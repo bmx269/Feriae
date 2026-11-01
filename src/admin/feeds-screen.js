@@ -564,12 +564,12 @@ export default function FeedsScreen( { root } ) {
 					defaultLayouts={ { table: {} } }
 					searchLabel={ __( 'Search calendars', 'openevents' ) }
 					empty={
-						<Text>
+						<p className="oe-feeds__empty">
 							{ __(
 								'No calendars yet. Add one above, and it syncs on its own from then on.',
 								'openevents'
 							) }
-						</Text>
+						</p>
 					}
 				/>
 				<Card.Root>

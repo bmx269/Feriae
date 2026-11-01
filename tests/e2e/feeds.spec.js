@@ -10,6 +10,9 @@ const scan = ( page ) =>
 
 const compact = ( offset ) => day( offset ).replaceAll( '-', '' );
 
+// Unique per run, so a retry imports afresh rather than finding the last try's events.
+const run = Date.now().toString( 36 );
+
 // What Google Calendar exports: a talk, a weekly club, and a private appointment.
 const ics = [
 	'BEGIN:VCALENDAR',
@@ -17,21 +20,21 @@ const ics = [
 	'X-WR-CALNAME:Imported team calendar',
 	'X-WR-TIMEZONE:America/Vancouver',
 	'BEGIN:VEVENT',
-	'UID:e2e-talk@example.com',
+	`UID:e2e-talk-${ run }@example.com`,
 	`DTSTART;TZID=America/Vancouver:${ compact( 12 ) }T190000`,
 	`DTEND;TZID=America/Vancouver:${ compact( 12 ) }T200000`,
-	'SUMMARY:Imported astronomy talk',
+	`SUMMARY:Imported astronomy talk ${ run }`,
 	'DESCRIPTION:Telescopes provided\\, bring a coat.',
 	'END:VEVENT',
 	'BEGIN:VEVENT',
-	'UID:e2e-club@example.com',
+	`UID:e2e-club-${ run }@example.com`,
 	`DTSTART;TZID=America/Vancouver:${ compact( 6 ) }T170000`,
 	'DURATION:PT1H',
 	'RRULE:FREQ=WEEKLY;COUNT=4',
-	'SUMMARY:Imported chess club',
+	`SUMMARY:Imported chess club ${ run }`,
 	'END:VEVENT',
 	'BEGIN:VEVENT',
-	'UID:e2e-private@example.com',
+	`UID:e2e-private-${ run }@example.com`,
 	`DTSTART:${ compact( 3 ) }T170000Z`,
 	'CLASS:PRIVATE',
 	'SUMMARY:Imported dentist',
@@ -75,14 +78,14 @@ test.describe( 'Calendar import', () => {
 		// The repeating club is one event with four dates.
 		const { body } = await rest(
 			page,
-			'/wp/v2/events?search=Imported&_fields=id,title,meta'
+			`/wp/v2/events?search=${ run }&_fields=id,title,meta`
 		);
 		expect( body.map( ( e ) => e.title.rendered ).sort() ).toEqual( [
-			'Imported astronomy talk',
-			'Imported chess club',
+			`Imported astronomy talk ${ run }`,
+			`Imported chess club ${ run }`,
 		] );
 		const club = body.find(
-			( e ) => e.title.rendered === 'Imported chess club'
+			( e ) => e.title.rendered === `Imported chess club ${ run }`
 		);
 		expect( club.meta._oe_recurrence.rrule ).toBe( 'FREQ=WEEKLY;COUNT=4' );
 		const dates = await rest(
