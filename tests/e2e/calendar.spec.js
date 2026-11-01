@@ -45,7 +45,9 @@ test.describe( 'Calendar block', () => {
 		const before = await title.textContent();
 		await page.evaluate( () => ( window.__noReload = true ) );
 
-		await page.getByRole( 'link', { name: 'Next month' } ).click();
+		await page
+			.getByRole( 'link', { name: 'Next month', exact: true } )
+			.click();
 
 		await expect( title ).not.toHaveText( before );
 		await expect( page ).toHaveURL( /oe_month=\d{4}-\d{2}/ );
@@ -64,7 +66,9 @@ test.describe( 'Calendar block', () => {
 		const page = await context.newPage();
 		await page.goto( '/events/?oe_view=month' );
 
-		await page.getByRole( 'link', { name: 'Next month' } ).click();
+		await page
+			.getByRole( 'link', { name: 'Next month', exact: true } )
+			.click();
 		await expect( page.getByText( 'Next Month Gala' ) ).toBeVisible();
 
 		await page.getByRole( 'link', { name: 'List', exact: true } ).click();
@@ -154,12 +158,12 @@ test.describe( 'Calendar block', () => {
 		} );
 		const page = await context.newPage();
 		await page.goto( '/events/?oe_view=list&oe_past=1' );
-		await page.getByLabel( 'Search events' ).fill( 'choir' );
+		await page.getByLabel( 'Search events' ).fill( 'archive' );
 		await page.getByRole( 'button', { name: 'Filter' } ).click();
 
-		await expect( page ).toHaveURL( /oe_s=choir/ );
+		await expect( page ).toHaveURL( /oe_s=archive/ );
 		await expect( page.locator( '.oe-event-card__title' ) ).toHaveText( [
-			'Choir Practice',
+			'Archive Lecture',
 		] );
 		await context.close();
 	} );
