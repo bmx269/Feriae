@@ -117,7 +117,7 @@ $rsvp_events = array(
 	$gala     => array( 'enabled' => true, 'capacity' => 120, 'max_per_response' => 4 ),
 	$workshop => array( 'enabled' => true, 'capacity' => 3, 'max_per_response' => 2 ),
 );
-update_option( 'openevents_modules', array( 'ical', 'recurrence', 'series', 'rsvp', 'tickets' ) );
+update_option( 'openevents_modules', array( 'ical', 'recurrence', 'series', 'rsvp', 'tickets', 'feeds' ) );
 OpenEvents\Attendance\Schema::install();
 $rsvp = new OpenEvents\Modules\Rsvp\Service();
 foreach ( $rsvp_events as $event_id => $config ) {

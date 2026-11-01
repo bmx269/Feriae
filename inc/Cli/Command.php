@@ -211,4 +211,108 @@ final class Command {
 		\WP_CLI::print_value( $report, array( 'format' => 'yaml' ) );
 		\WP_CLI::success( sprintf( 'Imported in %.1fs. Deactivate The Events Calendar and Event Tickets, then check the site.', microtime( true ) - $start ) );
 	}
+
+	/**
+	 * Imports an iCal (.ics) file once.
+	 *
+	 * Events are matched by UID, so importing the same file again updates them
+	 * rather than adding copies. Past and private events are skipped.
+	 *
+	 * ## OPTIONS
+	 *
+	 * <file>
+	 * : Path to the .ics file.
+	 *
+	 * [--category=<id>]
+	 * : Event category id to put every event in.
+	 *
+	 * [--status=<status>]
+	 * : Status of new events.
+	 * ---
+	 * default: publish
+	 * options:
+	 *   - publish
+	 *   - draft
+	 * ---
+	 *
+	 * [--post-type=<type>]
+	 * : Event post type for new events.
+	 *
+	 * [--author=<id>]
+	 * : Author of new events.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp openevents import-ics calendar.ics --category=12 --status=draft
+	 *
+	 * @subcommand import-ics
+	 *
+	 * @param string[]             $args       Positional arguments.
+	 * @param array<string, mixed> $assoc_args Flags.
+	 */
+	public function import_ics( array $args, array $assoc_args ): void {
+		self::require_module( 'feeds' );
+		$file = (string) $args[0];
+		if ( ! is_readable( $file ) || filesize( $file ) > \OpenEvents\Modules\Feeds\Rest::MAX_FILE ) {
+			\WP_CLI::error( 'The file can’t be read, or is larger than 5 MB.' );
+		}
+		$ics = (string) file_get_contents( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- local file.
+		if ( ! \OpenEvents\Modules\Feeds\Parser::is_calendar( $ics ) ) {
+			\WP_CLI::error( 'That file isn’t an iCal (.ics) calendar.' );
+		}
+		$options = \OpenEvents\Modules\Feeds\Feed::options(
+			array(
+				'category'    => $assoc_args['category'] ?? 0,
+				'post_status' => $assoc_args['status'] ?? 'publish',
+				'post_type'   => $assoc_args['post-type'] ?? '',
+			)
+		);
+		$parser   = new \OpenEvents\Modules\Feeds\Parser();
+		$importer = new \OpenEvents\Modules\Feeds\Importer( 0, $options['post_type'], $options['post_status'], $options['category'], absint( $assoc_args['author'] ?? get_current_user_id() ) );
+		$report   = \OpenEvents\Modules\Feeds\Importer::report( array( 'skipped' => $parser->skipped ) + $importer->import( $parser->parse( $ics ), false ) );
+		\WP_CLI::success( $report['message'] );
+	}
+
+	/**
+	 * Syncs calendar feeds now (all of them, or the ones given).
+	 *
+	 * ## OPTIONS
+	 *
+	 * [<id>...]
+	 * : Feed ids. Default: every feed.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp openevents sync-feeds
+	 *     wp openevents sync-feeds 42
+	 *
+	 * @subcommand sync-feeds
+	 *
+	 * @param string[] $args Feed ids.
+	 */
+	public function sync_feeds( array $args ): void {
+		self::require_module( 'feeds' );
+		$feeds = $args
+			? array_filter( array_map( static fn( $id ) => \OpenEvents\Modules\Feeds\Feed::get( (int) $id ), $args ) )
+			: \OpenEvents\Modules\Feeds\Feed::all();
+		if ( ! $feeds ) {
+			\WP_CLI::error( 'No calendar feeds found. Add one under Events → Calendar import.' );
+		}
+		$failed = 0;
+		foreach ( $feeds as $feed ) {
+			$report = $feed->sync();
+			$failed += $report['ok'] ? 0 : 1;
+			\WP_CLI::log( sprintf( '%s (#%d): %s', $feed->name(), $feed->id(), $report['message'] ) );
+		}
+		if ( $failed ) {
+			\WP_CLI::error( sprintf( '%d of %d feeds failed.', $failed, count( $feeds ) ) );
+		}
+		\WP_CLI::success( 'Synced.' );
+	}
+
+	private static function require_module( string $id ): void {
+		if ( ! openevents()->modules()->is_enabled( $id ) ) {
+			\WP_CLI::error( sprintf( 'Turn on the "%s" module first (Events → Settings → Modules).', openevents()->modules()->get( $id )?->label() ?? $id ) );
+		}
+	}
 }
