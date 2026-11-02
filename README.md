@@ -15,6 +15,7 @@ Open-source events for WordPress, built to replace The Events Calendar and its p
 - **Works without JavaScript.** Calendar views are server-rendered links. The Interactivity API upgrades them to in-place navigation.
 - **Theme-friendly.** Blocks inherit your theme.json, the templates are editable in the Site Editor, and classic themes get fallbacks.
 - **Recurring events.** Daily, weekly, monthly, or yearly rules (standard iCal RRULE), skipped and extra dates, and editing one date or the rest of a series.
+- **Calendar import.** Add a Google Calendar, Outlook, or Apple Calendar by its iCal address and its events stay in sync, repeating events included. No API keys. One-off `.ics` files too.
 - **Free RSVP and tickets.** Capacity limits, guests, waitlists, attendee questions (with consent boxes), pay at the door, Stripe, or PayPal, with no platform fees. See [docs/payments.md](docs/payments.md).
 - **Open APIs.** PHP functions, hooks, a module registry, REST, the Abilities API, Block Bindings, and editor SlotFills.
 
@@ -51,7 +52,7 @@ Requires WordPress 7.1+ and PHP 8.2+.
 | **Event status**: cancel or postpone an event, or one date of a repeating event, with a note; bookings close and listings say so | ✅ Done |
 | **Per-date places** for recurring events: each date has its own RSVP and ticket capacity, waitlist, and attendee list | ✅ Done |
 | Calendar filter and search, event popups, category badges, per-category and per-post-type templates | ✅ Done |
-| Google Calendar import (iCal feeds) | Next |
+| **Calendar import**: Google Calendar, Outlook, Apple Calendar, or any iCal feed, synced on a schedule (matched by UID, local edits kept, removed events unpublished); one-off `.ics` files | ✅ Done |
 | **Passes and door check-in**: a pass per person with a QR code, linked from every confirmation; a check-in screen for phones, cameras, and handheld scanners | ✅ Done |
 | Pro views (photo, map) | Planned |
 

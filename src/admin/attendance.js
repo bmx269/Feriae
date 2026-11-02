@@ -1,10 +1,12 @@
 /**
- * Attendance admin entry: Events → Attendees, Orders, Waitlist, and Check-in. Separate
- * from the main admin app so DataViews and its stylesheet load only here.
+ * DataViews admin entry: Events → Attendees, Orders, Waitlist, Check-in, and
+ * Calendar import. Separate from the main admin app so DataViews and its
+ * stylesheet load only here.
  */
 import { createRoot } from '@wordpress/element';
 import AttendeesScreen from './attendees-screen';
 import CheckInScreen from './check-in-screen';
+import FeedsScreen from './feeds-screen';
 import OrdersScreen from './orders-screen';
 import WaitlistScreen from './waitlist-screen';
 import './attendance.scss';
@@ -17,6 +19,7 @@ if ( root ) {
 			orders: <OrdersScreen root={ root } />,
 			waitlist: <WaitlistScreen root={ root } />,
 			'check-in': <CheckInScreen root={ root } />,
+			feeds: <FeedsScreen root={ root } />,
 		}[ root.dataset.screen ] || <AttendeesScreen root={ root } />
 	);
 }

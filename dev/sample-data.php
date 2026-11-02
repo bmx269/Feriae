@@ -91,6 +91,9 @@ foreach ( array( 'Open Mic', 'Choir Practice', 'Board Games', 'Late Show' ) as $
 	$make( $title, $d( 20, sprintf( '%02d:00:00', 12 + $i * 2 ) ), $d( 20, sprintf( '%02d:30:00', 13 + $i * 2 ) ), array(), 'Community' );
 }
 $gala = $make( 'Next Month Gala', $month->modify( '+1 month +4 days' )->format( 'Y-m-d' ) . ' 18:00:00', $month->modify( '+1 month +4 days' )->format( 'Y-m-d' ) . ' 23:00:00' );
+// Always in the past, whatever today's date (the rest of this month may not be yet).
+$past = current_datetime()->modify( '-40 days' )->format( 'Y-m-d' );
+$make( 'Archive Lecture', "{$past} 18:00:00", "{$past} 19:30:00", array(), 'Workshops' );
 $make( 'Hidden Rehearsal', $d( 22, '09:00:00' ), $d( 22, '10:00:00' ), array( '_oe_hide_from_listings' => true ) );
 
 // A repeating event: eight weeks from the 2nd (needs the recurrence module, enabled below).
@@ -114,7 +117,7 @@ $rsvp_events = array(
 	$gala     => array( 'enabled' => true, 'capacity' => 120, 'max_per_response' => 4 ),
 	$workshop => array( 'enabled' => true, 'capacity' => 3, 'max_per_response' => 2 ),
 );
-update_option( 'openevents_modules', array( 'ical', 'recurrence', 'series', 'rsvp', 'tickets' ) );
+update_option( 'openevents_modules', array( 'ical', 'recurrence', 'series', 'rsvp', 'tickets', 'feeds' ) );
 OpenEvents\Attendance\Schema::install();
 $rsvp = new OpenEvents\Modules\Rsvp\Service();
 foreach ( $rsvp_events as $event_id => $config ) {

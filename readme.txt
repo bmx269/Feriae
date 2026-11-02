@@ -20,10 +20,15 @@ OpenEvents adds events, venues, organizers, and calendar views to WordPress. Cal
 * Recurring events: daily, weekly, monthly, or yearly, with skipped and extra dates.
 * Free RSVP and tickets: capacity limits, guests, waitlists, pay at the door, Stripe, or PayPal, with no platform fees.
 * iCal feeds and "Add to Google Calendar" links.
+* Calendar import: keep events in sync with Google Calendar, Outlook, Apple Calendar, or any iCal feed, or import an .ics file once.
 * Site Editor templates for block themes and fallbacks for classic themes.
 * REST API, Abilities API, Block Bindings, and hooks for developers.
 
 Built for sites with thousands of events: listings run indexed queries against a dedicated table and load everything they show in a fixed number of queries.
+
+== External services ==
+
+The Calendar import module (off until you switch it on) downloads the iCal addresses you add under Events → Calendar import, such as a Google Calendar, Outlook, or Apple Calendar address, on the schedule you choose. Each request goes only to the address you entered and sends nothing about your site or visitors beyond a standard user agent (plugin version and site address). What those services do with requests is covered by their own terms, for example Google's (https://policies.google.com/terms, https://policies.google.com/privacy) and Microsoft's (https://www.microsoft.com/servicesagreement, https://privacy.microsoft.com/privacystatement).
 
 == Installation ==
 

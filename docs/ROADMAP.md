@@ -37,10 +37,11 @@ Priority order, set 2026-10-27. Everything here is free: no paid tier, no platfo
    - Several ticket types per event: price, capacity, sale window. `oe_orders` / `oe_order_items`.
    - Gateway interface. Built-in: "Pay at the door" (manual), Stripe Checkout, and PayPal (Orders v2), all with webhooks. A WooCommerce adapter later.
    - Order emails with check-in passes (QR codes), refunds from the admin.
-3. **Google Calendar import** (iCal feed module)
-   - Add a calendar by its iCal address (public or secret). No Google API keys or OAuth needed.
-   - Scheduled sync. Events are matched by UID, so updates replace rather than duplicate, and removed events are unpublished. Each feed can map to a category.
-   - RRULE/EXDATE expansion through `openevents/occurrences/generate`. This is the first piece of the recurrence module.
+3. ✅ **Calendar import** (`feeds` module; tests in `FeedsTest.php`, `feeds.spec.js`)
+   - Add a calendar by its iCal address: Google Calendar (public or secret), Outlook, Apple Calendar, Meetup, other event sites. No API keys or OAuth. The address is encrypted at rest and masked in the admin.
+   - Scheduled sync (hourly, daily, weekly, or by hand) with conditional requests. Events are matched by UID, so updates replace rather than duplicate; events edited here are left alone; upcoming events that leave the calendar are unpublished. Each feed maps to a category, a post type, and publish or draft.
+   - RRULE/RDATE/EXDATE onto the recurrence module; cancelled single dates are skipped, moved ones become their own events. Private events and past events aren't imported.
+   - One-off `.ics` file import, REST routes, abilities, and `wp openevents import-ics` / `sync-feeds`.
 
 - ✅ **Waitlists** for RSVPs (automatic promotion) and ticket types (held, time-limited offers); tests in `WaitlistTest.php`, `WaitlistFormsTest.php`, `waitlist.spec.js`.
 - ✅ **Attendee questions on RSVP waitlists**: asked when joining and carried onto attendees at promotion; covered by the privacy tools, including guests; tests in `WaitlistQuestionsTest.php`, `waitlist.spec.js`.
@@ -101,6 +102,7 @@ Done in Phase 2 groundwork:
 ## Phase 7: Ecosystem
 
 - Community submissions with moderation.
-- Scheduled ICS/Google Calendar imports.
+- ✅ Scheduled ICS/Google Calendar imports (see Phase 2).
+- Two-way sync to Google Calendar (OAuth), and Eventbrite/Meetup API imports beyond their iCal feeds.
 - Multilingual (WPML/Polylang) without autoloaded caches.
 - More abilities (update event, RSVP, check in).
