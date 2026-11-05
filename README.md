@@ -21,6 +21,12 @@ Open-source events for WordPress, built to replace The Events Calendar and its p
 
 Requires WordPress 7.1+ and PHP 8.2+.
 
+## About the name
+
+Feriae is pronounced **FAIR-ee-eye** (/ˈfɛri.aɪ/).
+
+In ancient Rome, *feriae* were the days set aside for festivals and public gatherings, when ordinary business paused and people came together. The word is the root of the English "fair" and the Spanish *feria*. A plugin for publishing the days your community gathers seemed a fitting place for it.
+
 ## Screenshots
 
 | | |
