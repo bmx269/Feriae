@@ -2,13 +2,13 @@
 /**
  * Post types and taxonomies.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Content;
+namespace Feriae\Content;
 
-use OpenEvents\Installer;
-use OpenEvents\Settings;
+use Feriae\Installer;
+use Feriae\Settings;
 
 /**
  * Registers the optional Events post type, venues, organizers, and event
@@ -17,9 +17,9 @@ use OpenEvents\Settings;
 final class PostTypes {
 
 	public const EVENT     = Settings::EVENT_TYPE;
-	public const VENUE     = 'oe_venue';
-	public const ORGANIZER = 'oe_organizer';
-	public const CATEGORY  = 'oe_event_category';
+	public const VENUE     = 'feriae_venue';
+	public const ORGANIZER = 'feriae_organizer';
+	public const CATEGORY  = 'feriae_event_category';
 
 	public function __construct( private Settings $settings ) {}
 
@@ -35,7 +35,7 @@ final class PostTypes {
 	 * type menu when it is registered, otherwise the plugin's own top-level page.
 	 */
 	public static function menu_parent( Settings $settings ): string {
-		return $settings->registers_event_type() ? 'edit.php?post_type=' . self::EVENT : 'openevents';
+		return $settings->registers_event_type() ? 'edit.php?post_type=' . self::EVENT : 'feriae';
 	}
 
 	public function register_types(): void {
@@ -50,12 +50,12 @@ final class PostTypes {
 			self::VENUE,
 			array(
 				'labels'       => array(
-					'name'          => __( 'Venues', 'openevents' ),
-					'singular_name' => __( 'Venue', 'openevents' ),
-					'add_new_item'  => __( 'Add New Venue', 'openevents' ),
-					'edit_item'     => __( 'Edit Venue', 'openevents' ),
-					'all_items'     => __( 'Venues', 'openevents' ),
-					'not_found'     => __( 'No venues found.', 'openevents' ),
+					'name'          => __( 'Venues', 'feriae' ),
+					'singular_name' => __( 'Venue', 'feriae' ),
+					'add_new_item'  => __( 'Add New Venue', 'feriae' ),
+					'edit_item'     => __( 'Edit Venue', 'feriae' ),
+					'all_items'     => __( 'Venues', 'feriae' ),
+					'not_found'     => __( 'No venues found.', 'feriae' ),
 				),
 				'public'       => true,
 				'show_in_rest' => true,
@@ -73,12 +73,12 @@ final class PostTypes {
 			self::ORGANIZER,
 			array(
 				'labels'       => array(
-					'name'          => __( 'Organizers', 'openevents' ),
-					'singular_name' => __( 'Organizer', 'openevents' ),
-					'add_new_item'  => __( 'Add New Organizer', 'openevents' ),
-					'edit_item'     => __( 'Edit Organizer', 'openevents' ),
-					'all_items'     => __( 'Organizers', 'openevents' ),
-					'not_found'     => __( 'No organizers found.', 'openevents' ),
+					'name'          => __( 'Organizers', 'feriae' ),
+					'singular_name' => __( 'Organizer', 'feriae' ),
+					'add_new_item'  => __( 'Add New Organizer', 'feriae' ),
+					'edit_item'     => __( 'Edit Organizer', 'feriae' ),
+					'all_items'     => __( 'Organizers', 'feriae' ),
+					'not_found'     => __( 'No organizers found.', 'feriae' ),
 				),
 				'public'       => true,
 				'show_in_rest' => true,
@@ -97,9 +97,9 @@ final class PostTypes {
 			$this->settings->registers_event_type() ? array( self::EVENT ) : array(),
 			array(
 				'labels'            => array(
-					'name'          => __( 'Event Categories', 'openevents' ),
-					'singular_name' => __( 'Event Category', 'openevents' ),
-					'menu_name'     => __( 'Event Categories', 'openevents' ),
+					'name'          => __( 'Event Categories', 'feriae' ),
+					'singular_name' => __( 'Event Category', 'feriae' ),
+					'menu_name'     => __( 'Event Categories', 'feriae' ),
 				),
 				'hierarchical'      => true,
 				'show_in_rest'      => true,
@@ -119,25 +119,25 @@ final class PostTypes {
 			self::EVENT,
 			array(
 				'labels'        => array(
-					'name'                  => __( 'Events', 'openevents' ),
-					'singular_name'         => __( 'Event', 'openevents' ),
-					'add_new_item'          => __( 'Add New Event', 'openevents' ),
-					'edit_item'             => __( 'Edit Event', 'openevents' ),
-					'new_item'              => __( 'New Event', 'openevents' ),
-					'view_item'             => __( 'View Event', 'openevents' ),
-					'view_items'            => __( 'View Events', 'openevents' ),
-					'search_items'          => __( 'Search Events', 'openevents' ),
-					'not_found'             => __( 'No events found.', 'openevents' ),
-					'not_found_in_trash'    => __( 'No events found in Trash.', 'openevents' ),
-					'all_items'             => __( 'All Events', 'openevents' ),
-					'archives'              => __( 'Event Archives', 'openevents' ),
-					'item_published'        => __( 'Event published.', 'openevents' ),
-					'item_updated'          => __( 'Event updated.', 'openevents' ),
-					'item_scheduled'        => __( 'Event scheduled.', 'openevents' ),
-					'menu_name'             => __( 'Events', 'openevents' ),
-					'filter_items_list'     => __( 'Filter events list', 'openevents' ),
-					'items_list_navigation' => __( 'Events list navigation', 'openevents' ),
-					'items_list'            => __( 'Events list', 'openevents' ),
+					'name'                  => __( 'Events', 'feriae' ),
+					'singular_name'         => __( 'Event', 'feriae' ),
+					'add_new_item'          => __( 'Add New Event', 'feriae' ),
+					'edit_item'             => __( 'Edit Event', 'feriae' ),
+					'new_item'              => __( 'New Event', 'feriae' ),
+					'view_item'             => __( 'View Event', 'feriae' ),
+					'view_items'            => __( 'View Events', 'feriae' ),
+					'search_items'          => __( 'Search Events', 'feriae' ),
+					'not_found'             => __( 'No events found.', 'feriae' ),
+					'not_found_in_trash'    => __( 'No events found in Trash.', 'feriae' ),
+					'all_items'             => __( 'All Events', 'feriae' ),
+					'archives'              => __( 'Event Archives', 'feriae' ),
+					'item_published'        => __( 'Event published.', 'feriae' ),
+					'item_updated'          => __( 'Event updated.', 'feriae' ),
+					'item_scheduled'        => __( 'Event scheduled.', 'feriae' ),
+					'menu_name'             => __( 'Events', 'feriae' ),
+					'filter_items_list'     => __( 'Filter events list', 'feriae' ),
+					'items_list_navigation' => __( 'Events list navigation', 'feriae' ),
+					'items_list'            => __( 'Events list', 'feriae' ),
 				),
 				'public'        => true,
 				'show_in_rest'  => true,

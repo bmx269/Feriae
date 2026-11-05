@@ -2,12 +2,12 @@
 /**
  * Block registration.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Frontend;
+namespace Feriae\Frontend;
 
-use const OpenEvents\PLUGIN_DIR;
+use const Feriae\PLUGIN_DIR;
 
 /**
  * Registers the plugin blocks from the build manifest, and keeps calendar
@@ -23,15 +23,15 @@ final class Blocks {
 	}
 
 	/**
-	 * Groups the plugin's blocks under "OpenEvents" in the inserter.
+	 * Groups the plugin's blocks under "Feriae" in the inserter.
 	 *
 	 * @param array<int, array<string, string>> $categories Block categories.
 	 * @return array<int, array<string, string>>
 	 */
 	public function category( array $categories ): array {
 		$categories[] = array(
-			'slug'  => 'openevents',
-			'title' => __( 'OpenEvents', 'openevents' ),
+			'slug'  => 'feriae',
+			'title' => __( 'Feriae', 'feriae' ),
 			'icon'  => null,
 		);
 		return $categories;
@@ -45,7 +45,7 @@ final class Blocks {
 	}
 
 	/**
-	 * Calendar navigation pages (?oe_month=, ?oe_view=, ...) are views of the same
+	 * Calendar navigation pages (?feriae_month=, ?feriae_view=, ...) are views of the same
 	 * content: noindex them, but let crawlers follow through to events.
 	 *
 	 * @param array<string, bool|string> $robots Robots directives.

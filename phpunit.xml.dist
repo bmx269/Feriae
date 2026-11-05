@@ -7,7 +7,7 @@
 	convertDeprecationsToExceptions="false"
 >
 	<testsuites>
-		<testsuite name="openevents">
+		<testsuite name="feriae">
 			<directory suffix="Test.php">./tests/phpunit</directory>
 		</testsuite>
 	</testsuites>

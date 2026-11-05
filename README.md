@@ -1,10 +1,10 @@
-# OpenEvents
+# Feriae
 
-Open-source events for WordPress, built to replace The Events Calendar and its paid add-ons. **OpenEvents Calendar** is the core; **RSVP**, **Tickets**, recurrence, and more are modules you switch on, with no upsells.
+Open-source events for WordPress, built to replace The Events Calendar and its paid add-ons. **Feriae Calendar** is the core; **RSVP**, **Tickets**, recurrence, and more are modules you switch on, with no upsells.
 
-![OpenEvents: a month calendar on desktop that becomes an agenda on phones](.wordpress-org/screenshot-1.png)
+![Feriae: a month calendar on desktop that becomes an agenda on phones](.wordpress-org/screenshot-1.png)
 
-**[Try it in WordPress Playground](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/bmx269/OpenEvents/main/.wordpress-org/blueprints/blueprint.json)** to test the plugin in your browser, with nothing to install. The demo loads sample events, venues, and coloured categories for the current month, and opens on the calendar. You're logged in as admin, so you can try the setup wizard (**Events → Settings → Run setup wizard**) and the editor too.
+**[Try it in WordPress Playground](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/bmx269/Feriae/main/.wordpress-org/blueprints/blueprint.json)** to test the plugin in your browser, with nothing to install. The demo loads sample events, venues, and coloured categories for the current month, and opens on the calendar. You're logged in as admin, so you can try the setup wizard (**Events → Settings → Run setup wizard**) and the editor too.
 
 - **Requires:** WordPress 7.1+, PHP 8.2+
 - **License:** GPLv2 or later
@@ -20,6 +20,12 @@ Open-source events for WordPress, built to replace The Events Calendar and its p
 - **Open APIs.** PHP functions, hooks, a module registry, REST, the Abilities API, Block Bindings, and editor SlotFills.
 
 Requires WordPress 7.1+ and PHP 8.2+.
+
+## About the name
+
+Feriae is pronounced **FAIR-ee-eye** (/ˈfɛri.aɪ/).
+
+In ancient Rome, *feriae* were the days set aside for festivals and public gatherings, when ordinary business paused and people came together. The word is the root of the English "fair" and the Spanish *feria*. A plugin for publishing the days your community gathers seemed a fitting place for it.
 
 ## Screenshots
 
@@ -45,7 +51,7 @@ Requires WordPress 7.1+ and PHP 8.2+.
 | **Recurring events**: daily to yearly rules (iCal RRULE), skipped and extra dates, edit one date or the rest of a series | ✅ Done |
 | **Attendee fields**: questions per RSVP or ticket type (ten field types, consent boxes), each person's own name and email, saved question sets, answers in the attendee list and CSV | ✅ Done |
 | **Series**: group events under a series page, with series passes | ✅ Done |
-| **TEC and Event Tickets importer** (`wp openevents import-tec`): in-place conversion with verification and rollback | ✅ Done |
+| **TEC and Event Tickets importer** (`wp feriae import-tec`): in-place conversion with verification and rollback | ✅ Done |
 | **Privacy tools**: attendee data in WordPress's personal data export and erase | ✅ Done |
 | **Week and day views** | ✅ Done |
 | **Event attributes and calendar filters**: lists such as Audiences, filter by attribute and day of the week | ✅ Done |
@@ -64,7 +70,7 @@ Details and the order of work are in [docs/ROADMAP.md](docs/ROADMAP.md).
 npm install
 npm run build          # or: npm start (watch)
 npm run playground     # WordPress Playground with the plugin and sample events
-npm run bench          # Playground with 5,000 generated events; add ?openevents_bench=1 to a page
+npm run bench          # Playground with 5,000 generated events; add ?feriae_bench=1 to a page
 npm run lint:js
 ```
 
@@ -85,9 +91,9 @@ The built `build/` directory is not committed. Run `npm run build` after cloning
 ### WP-CLI
 
 ```bash
-wp openevents rebuild     # rebuild the occurrences table (after bulk imports)
-wp openevents stats       # row counts and EXPLAIN plans for hot queries
-wp openevents generate --count=5000   # load-test data; never on production
+wp feriae rebuild     # rebuild the occurrences table (after bulk imports)
+wp feriae stats       # row counts and EXPLAIN plans for hot queries
+wp feriae generate --count=5000   # load-test data; never on production
 ```
 
 ## Documentation
@@ -100,14 +106,14 @@ wp openevents generate --count=5000   # load-test data; never on production
 
 ```php
 // Add a module that site owners can toggle in Events → Settings → Modules.
-add_filter( 'openevents/modules', function ( array $modules ) {
-	$modules[] = new My_Zoom_Module(); // extends OpenEvents\Modules\AbstractModule
+add_filter( 'feriae/modules', function ( array $modules ) {
+	$modules[] = new My_Zoom_Module(); // extends Feriae\Modules\AbstractModule
 	return $modules;
 } );
 
 // Query events anywhere.
-foreach ( openevents_get_upcoming( 5, array( 'categories' => array( 12 ) ) ) as $occurrence ) {
-	echo esc_html( get_the_title( $occurrence->event_id ) . ': ' . openevents_format_range( $occurrence ) );
+foreach ( feriae_get_upcoming( 5, array( 'categories' => array( 12 ) ) ) as $occurrence ) {
+	echo esc_html( get_the_title( $occurrence->event_id ) . ': ' . feriae_format_range( $occurrence ) );
 }
 ```
 

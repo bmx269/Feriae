@@ -2,21 +2,21 @@
 /**
  * Privacy exporter and eraser for attendance data.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Tests\Integration;
+namespace Feriae\Tests\Integration;
 
-use OpenEvents\Attendance\Attendees;
-use OpenEvents\Attendance\Guard;
-use OpenEvents\Attendance\Privacy;
-use OpenEvents\Attendance\Schema;
-use OpenEvents\Attendance\TicketTypes;
-use OpenEvents\Attendance\Waitlist;
-use OpenEvents\Modules\Rsvp\Service;
-use OpenEvents\Modules\Tickets\Checkout;
-use OpenEvents\Modules\Tickets\Module as Tickets;
-use OpenEvents\Tests\TestCase;
+use Feriae\Attendance\Attendees;
+use Feriae\Attendance\Guard;
+use Feriae\Attendance\Privacy;
+use Feriae\Attendance\Schema;
+use Feriae\Attendance\TicketTypes;
+use Feriae\Attendance\Waitlist;
+use Feriae\Modules\Rsvp\Service;
+use Feriae\Modules\Tickets\Checkout;
+use Feriae\Modules\Tickets\Module as Tickets;
+use Feriae\Tests\TestCase;
 
 final class PrivacyTest extends TestCase {
 
@@ -28,8 +28,8 @@ final class PrivacyTest extends TestCase {
 		$day         = current_datetime()->modify( '+5 days' )->format( 'Y-m-d' );
 		$this->event = $this->event(
 			array(
-				'_oe_start' => "{$day} 19:00:00",
-				'_oe_end'   => "{$day} 21:00:00",
+				'_feriae_start' => "{$day} 19:00:00",
+				'_feriae_end'   => "{$day} 21:00:00",
 			)
 		);
 		update_post_meta(
@@ -89,8 +89,8 @@ final class PrivacyTest extends TestCase {
 	}
 
 	public function test_tools_are_registered(): void {
-		$this->assertArrayHasKey( 'openevents-attendance', apply_filters( 'wp_privacy_personal_data_exporters', array() ) );
-		$this->assertArrayHasKey( 'openevents-attendance', apply_filters( 'wp_privacy_personal_data_erasers', array() ) );
+		$this->assertArrayHasKey( 'feriae-attendance', apply_filters( 'wp_privacy_personal_data_exporters', array() ) );
+		$this->assertArrayHasKey( 'feriae-attendance', apply_filters( 'wp_privacy_personal_data_erasers', array() ) );
 	}
 
 	public function test_export_includes_attendees_orders_and_answers(): void {
@@ -102,8 +102,8 @@ final class PrivacyTest extends TestCase {
 		$groups = array_count_values( array_column( $export['data'], 'group_id' ) );
 
 		$this->assertTrue( $export['done'] );
-		$this->assertSame( 2, $groups['openevents-attendees'], 'The RSVP and the ticket holder.' );
-		$this->assertSame( 1, $groups['openevents-orders'] );
+		$this->assertSame( 2, $groups['feriae-attendees'], 'The RSVP and the ticket holder.' );
+		$this->assertSame( 1, $groups['feriae-orders'] );
 		$values = array_column( $export['data'][0]['data'], 'value', 'name' );
 		$this->assertSame( 'grace@example.com', $values['Email'] );
 		$this->assertSame( '604 555 0100', $values['Phone number'], 'Answers are exported under their question.' );

@@ -21,56 +21,56 @@ export function VenuePanel( { meta, setMeta } ) {
 		<Flex direction="column" gap={ 4 }>
 			<Field
 				{ ...props }
-				metaKey="_oe_address"
-				label={ __( 'Address', 'openevents' ) }
+				metaKey="_feriae_address"
+				label={ __( 'Address', 'feriae' ) }
 			/>
 			<Field
 				{ ...props }
-				metaKey="_oe_city"
-				label={ __( 'City', 'openevents' ) }
+				metaKey="_feriae_city"
+				label={ __( 'City', 'feriae' ) }
 			/>
 			<Flex align="flex-start">
 				<Field
 					{ ...props }
-					metaKey="_oe_region"
-					label={ __( 'State / Province', 'openevents' ) }
+					metaKey="_feriae_region"
+					label={ __( 'State / Province', 'feriae' ) }
 				/>
 				<Field
 					{ ...props }
-					metaKey="_oe_postal_code"
-					label={ __( 'Postal code', 'openevents' ) }
+					metaKey="_feriae_postal_code"
+					label={ __( 'Postal code', 'feriae' ) }
 				/>
 			</Flex>
 			<Field
 				{ ...props }
-				metaKey="_oe_country"
-				label={ __( 'Country', 'openevents' ) }
+				metaKey="_feriae_country"
+				label={ __( 'Country', 'feriae' ) }
 			/>
 			<Field
 				{ ...props }
-				metaKey="_oe_phone"
+				metaKey="_feriae_phone"
 				type="tel"
-				label={ __( 'Phone', 'openevents' ) }
+				label={ __( 'Phone', 'feriae' ) }
 			/>
 			<Field
 				{ ...props }
-				metaKey="_oe_website"
+				metaKey="_feriae_website"
 				type="url"
-				label={ __( 'Website', 'openevents' ) }
+				label={ __( 'Website', 'feriae' ) }
 			/>
 			<Flex align="flex-start">
 				<Field
 					{ ...props }
-					metaKey="_oe_lat"
-					label={ __( 'Latitude', 'openevents' ) }
+					metaKey="_feriae_lat"
+					label={ __( 'Latitude', 'feriae' ) }
 				/>
 				<Field
 					{ ...props }
-					metaKey="_oe_lng"
-					label={ __( 'Longitude', 'openevents' ) }
+					metaKey="_feriae_lng"
+					label={ __( 'Longitude', 'feriae' ) }
 				/>
 			</Flex>
-			<Slot name="OpenEventsVenuePanel" fillProps={ { meta, setMeta } } />
+			<Slot name="FeriaeVenuePanel" fillProps={ { meta, setMeta } } />
 		</Flex>
 	);
 }
@@ -81,26 +81,23 @@ export function OrganizerPanel( { meta, setMeta } ) {
 		<Flex direction="column" gap={ 4 }>
 			<Field
 				{ ...props }
-				metaKey="_oe_email"
+				metaKey="_feriae_email"
 				type="email"
-				label={ __( 'Email', 'openevents' ) }
+				label={ __( 'Email', 'feriae' ) }
 			/>
 			<Field
 				{ ...props }
-				metaKey="_oe_phone"
+				metaKey="_feriae_phone"
 				type="tel"
-				label={ __( 'Phone', 'openevents' ) }
+				label={ __( 'Phone', 'feriae' ) }
 			/>
 			<Field
 				{ ...props }
-				metaKey="_oe_website"
+				metaKey="_feriae_website"
 				type="url"
-				label={ __( 'Website', 'openevents' ) }
+				label={ __( 'Website', 'feriae' ) }
 			/>
-			<Slot
-				name="OpenEventsOrganizerPanel"
-				fillProps={ { meta, setMeta } }
-			/>
+			<Slot name="FeriaeOrganizerPanel" fillProps={ { meta, setMeta } } />
 		</Flex>
 	);
 }

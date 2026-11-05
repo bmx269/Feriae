@@ -11,18 +11,18 @@ import apiFetch from '@wordpress/api-fetch';
 import { useEffect, useState } from '@wordpress/element';
 
 const TYPES = () => [
-	{ value: 'text', label: __( 'Short text', 'openevents' ) },
-	{ value: 'textarea', label: __( 'Long text', 'openevents' ) },
-	{ value: 'email', label: __( 'Email', 'openevents' ) },
-	{ value: 'tel', label: __( 'Phone', 'openevents' ) },
-	{ value: 'url', label: __( 'Website', 'openevents' ) },
-	{ value: 'number', label: __( 'Number', 'openevents' ) },
-	{ value: 'date', label: __( 'Date', 'openevents' ) },
-	{ value: 'select', label: __( 'Dropdown', 'openevents' ) },
-	{ value: 'radio', label: __( 'One choice', 'openevents' ) },
+	{ value: 'text', label: __( 'Short text', 'feriae' ) },
+	{ value: 'textarea', label: __( 'Long text', 'feriae' ) },
+	{ value: 'email', label: __( 'Email', 'feriae' ) },
+	{ value: 'tel', label: __( 'Phone', 'feriae' ) },
+	{ value: 'url', label: __( 'Website', 'feriae' ) },
+	{ value: 'number', label: __( 'Number', 'feriae' ) },
+	{ value: 'date', label: __( 'Date', 'feriae' ) },
+	{ value: 'select', label: __( 'Dropdown', 'feriae' ) },
+	{ value: 'radio', label: __( 'One choice', 'feriae' ) },
 	{
 		value: 'checkbox',
-		label: __( 'Checkboxes (or one “I agree” box)', 'openevents' ),
+		label: __( 'Checkboxes (or one “I agree” box)', 'feriae' ),
 	},
 ];
 const CHOICES = [ 'select', 'radio', 'checkbox' ];
@@ -33,12 +33,12 @@ function useFieldSets() {
 	const [ sets, setSets ] = useState( [] );
 	useEffect( () => {
 		setsRequest =
-			setsRequest || apiFetch( { path: '/openevents/v1/field-sets' } );
+			setsRequest || apiFetch( { path: '/feriae/v1/field-sets' } );
 		setsRequest.then( setSets ).catch( () => setSets( [] ) );
 	}, [] );
 	const save = async ( name, fields ) => {
 		const saved = await apiFetch( {
-			path: '/openevents/v1/field-sets',
+			path: '/feriae/v1/field-sets',
 			method: 'POST',
 			data: { name, fields },
 		} );
@@ -64,24 +64,24 @@ function Question( { field, index, count, onChange, onMove, onRemove } ) {
 		field.label ||
 		sprintf(
 			/* translators: %d: question number */
-			__( 'Question %d', 'openevents' ),
+			__( 'Question %d', 'feriae' ),
 			index + 1
 		);
 	return (
-		<fieldset className="oe-editor-panel__question">
+		<fieldset className="feriae-editor-panel__question">
 			<legend>{ name }</legend>
 			<Flex direction="column" gap={ 3 }>
 				<SelectControl
 					__next40pxDefaultSize
 					__nextHasNoMarginBottom
-					label={ __( 'Type', 'openevents' ) }
+					label={ __( 'Type', 'feriae' ) }
 					value={ field.type }
 					options={ TYPES() }
 					onChange={ ( type ) => onChange( { type } ) }
 				/>
 				<TextareaControl
 					__nextHasNoMarginBottom
-					label={ __( 'Question', 'openevents' ) }
+					label={ __( 'Question', 'feriae' ) }
 					rows={ 2 }
 					value={ field.label }
 					onChange={ ( label ) => onChange( { label } ) }
@@ -89,12 +89,12 @@ function Question( { field, index, count, onChange, onMove, onRemove } ) {
 				{ CHOICES.includes( field.type ) && (
 					<TextareaControl
 						__nextHasNoMarginBottom
-						label={ __( 'Options, one per line', 'openevents' ) }
+						label={ __( 'Options, one per line', 'feriae' ) }
 						help={
 							field.type === 'checkbox'
 								? __(
 										'Leave empty for a single “I agree” checkbox.',
-										'openevents'
+										'feriae'
 								  )
 								: undefined
 						}
@@ -108,13 +108,13 @@ function Question( { field, index, count, onChange, onMove, onRemove } ) {
 				<TextControl
 					__next40pxDefaultSize
 					__nextHasNoMarginBottom
-					label={ __( 'Help text', 'openevents' ) }
+					label={ __( 'Help text', 'feriae' ) }
 					value={ field.help || '' }
 					onChange={ ( help ) => onChange( { help } ) }
 				/>
 				<ToggleControl
 					__nextHasNoMarginBottom
-					label={ __( 'Required', 'openevents' ) }
+					label={ __( 'Required', 'feriae' ) }
 					checked={ !! field.required }
 					onChange={ ( required ) => onChange( { required } ) }
 				/>
@@ -127,11 +127,11 @@ function Question( { field, index, count, onChange, onMove, onRemove } ) {
 						onClick={ () => onMove( -1 ) }
 						label={ sprintf(
 							/* translators: %s: question */
-							__( 'Move “%s” up', 'openevents' ),
+							__( 'Move “%s” up', 'feriae' ),
 							name
 						) }
 					>
-						{ __( 'Up', 'openevents' ) }
+						{ __( 'Up', 'feriae' ) }
 					</Button>
 					<Button
 						size="compact"
@@ -141,11 +141,11 @@ function Question( { field, index, count, onChange, onMove, onRemove } ) {
 						onClick={ () => onMove( 1 ) }
 						label={ sprintf(
 							/* translators: %s: question */
-							__( 'Move “%s” down', 'openevents' ),
+							__( 'Move “%s” down', 'feriae' ),
 							name
 						) }
 					>
-						{ __( 'Down', 'openevents' ) }
+						{ __( 'Down', 'feriae' ) }
 					</Button>
 					<Button
 						size="compact"
@@ -154,11 +154,11 @@ function Question( { field, index, count, onChange, onMove, onRemove } ) {
 						onClick={ onRemove }
 						label={ sprintf(
 							/* translators: %s: question */
-							__( 'Remove “%s”', 'openevents' ),
+							__( 'Remove “%s”', 'feriae' ),
 							name
 						) }
 					>
-						{ __( 'Remove', 'openevents' ) }
+						{ __( 'Remove', 'feriae' ) }
 					</Button>
 				</Flex>
 			</Flex>
@@ -198,28 +198,29 @@ export default function AttendeeFields( {
 	};
 
 	return (
-		<Flex direction="column" gap={ 3 } className="oe-editor-panel__fields">
+		<Flex
+			direction="column"
+			gap={ 3 }
+			className="feriae-editor-panel__fields"
+		>
 			<SelectControl
 				__next40pxDefaultSize
 				__nextHasNoMarginBottom
 				label={
 					forWhom === 'guest'
-						? __( 'Each guest’s name and email', 'openevents' )
-						: __(
-								'Each ticket holder’s name and email',
-								'openevents'
-						  )
+						? __( 'Each guest’s name and email', 'feriae' )
+						: __( 'Each ticket holder’s name and email', 'feriae' )
 				}
 				value={ details }
 				options={ [
-					{ value: 'none', label: __( 'Don’t ask', 'openevents' ) },
+					{ value: 'none', label: __( 'Don’t ask', 'feriae' ) },
 					{
 						value: 'optional',
-						label: __( 'Optional', 'openevents' ),
+						label: __( 'Optional', 'feriae' ),
 					},
 					{
 						value: 'required',
-						label: __( 'Required', 'openevents' ),
+						label: __( 'Required', 'feriae' ),
 					},
 				] }
 				onChange={ ( value ) =>
@@ -257,18 +258,18 @@ export default function AttendeeFields( {
 						] )
 					}
 				>
-					{ __( 'Add question', 'openevents' ) }
+					{ __( 'Add question', 'feriae' ) }
 				</Button>
 			</Flex>
 			{ sets.length > 0 && (
 				<SelectControl
 					__next40pxDefaultSize
 					__nextHasNoMarginBottom
-					label={ __( 'Use a saved question set', 'openevents' ) }
-					help={ __( 'Replaces the questions above.', 'openevents' ) }
+					label={ __( 'Use a saved question set', 'feriae' ) }
+					help={ __( 'Replaces the questions above.', 'feriae' ) }
 					value=""
 					options={ [
-						{ value: '', label: __( 'Choose…', 'openevents' ) },
+						{ value: '', label: __( 'Choose…', 'feriae' ) },
 						...sets.map( ( set, i ) => ( {
 							value: String( i ),
 							label: set.name,
@@ -291,7 +292,7 @@ export default function AttendeeFields( {
 						__nextHasNoMarginBottom
 						label={ __(
 							'Save these questions as a set',
-							'openevents'
+							'feriae'
 						) }
 						value={ setName }
 						onChange={ setSetName }
@@ -307,7 +308,7 @@ export default function AttendeeFields( {
 							)
 						}
 					>
-						{ __( 'Save set', 'openevents' ) }
+						{ __( 'Save set', 'feriae' ) }
 					</Button>
 				</Flex>
 			) }

@@ -7,19 +7,19 @@ set -euo pipefail
 
 MODE="${1:-release}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-STAGE="$ROOT/dist/stage/openevents"
+STAGE="$ROOT/dist/stage/feriae"
 
 cd "$ROOT"
 [ -f build/blocks-manifest.php ] || npm run build
 
 rm -rf "$ROOT/dist/stage" && mkdir -p "$STAGE"
-cp -R build inc templates openevents.php uninstall.php readme.txt "$STAGE/"
+cp -R build inc templates feriae.php uninstall.php readme.txt "$STAGE/"
 [ -d languages ] && cp -R languages "$STAGE/"
 if [ "$MODE" = "playground" ]; then
 	mkdir -p "$STAGE/dev" && cp dev/sample-data.php "$STAGE/dev/"
 fi
 
-rm -f "$ROOT/dist/openevents.zip"
-(cd "$ROOT/dist/stage" && zip -qr ../openevents.zip openevents)
+rm -f "$ROOT/dist/feriae.zip"
+(cd "$ROOT/dist/stage" && zip -qr ../feriae.zip feriae)
 rm -rf "$ROOT/dist/stage"
-echo "dist/openevents.zip ($MODE)"
+echo "dist/feriae.zip ($MODE)"

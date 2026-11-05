@@ -13,7 +13,7 @@
  * "method": "POST" and "body": {...} for form posts, and "cookie": "..." to
  * send one (e.g. a logged-in session).
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
 // phpcs:disable
@@ -25,8 +25,8 @@ $base   = getenv( 'BENCH_BASE' ) ?: 'http://127.0.0.1';
 $host   = getenv( 'BENCH_HOST' ) ?: '';
 $urls   = json_decode( (string) file_get_contents( $file ), true );
 
-function oe_bench_request( string $base, string $host, array $item ): array {
-	$headers = array( 'X-OE-Bench: 1' );
+function feriae_bench_request( string $base, string $host, array $item ): array {
+	$headers = array( 'X-Feriae-Bench: 1' );
 	if ( $host ) {
 		$headers[] = 'Host: ' . $host;
 		// Behind the router the site sees HTTPS; keep that so it doesn't redirect.
@@ -74,7 +74,7 @@ function oe_bench_request( string $base, string $host, array $item ): array {
 	return $out;
 }
 
-function oe_bench_median( array $values ): float {
+function feriae_bench_median( array $values ): float {
 	sort( $values );
 	$n = count( $values );
 	if ( ! $n ) {
@@ -86,23 +86,23 @@ function oe_bench_median( array $values ): float {
 $results = array();
 foreach ( $urls as $item ) {
 	for ( $i = 0; $i < $warmup; $i++ ) {
-		oe_bench_request( $base, $host, $item );
+		feriae_bench_request( $base, $host, $item );
 	}
 	$samples = array();
 	for ( $i = 0; $i < $runs; $i++ ) {
-		$samples[] = oe_bench_request( $base, $host, $item );
+		$samples[] = feriae_bench_request( $base, $host, $item );
 	}
 	$row = array(
 		'name'    => $item['name'],
 		'url'     => $item['url'],
 		'status'  => $samples[0]['status'],
 		'runs'    => $runs,
-		'ttfb'    => round( oe_bench_median( array_column( $samples, 'ttfb' ) ), 1 ),
-		'total'   => round( oe_bench_median( array_column( $samples, 'total' ) ), 1 ),
-		'db_ms'   => round( oe_bench_median( array_column( $samples, 'db_ms' ) ), 1 ),
-		'queries' => (int) oe_bench_median( array_column( $samples, 'queries' ) ),
-		'mem'     => round( oe_bench_median( array_column( $samples, 'mem' ) ), 1 ),
-		'bytes'   => (int) oe_bench_median( array_column( $samples, 'bytes' ) ),
+		'ttfb'    => round( feriae_bench_median( array_column( $samples, 'ttfb' ) ), 1 ),
+		'total'   => round( feriae_bench_median( array_column( $samples, 'total' ) ), 1 ),
+		'db_ms'   => round( feriae_bench_median( array_column( $samples, 'db_ms' ) ), 1 ),
+		'queries' => (int) feriae_bench_median( array_column( $samples, 'queries' ) ),
+		'mem'     => round( feriae_bench_median( array_column( $samples, 'mem' ) ), 1 ),
+		'bytes'   => (int) feriae_bench_median( array_column( $samples, 'bytes' ) ),
 	);
 	$results[] = $row;
 	fwrite( STDERR, sprintf( "%-34s %3d  ttfb %7.1f ms  php %7.1f ms  %4d queries  db %6.1f ms  %5.1f MB\n", $row['name'], $row['status'], $row['ttfb'], $row['total'], $row['queries'], $row['db_ms'], $row['mem'] ) );

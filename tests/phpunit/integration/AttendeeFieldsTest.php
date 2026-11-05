@@ -3,20 +3,20 @@
  * Attendee fields: definitions, validation, collection on RSVPs and orders,
  * and reporting (REST, CSV).
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Tests\Integration;
+namespace Feriae\Tests\Integration;
 
-use OpenEvents\Attendance\Attendees;
-use OpenEvents\Attendance\Fields;
-use OpenEvents\Attendance\Guard;
-use OpenEvents\Attendance\TicketTypes;
-use OpenEvents\Modules\Rsvp\Form;
-use OpenEvents\Modules\Rsvp\Service;
-use OpenEvents\Modules\Tickets\Checkout;
-use OpenEvents\Modules\Tickets\Module as TicketsModule;
-use OpenEvents\Tests\TestCase;
+use Feriae\Attendance\Attendees;
+use Feriae\Attendance\Fields;
+use Feriae\Attendance\Guard;
+use Feriae\Attendance\TicketTypes;
+use Feriae\Modules\Rsvp\Form;
+use Feriae\Modules\Rsvp\Service;
+use Feriae\Modules\Tickets\Checkout;
+use Feriae\Modules\Tickets\Module as TicketsModule;
+use Feriae\Tests\TestCase;
 
 final class AttendeeFieldsTest extends TestCase {
 
@@ -48,8 +48,8 @@ final class AttendeeFieldsTest extends TestCase {
 		$day = current_datetime()->modify( '+5 days' )->format( 'Y-m-d' );
 		$id  = $this->event(
 			array(
-				'_oe_start' => "{$day} 19:00:00",
-				'_oe_end'   => "{$day} 21:00:00",
+				'_feriae_start' => "{$day} 19:00:00",
+				'_feriae_end'   => "{$day} 21:00:00",
 			)
 		);
 		update_post_meta(
@@ -253,9 +253,9 @@ final class AttendeeFieldsTest extends TestCase {
 	public function test_form_renders_a_group_per_person(): void {
 		$event = $this->rsvp_event( array( 'attendee_details' => 'optional' ) );
 		$type  = ( new TicketTypes() )->find( $event, Service::TYPE_KEY );
-		$html  = Form::render( \OpenEvents\Content\Event::get( $event ), $type, new Service() );
+		$html  = Form::render( \Feriae\Content\Event::get( $event ), $type, new Service() );
 
-		$this->assertSame( 3, substr_count( $html, '<fieldset class="oe-person"' ) );
+		$this->assertSame( 3, substr_count( $html, '<fieldset class="feriae-person"' ) );
 		$this->assertStringContainsString( '<legend>Your details</legend>', $html );
 		$this->assertStringContainsString( '<legend>Guest 3</legend>', $html );
 		$this->assertStringContainsString( 'name="attendees[1][email]"', $html );
@@ -269,8 +269,8 @@ final class AttendeeFieldsTest extends TestCase {
 		$day                           = current_datetime()->modify( '+10 days' )->format( 'Y-m-d' );
 		$event                         = $this->event(
 			array(
-				'_oe_start' => "{$day} 19:00:00",
-				'_oe_end'   => "{$day} 21:00:00",
+				'_feriae_start' => "{$day} 19:00:00",
+				'_feriae_end'   => "{$day} 21:00:00",
 			)
 		);
 		update_post_meta(
@@ -357,7 +357,7 @@ final class AttendeeFieldsTest extends TestCase {
 		);
 
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
-		$request = new \WP_REST_Request( 'GET', '/openevents/v1/attendees' );
+		$request = new \WP_REST_Request( 'GET', '/feriae/v1/attendees' );
 		$request->set_param( 'event', $event );
 		$item = rest_get_server()->dispatch( $request )->get_data()[0];
 
@@ -388,7 +388,7 @@ final class AttendeeFieldsTest extends TestCase {
 
 	public function test_saved_question_sets(): void {
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
-		$request = new \WP_REST_Request( 'POST', '/openevents/v1/field-sets' );
+		$request = new \WP_REST_Request( 'POST', '/feriae/v1/field-sets' );
 		$request->set_body_params(
 			array(
 				'name'   => 'Kids programs',
@@ -420,12 +420,12 @@ final class AttendeeFieldsTest extends TestCase {
 		$count  = static fn( string $table, int $id ) => (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE event_id = %d", $id ) ); // phpcs:ignore WordPress.DB
 
 		wp_trash_post( $event );
-		$this->assertSame( 1, $count( \OpenEvents\Attendance\Schema::attendees(), $event ), 'Trash keeps attendees, so a restore is whole.' );
+		$this->assertSame( 1, $count( \Feriae\Attendance\Schema::attendees(), $event ), 'Trash keeps attendees, so a restore is whole.' );
 
 		wp_delete_post( $event, true );
-		$this->assertSame( 0, $count( \OpenEvents\Attendance\Schema::attendees(), $event ) );
-		$this->assertSame( 0, $count( \OpenEvents\Attendance\Schema::ticket_types(), $event ) );
-		$this->assertSame( 1, $count( \OpenEvents\Attendance\Schema::attendees(), $keep ), 'Other events are untouched.' );
+		$this->assertSame( 0, $count( \Feriae\Attendance\Schema::attendees(), $event ) );
+		$this->assertSame( 0, $count( \Feriae\Attendance\Schema::ticket_types(), $event ) );
+		$this->assertSame( 1, $count( \Feriae\Attendance\Schema::attendees(), $keep ), 'Other events are untouched.' );
 	}
 
 	public function test_deleting_an_event_deletes_its_orders(): void {
@@ -433,8 +433,8 @@ final class AttendeeFieldsTest extends TestCase {
 		$day   = current_datetime()->modify( '+10 days' )->format( 'Y-m-d' );
 		$event = $this->event(
 			array(
-				'_oe_start' => "{$day} 19:00:00",
-				'_oe_end'   => "{$day} 21:00:00",
+				'_feriae_start' => "{$day} 19:00:00",
+				'_feriae_end'   => "{$day} 21:00:00",
 			)
 		);
 		update_post_meta(
@@ -463,9 +463,9 @@ final class AttendeeFieldsTest extends TestCase {
 		$this->assertTrue( $result->ok, $result->message );
 
 		wp_delete_post( $event, true );
-		foreach ( array( \OpenEvents\Attendance\Schema::orders(), \OpenEvents\Attendance\Schema::attendees(), \OpenEvents\Attendance\Schema::ticket_types() ) as $table ) {
+		foreach ( array( \Feriae\Attendance\Schema::orders(), \Feriae\Attendance\Schema::attendees(), \Feriae\Attendance\Schema::ticket_types() ) as $table ) {
 			$this->assertSame( 0, (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE event_id = %d", $event ) ), $table ); // phpcs:ignore WordPress.DB
 		}
-		$this->assertSame( 0, (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . \OpenEvents\Attendance\Schema::order_items() ), 'Order lines go with their orders.' ); // phpcs:ignore WordPress.DB
+		$this->assertSame( 0, (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . \Feriae\Attendance\Schema::order_items() ), 'Order lines go with their orders.' ); // phpcs:ignore WordPress.DB
 	}
 }

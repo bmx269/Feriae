@@ -8,11 +8,11 @@ test.describe( 'Tickets', () => {
 	} ) => {
 		await page.goto( '/events/spring-concert/' );
 		// The checkout form (the page also has a waitlist form for sold-out types).
-		const tickets = page.locator( '.oe-tickets__form:not(.oe-waitlist)' );
+		const tickets = page.locator( '.feriae-tickets__form:not(.feriae-waitlist)' );
 
 		await tickets.getByLabel( 'Adult' ).selectOption( '2' );
 		await tickets.getByLabel( 'Under 12' ).selectOption( '1' );
-		await expect( tickets.locator( '.oe-tickets__total' ) ).toContainText(
+		await expect( tickets.locator( '.feriae-tickets__total' ) ).toContainText(
 			'$50.00'
 		);
 
@@ -24,8 +24,8 @@ test.describe( 'Tickets', () => {
 		await humanPause( page );
 		await tickets.getByRole( 'button', { name: 'Get tickets' } ).click();
 
-		await expect( page ).toHaveURL( /oe_order_token=/ );
-		const order = page.locator( '.oe-tickets__order' );
+		await expect( page ).toHaveURL( /feriae_order_token=/ );
+		const order = page.locator( '.feriae-tickets__order' );
 		await expect( order ).toContainText( 'Reserved — payment due' );
 		await expect( order.locator( 'code' ) ).toHaveCount( 3 );
 	} );
@@ -37,7 +37,7 @@ test.describe( 'Tickets', () => {
 		const page = await context.newPage();
 		await page.goto( '/events/spring-concert/' );
 		// The checkout form (the page also has a waitlist form for sold-out types).
-		const tickets = page.locator( '.oe-tickets__form:not(.oe-waitlist)' );
+		const tickets = page.locator( '.feriae-tickets__form:not(.feriae-waitlist)' );
 		await tickets.getByLabel( 'Student' ).selectOption( '1' );
 		await tickets.getByLabel( 'Name' ).fill( 'No Script' );
 		await tickets
@@ -46,8 +46,8 @@ test.describe( 'Tickets', () => {
 		await humanPause( page );
 		await tickets.getByRole( 'button', { name: 'Get tickets' } ).click();
 
-		await expect( page ).toHaveURL( /oe_checkout=done/ );
-		await expect( page.locator( '.oe-tickets__order code' ) ).toHaveCount(
+		await expect( page ).toHaveURL( /feriae_checkout=done/ );
+		await expect( page.locator( '.feriae-tickets__order code' ) ).toHaveCount(
 			1
 		);
 		await context.close();
@@ -57,7 +57,7 @@ test.describe( 'Tickets', () => {
 		page,
 	} ) => {
 		await page.goto(
-			'/wp-admin/edit.php?post_type=oe_event&page=openevents-orders'
+			'/wp-admin/edit.php?post_type=feriae_event&page=feriae-orders'
 		);
 		const table = page.locator( '.dataviews-view-table' );
 		const row = table.locator( 'tr' ).filter( {
@@ -75,7 +75,7 @@ test.describe( 'Tickets', () => {
 		page,
 	} ) => {
 		await page.goto(
-			'/wp-admin/edit.php?post_type=oe_event&page=openevents-settings'
+			'/wp-admin/edit.php?post_type=feriae_event&page=feriae-settings'
 		);
 		await page.getByRole( 'tab', { name: 'Tickets' } ).click();
 		await expect(

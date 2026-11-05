@@ -2,21 +2,21 @@
 /**
  * Tickets module.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Tickets;
+namespace Feriae\Modules\Tickets;
 
-use OpenEvents\Attendance\Money;
-use OpenEvents\Attendance\Schema;
-use OpenEvents\Attendance\TicketTypes;
-use OpenEvents\Content\Event;
-use OpenEvents\Content\Meta;
-use OpenEvents\Modules\AbstractModule;
-use OpenEvents\Occurrences\Occurrence;
+use Feriae\Attendance\Money;
+use Feriae\Attendance\Schema;
+use Feriae\Attendance\TicketTypes;
+use Feriae\Content\Event;
+use Feriae\Content\Meta;
+use Feriae\Modules\AbstractModule;
+use Feriae\Occurrences\Occurrence;
 
-use const OpenEvents\PLUGIN_DIR;
-use const OpenEvents\PLUGIN_FILE;
+use const Feriae\PLUGIN_DIR;
+use const Feriae\PLUGIN_FILE;
 
 /**
  * Free and paid tickets: ticket types in the editor, checkout in event
@@ -25,8 +25,8 @@ use const OpenEvents\PLUGIN_FILE;
  */
 final class Module extends AbstractModule {
 
-	public const META_KEY   = '_oe_tickets';
-	public const CRON_HOOK  = 'openevents_expire_orders';
+	public const META_KEY   = '_feriae_tickets';
+	public const CRON_HOOK  = 'feriae_expire_orders';
 	public const KEY_PREFIX = 'tkt-';
 
 	public function id(): string {
@@ -34,11 +34,11 @@ final class Module extends AbstractModule {
 	}
 
 	public function label(): string {
-		return __( 'Tickets', 'openevents' );
+		return __( 'Tickets', 'feriae' );
 	}
 
 	public function description(): string {
-		return __( 'Sell or give away tickets: several ticket types per event, capacity limits, Stripe, PayPal, or pay at the door, with no platform fees.', 'openevents' );
+		return __( 'Sell or give away tickets: several ticket types per event, capacity limits, Stripe, PayPal, or pay at the door, with no platform fees.', 'feriae' );
 	}
 
 	public function install(): void {
@@ -46,21 +46,21 @@ final class Module extends AbstractModule {
 	}
 
 	public function boot(): void {
-		\OpenEvents\Attendance\FieldSets::register();
+		\Feriae\Attendance\FieldSets::register();
 		Schema::maybe_install();
-		\OpenEvents\Attendance\WaitlistService::register();
+		\Feriae\Attendance\WaitlistService::register();
 
-		add_filter( 'openevents/meta_fields', array( $this, 'meta_fields' ), 10, 2 );
+		add_filter( 'feriae/meta_fields', array( $this, 'meta_fields' ), 10, 2 );
 		add_action( 'added_post_meta', array( $this, 'on_meta_change' ), 10, 3 );
 		add_action( 'updated_post_meta', array( $this, 'on_meta_change' ), 10, 3 );
 		add_action( 'deleted_post_meta', array( $this, 'on_meta_change' ), 10, 3 );
 
-		add_filter( 'openevents/event_details/sections', array( $this, 'section' ), 20, 3 );
-		add_filter( 'openevents/series/sections', array( $this, 'series_section' ), 20, 2 );
+		add_filter( 'feriae/event_details/sections', array( $this, 'section' ), 20, 3 );
+		add_filter( 'feriae/series/sections', array( $this, 'series_section' ), 20, 2 );
 		add_action( 'init', array( $this, 'register_assets' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_on_event_pages' ) );
-		add_action( 'admin_post_openevents_checkout', array( $this, 'handle_form' ) );
-		add_action( 'admin_post_nopriv_openevents_checkout', array( $this, 'handle_form' ) );
+		add_action( 'admin_post_feriae_checkout', array( $this, 'handle_form' ) );
+		add_action( 'admin_post_nopriv_feriae_checkout', array( $this, 'handle_form' ) );
 		add_filter( 'wp_robots', array( $this, 'robots' ) );
 		add_action( 'template_redirect', array( $this, 'no_cache_order_pages' ) );
 
@@ -68,14 +68,14 @@ final class Module extends AbstractModule {
 		add_filter( 'cron_schedules', array( self::class, 'cron_schedule' ) ); // phpcs:ignore WordPress.WP.CronInterval.CronSchedulesInterval
 		add_action( self::CRON_HOOK, array( $this, 'expire_orders' ) );
 		if ( ! wp_next_scheduled( self::CRON_HOOK ) ) {
-			wp_schedule_event( time() + 300, 'openevents_five_minutes', self::CRON_HOOK );
+			wp_schedule_event( time() + 300, 'feriae_five_minutes', self::CRON_HOOK );
 		}
 
 		( new Rest() )->register();
 		if ( is_admin() ) {
 			( new Admin() )->register();
 		}
-		add_action( 'openevents/uninstall', array( self::class, 'uninstall' ) );
+		add_action( 'feriae/uninstall', array( self::class, 'uninstall' ) );
 	}
 
 	/**
@@ -83,9 +83,9 @@ final class Module extends AbstractModule {
 	 * @return array<string, array<string, int|string>>
 	 */
 	public static function cron_schedule( array $schedules ): array {
-		$schedules['openevents_five_minutes'] = array(
+		$schedules['feriae_five_minutes'] = array(
 			'interval' => 300,
-			'display'  => __( 'Every five minutes', 'openevents' ),
+			'display'  => __( 'Every five minutes', 'feriae' ),
 		);
 		return $schedules;
 	}
@@ -100,14 +100,14 @@ final class Module extends AbstractModule {
 	}
 
 	/**
-	 * Registers the _oe_tickets list on event post types.
+	 * Registers the _feriae_tickets list on event post types.
 	 *
 	 * @param array<string, array<string, mixed>> $fields    Meta fields.
 	 * @param string                              $post_type Post type.
 	 * @return array<string, array<string, mixed>>
 	 */
 	public function meta_fields( array $fields, string $post_type ): array {
-		if ( ! in_array( $post_type, openevents_ticketed_post_types(), true ) ) {
+		if ( ! in_array( $post_type, feriae_ticketed_post_types(), true ) ) {
 			return $fields;
 		}
 		$fields[ self::META_KEY ] = array(
@@ -131,9 +131,9 @@ final class Module extends AbstractModule {
 							'waitlist'      => array( 'type' => 'boolean' ),
 							'attendee_details' => array(
 								'type' => 'string',
-								'enum' => \OpenEvents\Attendance\Fields::DETAILS,
+								'enum' => \Feriae\Attendance\Fields::DETAILS,
 							),
-							'fields'        => \OpenEvents\Attendance\Fields::schema(),
+							'fields'        => \Feriae\Attendance\Fields::schema(),
 						),
 						'additionalProperties' => false,
 					),
@@ -175,8 +175,8 @@ final class Module extends AbstractModule {
 				'sale_start'    => Meta::sanitize_datetime( $type['sale_start'] ?? '' ),
 				'sale_end'      => Meta::sanitize_datetime( $type['sale_end'] ?? '' ),
 				'waitlist'      => ! empty( $type['waitlist'] ),
-				'attendee_details' => \OpenEvents\Attendance\Fields::sanitize_details( $type['attendee_details'] ?? 'none' ),
-				'fields'        => \OpenEvents\Attendance\Fields::sanitize( $type['fields'] ?? array() ),
+				'attendee_details' => \Feriae\Attendance\Fields::sanitize_details( $type['attendee_details'] ?? 'none' ),
+				'fields'        => \Feriae\Attendance\Fields::sanitize( $type['fields'] ?? array() ),
 			);
 		}
 		return $out;
@@ -186,7 +186,7 @@ final class Module extends AbstractModule {
 	 * @param int|int[] $meta_ids Meta id(s); unused.
 	 */
 	public function on_meta_change( int|array $meta_ids, int $post_id, string $meta_key ): void {
-		if ( in_array( $meta_key, array( self::META_KEY, '_oe_timezone' ), true ) && in_array( (string) get_post_type( $post_id ), openevents_ticketed_post_types(), true ) ) {
+		if ( in_array( $meta_key, array( self::META_KEY, '_feriae_timezone' ), true ) && in_array( (string) get_post_type( $post_id ), feriae_ticketed_post_types(), true ) ) {
 			self::sync( $post_id );
 		}
 	}
@@ -199,7 +199,7 @@ final class Module extends AbstractModule {
 		global $wpdb;
 		$post_type = (string) get_post_type( $event_id );
 		// Series are accepted even before the series module boots (setup, imports).
-		if ( ! in_array( $post_type, openevents_ticketed_post_types(), true ) && \OpenEvents\Modules\Series\Module::POST_TYPE !== $post_type ) {
+		if ( ! in_array( $post_type, feriae_ticketed_post_types(), true ) && \Feriae\Modules\Series\Module::POST_TYPE !== $post_type ) {
 			return;
 		}
 		// Series have no timezone of their own: sale dates use the site's.
@@ -239,8 +239,8 @@ final class Module extends AbstractModule {
 						'max_per_order'  => (int) $type['max_per_order'],
 						'sale_start_utc' => (string) $to_utc( (string) ( $type['sale_start'] ?? '' ) ),
 						'waitlist'       => ! empty( $type['waitlist'] ),
-						'attendee_details' => \OpenEvents\Attendance\Fields::sanitize_details( $type['attendee_details'] ?? 'none' ),
-						'fields'         => \OpenEvents\Attendance\Fields::sanitize( $type['fields'] ?? array() ),
+						'attendee_details' => \Feriae\Attendance\Fields::sanitize_details( $type['attendee_details'] ?? 'none' ),
+						'fields'         => \Feriae\Attendance\Fields::sanitize( $type['fields'] ?? array() ),
 					),
 				)
 			);
@@ -259,13 +259,13 @@ final class Module extends AbstractModule {
 		$asset_file = PLUGIN_DIR . '/build/modules/tickets/view.asset.php';
 		if ( is_readable( $asset_file ) ) {
 			$asset = require $asset_file;
-			wp_register_script_module( 'openevents-tickets', plugins_url( 'build/modules/tickets/view.js', PLUGIN_FILE ), $asset['dependencies'], $asset['version'] );
+			wp_register_script_module( 'feriae-tickets', plugins_url( 'build/modules/tickets/view.js', PLUGIN_FILE ), $asset['dependencies'], $asset['version'] );
 		}
 	}
 
 	public function enqueue_on_event_pages(): void {
-		if ( is_singular( openevents_ticketed_post_types() ) && ( new Checkout() )->ticket_types( get_queried_object_id() ) ) {
-			wp_enqueue_script_module( 'openevents-tickets' );
+		if ( is_singular( feriae_ticketed_post_types() ) && ( new Checkout() )->ticket_types( get_queried_object_id() ) ) {
+			wp_enqueue_script_module( 'feriae-tickets' );
 		}
 	}
 
@@ -277,9 +277,9 @@ final class Module extends AbstractModule {
 		$checkout = new Checkout();
 		$types    = $checkout->ticket_types( $event->id(), false, $this->sequence_for_page( $event->id(), $occurrence ) );
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$token = sanitize_text_field( wp_unslash( $_GET['oe_order_token'] ?? '' ) );
+		$token = sanitize_text_field( wp_unslash( $_GET['feriae_order_token'] ?? '' ) );
 		if ( $types || '' !== $token ) {
-			wp_enqueue_script_module( 'openevents-tickets' );
+			wp_enqueue_script_module( 'feriae-tickets' );
 			$sections['tickets'] = TicketForm::render( $event->id(), $types, $checkout, $token );
 		}
 		return $sections;
@@ -291,9 +291,9 @@ final class Module extends AbstractModule {
 	 */
 	private function sequence_for_page( int $event_id, Occurrence $occurrence ): int {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only display state.
-		$wl_token = sanitize_text_field( wp_unslash( $_GET['oe_waitlist'] ?? '' ) );
-		$entry    = '' !== $wl_token ? ( new \OpenEvents\Attendance\Waitlist() )->by_token( $wl_token ) : null;
-		$type     = $entry && $entry->event_id === $event_id ? ( new \OpenEvents\Attendance\TicketTypes() )->get( $entry->ticket_type_id ) : null;
+		$wl_token = sanitize_text_field( wp_unslash( $_GET['feriae_waitlist'] ?? '' ) );
+		$entry    = '' !== $wl_token ? ( new \Feriae\Attendance\Waitlist() )->by_token( $wl_token ) : null;
+		$type     = $entry && $entry->event_id === $event_id ? ( new \Feriae\Attendance\TicketTypes() )->get( $entry->ticket_type_id ) : null;
 		if ( $type && 'paid' === $type->kind ) {
 			return $type->sequence;
 		}
@@ -310,9 +310,9 @@ final class Module extends AbstractModule {
 		$checkout = new Checkout();
 		$types    = $checkout->ticket_types( $series_id );
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$token = sanitize_text_field( wp_unslash( $_GET['oe_order_token'] ?? '' ) );
+		$token = sanitize_text_field( wp_unslash( $_GET['feriae_order_token'] ?? '' ) );
 		if ( $types || '' !== $token ) {
-			wp_enqueue_script_module( 'openevents-tickets' );
+			wp_enqueue_script_module( 'feriae-tickets' );
 			$sections['tickets'] = TicketForm::render( $series_id, $types, $checkout, $token );
 		}
 		return $sections;
@@ -336,7 +336,7 @@ final class Module extends AbstractModule {
 				'waitlist_token' => sanitize_text_field( wp_unslash( $_POST['waitlist_token'] ?? '' ) ),
 				'website' => wp_unslash( $_POST['website'] ?? '' ),
 				'ts'      => sanitize_text_field( wp_unslash( $_POST['ts'] ?? '' ) ),
-				'ip'      => \OpenEvents\Attendance\Guard::client_ip(),
+				'ip'      => \Feriae\Attendance\Guard::client_ip(),
 			)
 		);
 		// phpcs:enable
@@ -346,9 +346,9 @@ final class Module extends AbstractModule {
 			exit;
 		}
 		// Back to the date the form was for.
-		$occurrence = openevents()->occurrences()->by_sequence( $event_id, absint( $_POST['sequence'] ?? 0 ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
-		$page       = $occurrence ? openevents_occurrence_url( $occurrence ) : (string) get_permalink( $event_id );
-		wp_safe_redirect( add_query_arg( array( 'oe_checkout' => 'error', 'oe_checkout_code' => $result->code ), $page ) . '#tickets', 303 );
+		$occurrence = feriae()->occurrences()->by_sequence( $event_id, absint( $_POST['sequence'] ?? 0 ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		$page       = $occurrence ? feriae_occurrence_url( $occurrence ) : (string) get_permalink( $event_id );
+		wp_safe_redirect( add_query_arg( array( 'feriae_checkout' => 'error', 'feriae_checkout_code' => $result->code ), $page ) . '#tickets', 303 );
 		exit;
 	}
 
@@ -359,7 +359,7 @@ final class Module extends AbstractModule {
 	public static function remember_order( CheckoutResult $result ): void {
 		if ( $result->order && '' !== $result->token && ! headers_sent() ) {
 			setcookie(
-				'oe_order_' . $result->order->uuid,
+				'feriae_order_' . $result->order->uuid,
 				$result->token,
 				array(
 					'expires'  => time() + DAY_IN_SECONDS,
@@ -378,7 +378,7 @@ final class Module extends AbstractModule {
 	 */
 	public function robots( array $robots ): array {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		if ( isset( $_GET['oe_checkout'] ) || isset( $_GET['oe_order_token'] ) ) {
+		if ( isset( $_GET['feriae_checkout'] ) || isset( $_GET['feriae_order_token'] ) ) {
 			$robots['noindex'] = true;
 		}
 		return $robots;
@@ -386,7 +386,7 @@ final class Module extends AbstractModule {
 
 	public function no_cache_order_pages(): void {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		if ( isset( $_GET['oe_checkout'] ) || isset( $_GET['oe_order_token'] ) ) {
+		if ( isset( $_GET['feriae_checkout'] ) || isset( $_GET['feriae_order_token'] ) ) {
 			nocache_headers();
 		}
 	}

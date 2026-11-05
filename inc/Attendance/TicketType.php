@@ -2,13 +2,13 @@
 /**
  * Ticket type value object.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Attendance;
+namespace Feriae\Attendance;
 
 /**
- * A row in oe_ticket_types: an RSVP or a paid ticket with optional capacity.
+ * A row in feriae_ticket_types: an RSVP or a paid ticket with optional capacity.
  */
 final class TicketType {
 

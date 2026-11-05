@@ -2,20 +2,20 @@
 /**
  * Event status: scheduled, cancelled, or postponed.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Content;
+namespace Feriae\Content;
 
 use DateTimeImmutable;
-use OpenEvents\Occurrences\Occurrence;
+use Feriae\Occurrences\Occurrence;
 
 /**
  * Whether an event (or one date of a repeating event) is still happening.
  *
- * - `_oe_status` and `_oe_status_reason`: the whole event's status and an
+ * - `_feriae_status` and `_feriae_status_reason`: the whole event's status and an
  *   optional note ("Postponed because of the storm; new date to follow").
- * - `_oe_date_status`: one date of a repeating event cancelled or postponed
+ * - `_feriae_date_status`: one date of a repeating event cancelled or postponed
  *   on its own, `[ { date: "Y-m-d", status, reason } ]`, keyed by local date
  *   like skipped dates (iCal's STATUS on a RECURRENCE-ID instance).
  *
@@ -34,9 +34,9 @@ final class EventStatus {
 
 	public static function label( string $status ): string {
 		return match ( $status ) {
-			self::CANCELLED => __( 'Cancelled', 'openevents' ),
-			self::POSTPONED => __( 'Postponed', 'openevents' ),
-			default         => __( 'Scheduled', 'openevents' ),
+			self::CANCELLED => __( 'Cancelled', 'feriae' ),
+			self::POSTPONED => __( 'Postponed', 'feriae' ),
+			default         => __( 'Scheduled', 'feriae' ),
 		};
 	}
 
@@ -90,22 +90,22 @@ final class EventStatus {
 	 */
 	public static function set( int $event_id, string $status, string $reason = '', string $date = '' ): true|\WP_Error {
 		if ( ! in_array( $status, self::ALL, true ) ) {
-			return new \WP_Error( 'openevents_invalid_status', __( 'Status must be scheduled, cancelled, or postponed.', 'openevents' ) );
+			return new \WP_Error( 'feriae_invalid_status', __( 'Status must be scheduled, cancelled, or postponed.', 'feriae' ) );
 		}
-		$event = openevents_get_event( $event_id );
+		$event = feriae_get_event( $event_id );
 		if ( ! $event ) {
-			return new \WP_Error( 'openevents_not_event', __( 'That is not an event.', 'openevents' ) );
+			return new \WP_Error( 'feriae_not_event', __( 'That is not an event.', 'feriae' ) );
 		}
 		$reason = self::sanitize_reason( $reason );
 		if ( '' === $date ) {
-			update_post_meta( $event_id, '_oe_status', $status );
-			update_post_meta( $event_id, '_oe_status_reason', self::SCHEDULED === $status ? '' : $reason );
+			update_post_meta( $event_id, '_feriae_status', $status );
+			update_post_meta( $event_id, '_feriae_status_reason', self::SCHEDULED === $status ? '' : $reason );
 			return true;
 		}
-		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date ) || ! openevents()->occurrences()->on_date( $event_id, $date ) ) {
-			return new \WP_Error( 'openevents_invalid_date', __( 'The event isn’t on that date.', 'openevents' ) );
+		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date ) || ! feriae()->occurrences()->on_date( $event_id, $date ) ) {
+			return new \WP_Error( 'feriae_invalid_date', __( 'The event isn’t on that date.', 'feriae' ) );
 		}
-		$dates = array_values( array_filter( self::sanitize_dates( $event->meta( '_oe_date_status' ) ), static fn( array $entry ) => $entry['date'] !== $date ) );
+		$dates = array_values( array_filter( self::sanitize_dates( $event->meta( '_feriae_date_status' ) ), static fn( array $entry ) => $entry['date'] !== $date ) );
 		if ( self::SCHEDULED !== $status ) {
 			$dates[] = array(
 				'date'   => $date,
@@ -113,7 +113,7 @@ final class EventStatus {
 				'reason' => $reason,
 			);
 		}
-		update_post_meta( $event_id, '_oe_date_status', self::sanitize_dates( $dates ) );
+		update_post_meta( $event_id, '_feriae_date_status', self::sanitize_dates( $dates ) );
 		return true;
 	}
 
@@ -121,7 +121,7 @@ final class EventStatus {
 	 * The event's own status.
 	 */
 	public static function for_event( Event $event ): string {
-		return self::sanitize( $event->meta( '_oe_status' ) );
+		return self::sanitize( $event->meta( '_feriae_status' ) );
 	}
 
 	/**
@@ -136,11 +136,11 @@ final class EventStatus {
 		if ( self::SCHEDULED !== $status ) {
 			return array(
 				'status' => $status,
-				'reason' => self::sanitize_reason( $event->meta( '_oe_status_reason' ) ),
+				'reason' => self::sanitize_reason( $event->meta( '_feriae_status_reason' ) ),
 			);
 		}
 		$day = $start->format( 'Y-m-d' );
-		foreach ( self::sanitize_dates( $event->meta( '_oe_date_status' ) ) as $entry ) {
+		foreach ( self::sanitize_dates( $event->meta( '_feriae_date_status' ) ) as $entry ) {
 			if ( $entry['date'] === $day ) {
 				return array(
 					'status' => $entry['status'],

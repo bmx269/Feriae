@@ -25,18 +25,18 @@ import {
 	useState,
 } from '@wordpress/element';
 
-const PATH = '/openevents/v1/feeds';
+const PATH = '/feriae/v1/feeds';
 
 const FREQUENCIES = [
-	{ value: 'hourly', label: __( 'Every hour', 'openevents' ) },
-	{ value: 'daily', label: __( 'Every day', 'openevents' ) },
-	{ value: 'weekly', label: __( 'Every week', 'openevents' ) },
-	{ value: 'manual', label: __( 'Only when I sync', 'openevents' ) },
+	{ value: 'hourly', label: __( 'Every hour', 'feriae' ) },
+	{ value: 'daily', label: __( 'Every day', 'feriae' ) },
+	{ value: 'weekly', label: __( 'Every week', 'feriae' ) },
+	{ value: 'manual', label: __( 'Only when I sync', 'feriae' ) },
 ];
 
 const STATUSES = [
-	{ value: 'publish', label: __( 'Publish them', 'openevents' ) },
-	{ value: 'draft', label: __( 'Save as drafts', 'openevents' ) },
+	{ value: 'publish', label: __( 'Publish them', 'feriae' ) },
+	{ value: 'draft', label: __( 'Save as drafts', 'feriae' ) },
 ];
 
 const when = ( utc ) =>
@@ -62,16 +62,16 @@ function Options( { value, onChange, config, withFrequency } ) {
 		<Stack direction="row" gap="md" wrap="wrap">
 			{ withFrequency && (
 				<SelectControl
-					label={ __( 'Sync', 'openevents' ) }
+					label={ __( 'Sync', 'feriae' ) }
 					items={ FREQUENCIES }
 					value={ value.frequency }
 					onValueChange={ set( 'frequency' ) }
 				/>
 			) }
 			<SelectControl
-				label={ __( 'Category', 'openevents' ) }
+				label={ __( 'Category', 'feriae' ) }
 				items={ [
-					{ value: '0', label: __( 'None', 'openevents' ) },
+					{ value: '0', label: __( 'None', 'feriae' ) },
 					...config.categories.map( ( c ) => ( {
 						value: String( c.value ),
 						label: c.label,
@@ -81,14 +81,14 @@ function Options( { value, onChange, config, withFrequency } ) {
 				onValueChange={ set( 'category' ) }
 			/>
 			<SelectControl
-				label={ __( 'New events', 'openevents' ) }
+				label={ __( 'New events', 'feriae' ) }
 				items={ STATUSES }
 				value={ value.post_status }
 				onValueChange={ set( 'post_status' ) }
 			/>
 			{ config.types.length > 1 && (
 				<SelectControl
-					label={ __( 'Create as', 'openevents' ) }
+					label={ __( 'Create as', 'feriae' ) }
 					items={ config.types }
 					value={ value.post_type }
 					onValueChange={ set( 'post_type' ) }
@@ -130,16 +130,16 @@ function FeedForm( { initial, config, editing, submit, onSubmit } ) {
 		>
 			<Stack direction="column" gap="md">
 				<InputControl
-					label={ __( 'iCal address', 'openevents' ) }
+					label={ __( 'iCal address', 'feriae' ) }
 					description={
 						editing
 							? __(
 									'Leave blank to keep the current address.',
-									'openevents'
+									'feriae'
 							  )
 							: __(
 									'Google Calendar: Settings → your calendar → Integrate calendar → “Public address in iCal format”, or the secret address for a private calendar. Outlook: Publish a calendar → ICS link. Apple Calendar: Share → Public Calendar.',
-									'openevents'
+									'feriae'
 							  )
 					}
 					type="url"
@@ -150,11 +150,8 @@ function FeedForm( { initial, config, editing, submit, onSubmit } ) {
 					onValueChange={ ( url ) => setValues( { ...values, url } ) }
 				/>
 				<InputControl
-					label={ __( 'Name', 'openevents' ) }
-					description={ __(
-						'Shown on this screen only.',
-						'openevents'
-					) }
+					label={ __( 'Name', 'feriae' ) }
+					description={ __( 'Shown on this screen only.', 'feriae' ) }
 					value={ values.name }
 					onValueChange={ ( name ) =>
 						setValues( { ...values, name } )
@@ -171,7 +168,7 @@ function FeedForm( { initial, config, editing, submit, onSubmit } ) {
 						type="submit"
 						disabled={ busy || ( ! editing && ! values.url ) }
 					>
-						{ busy ? __( 'Importing…', 'openevents' ) : submit }
+						{ busy ? __( 'Importing…', 'feriae' ) : submit }
 					</Button>
 				</div>
 			</Stack>
@@ -203,7 +200,7 @@ function FileImport( { config, onDone } ) {
 				ok: false,
 				message: __(
 					'That file is larger than 5 MB. Import a shorter date range.',
-					'openevents'
+					'feriae'
 				),
 			} );
 			return;
@@ -226,9 +223,9 @@ function FileImport( { config, onDone } ) {
 	return (
 		<form onSubmit={ run }>
 			<Stack direction="column" gap="md">
-				<div className="oe-file-field">
+				<div className="feriae-file-field">
 					<label htmlFor={ id }>
-						{ __( 'iCal file (.ics)', 'openevents' ) }
+						{ __( 'iCal file (.ics)', 'feriae' ) }
 					</label>
 					<input
 						id={ id }
@@ -247,8 +244,8 @@ function FileImport( { config, onDone } ) {
 				<div>
 					<Button type="submit" disabled={ busy || ! file }>
 						{ busy
-							? __( 'Importing…', 'openevents' )
-							: __( 'Import file', 'openevents' ) }
+							? __( 'Importing…', 'feriae' )
+							: __( 'Import file', 'feriae' ) }
 					</Button>
 				</div>
 			</Stack>
@@ -312,7 +309,7 @@ export default function FeedsScreen( { root } ) {
 					? noticeFor( feed.last )
 					: {
 							intent: 'success',
-							text: __( 'Calendar added.', 'openevents' ),
+							text: __( 'Calendar added.', 'feriae' ),
 					  }
 			);
 			reload();
@@ -342,49 +339,48 @@ export default function FeedsScreen( { root } ) {
 		() => [
 			{
 				id: 'name',
-				label: __( 'Calendar', 'openevents' ),
+				label: __( 'Calendar', 'feriae' ),
 				enableHiding: false,
 				enableGlobalSearch: true,
 			},
 			{
 				id: 'address',
-				label: __( 'Address', 'openevents' ),
+				label: __( 'Address', 'feriae' ),
 				render: ( { item } ) =>
-					item.address ||
-					__( 'Needs its address again', 'openevents' ),
+					item.address || __( 'Needs its address again', 'feriae' ),
 				enableSorting: false,
 			},
 			{
 				id: 'events',
-				label: __( 'Events', 'openevents' ),
+				label: __( 'Events', 'feriae' ),
 				type: 'integer',
 			},
 			{
 				id: 'category_name',
-				label: __( 'Category', 'openevents' ),
+				label: __( 'Category', 'feriae' ),
 				render: ( { item } ) => item.category_name || '—',
 			},
 			{
 				id: 'frequency',
-				label: __( 'Sync', 'openevents' ),
+				label: __( 'Sync', 'feriae' ),
 				elements: FREQUENCIES,
 				enableSorting: false,
 			},
 			{
 				id: 'last',
-				label: __( 'Last sync', 'openevents' ),
+				label: __( 'Last sync', 'feriae' ),
 				getValue: ( { item } ) => item.last?.time || '',
 				render: ( { item } ) =>
 					item.last ? (
 						<span
 							className={
-								item.last.ok ? undefined : 'oe-feed-error'
+								item.last.ok ? undefined : 'feriae-feed-error'
 							}
 						>
 							{ when( item.last.time ) }: { item.last.message }
 						</span>
 					) : (
-						__( 'Not yet', 'openevents' )
+						__( 'Not yet', 'feriae' )
 					),
 			},
 		],
@@ -395,15 +391,15 @@ export default function FeedsScreen( { root } ) {
 		() => [
 			{
 				id: 'sync',
-				label: __( 'Sync now', 'openevents' ),
+				label: __( 'Sync now', 'feriae' ),
 				isPrimary: true,
 				supportsBulk: true,
 				callback: sync,
 			},
 			{
 				id: 'edit',
-				label: __( 'Edit', 'openevents' ),
-				modalHeader: __( 'Edit calendar', 'openevents' ),
+				label: __( 'Edit', 'feriae' ),
+				modalHeader: __( 'Edit calendar', 'feriae' ),
 				RenderModal: ( { items, closeModal } ) => (
 					<FeedForm
 						config={ config }
@@ -413,7 +409,7 @@ export default function FeedsScreen( { root } ) {
 							url: '',
 							category: String( items[ 0 ].category ),
 						} }
-						submit={ __( 'Save', 'openevents' ) }
+						submit={ __( 'Save', 'feriae' ) }
 						onSubmit={ async ( values ) => {
 							try {
 								await apiFetch( {
@@ -423,7 +419,7 @@ export default function FeedsScreen( { root } ) {
 								} );
 								setNotice( {
 									intent: 'success',
-									text: __( 'Calendar saved.', 'openevents' ),
+									text: __( 'Calendar saved.', 'feriae' ),
 								} );
 								closeModal();
 								reload();
@@ -442,9 +438,9 @@ export default function FeedsScreen( { root } ) {
 			},
 			{
 				id: 'delete',
-				label: __( 'Remove', 'openevents' ),
+				label: __( 'Remove', 'feriae' ),
 				isDestructive: true,
-				modalHeader: __( 'Remove calendar', 'openevents' ),
+				modalHeader: __( 'Remove calendar', 'feriae' ),
 				RenderModal: ( { items, closeModal } ) => {
 					const remove = async ( events ) => {
 						try {
@@ -454,7 +450,7 @@ export default function FeedsScreen( { root } ) {
 							} );
 							setNotice( {
 								intent: 'success',
-								text: __( 'Calendar removed.', 'openevents' ),
+								text: __( 'Calendar removed.', 'feriae' ),
 							} );
 						} catch ( e ) {
 							setNotice( { intent: 'error', text: e.message } );
@@ -469,7 +465,7 @@ export default function FeedsScreen( { root } ) {
 									/* translators: 1: calendar name, 2: number of events */
 									__(
 										'Stop importing from “%1$s”? Its %2$d events can stay as ordinary events, or go to the trash.',
-										'openevents'
+										'feriae'
 									),
 									items[ 0 ].name,
 									items[ 0 ].events
@@ -485,16 +481,13 @@ export default function FeedsScreen( { root } ) {
 									variant="outline"
 									onClick={ closeModal }
 								>
-									{ __( 'Cancel', 'openevents' ) }
+									{ __( 'Cancel', 'feriae' ) }
 								</Button>
 								<Button
 									variant="outline"
 									onClick={ () => remove( 'keep' ) }
 								>
-									{ __(
-										'Remove, keep events',
-										'openevents'
-									) }
+									{ __( 'Remove, keep events', 'feriae' ) }
 								</Button>
 								<Button
 									tone="neutral"
@@ -502,7 +495,7 @@ export default function FeedsScreen( { root } ) {
 								>
 									{ __(
 										'Remove and trash events',
-										'openevents'
+										'feriae'
 									) }
 								</Button>
 							</Stack>
@@ -521,13 +514,13 @@ export default function FeedsScreen( { root } ) {
 
 	return (
 		<Page
-			title={ __( 'Calendar import', 'openevents' ) }
+			title={ __( 'Calendar import', 'feriae' ) }
 			subTitle={ __(
 				'Bring in events from Google Calendar, Outlook, Apple Calendar, or any iCal feed, and keep them in sync. Events you edit here stop updating from the calendar; private events are never imported.',
-				'openevents'
+				'feriae'
 			) }
 		>
-			<Stack direction="column" gap="lg" className="oe-feeds">
+			<Stack direction="column" gap="lg" className="feriae-feeds">
 				<div role="status" aria-live="polite">
 					{ notice && (
 						<Notice.Root intent={ notice.intent }>
@@ -540,14 +533,14 @@ export default function FeedsScreen( { root } ) {
 				<Card.Root>
 					<Card.Header>
 						<Card.Title>
-							{ __( 'Add a calendar', 'openevents' ) }
+							{ __( 'Add a calendar', 'feriae' ) }
 						</Card.Title>
 					</Card.Header>
 					<Card.Content>
 						<FeedForm
 							config={ config }
 							initial={ blank }
-							submit={ __( 'Add and import', 'openevents' ) }
+							submit={ __( 'Add and import', 'feriae' ) }
 							onSubmit={ add }
 						/>
 					</Card.Content>
@@ -562,12 +555,12 @@ export default function FeedsScreen( { root } ) {
 					getItemId={ ( item ) => String( item.id ) }
 					paginationInfo={ paginationInfo }
 					defaultLayouts={ { table: {} } }
-					searchLabel={ __( 'Search calendars', 'openevents' ) }
+					searchLabel={ __( 'Search calendars', 'feriae' ) }
 					empty={
-						<p className="oe-feeds__empty">
+						<p className="feriae-feeds__empty">
 							{ __(
 								'No calendars yet. Add one above, and it syncs on its own from then on.',
-								'openevents'
+								'feriae'
 							) }
 						</p>
 					}
@@ -575,7 +568,7 @@ export default function FeedsScreen( { root } ) {
 				<Card.Root>
 					<Card.Header>
 						<Card.Title>
-							{ __( 'Import a file once', 'openevents' ) }
+							{ __( 'Import a file once', 'feriae' ) }
 						</Card.Title>
 					</Card.Header>
 					<Card.Content>

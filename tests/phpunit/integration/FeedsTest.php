@@ -2,19 +2,19 @@
 /**
  * Calendar import: iCal parsing, feed syncs, and one-off file imports.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Tests\Integration;
+namespace Feriae\Tests\Integration;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OpenEvents\Content\PostTypes;
-use OpenEvents\Modules\Feeds\Feed;
-use OpenEvents\Modules\Feeds\Importer;
-use OpenEvents\Modules\Feeds\Parser;
-use OpenEvents\Modules\Recurrence\Recurrence;
-use OpenEvents\Tests\TestCase;
+use Feriae\Content\PostTypes;
+use Feriae\Modules\Feeds\Feed;
+use Feriae\Modules\Feeds\Importer;
+use Feriae\Modules\Feeds\Parser;
+use Feriae\Modules\Recurrence\Recurrence;
+use Feriae\Tests\TestCase;
 
 final class FeedsTest extends TestCase {
 
@@ -171,9 +171,9 @@ final class FeedsTest extends TestCase {
 
 		$talk = $events['Planning talk'];
 		$this->assertSame( 'publish', $talk->post_status );
-		$this->assertSame( self::day( 10, 'Y-m-d' ) . ' 19:00:00', get_post_meta( $talk->ID, '_oe_start', true ) );
-		$this->assertSame( 'America/Toronto', get_post_meta( $talk->ID, '_oe_timezone', true ) );
-		$this->assertSame( 'https://example.org/talk', get_post_meta( $talk->ID, '_oe_url', true ) );
+		$this->assertSame( self::day( 10, 'Y-m-d' ) . ' 19:00:00', get_post_meta( $talk->ID, '_feriae_start', true ) );
+		$this->assertSame( 'America/Toronto', get_post_meta( $talk->ID, '_feriae_timezone', true ) );
+		$this->assertSame( 'https://example.org/talk', get_post_meta( $talk->ID, '_feriae_url', true ) );
 		$this->assertStringContainsString( 'Bring questions, and friends.', $talk->post_content );
 		$this->assertStringContainsString( '<a href="https://example.org/talk', $talk->post_content );
 		$this->assertStringNotContainsString( '<script', $talk->post_content );
@@ -181,14 +181,14 @@ final class FeedsTest extends TestCase {
 		$this->assertStringNotContainsString( 'Reminder', $talk->post_content, 'Alarm text is ignored.' );
 		$this->assertSame( array( $category ), wp_get_post_terms( $talk->ID, PostTypes::CATEGORY, array( 'fields' => 'ids' ) ) );
 
-		$venue = get_post( (int) get_post_meta( $talk->ID, '_oe_venue_id', true ) );
+		$venue = get_post( (int) get_post_meta( $talk->ID, '_feriae_venue_id', true ) );
 		$this->assertSame( 'Central Library', $venue->post_title );
-		$this->assertSame( '350 W Georgia St, Vancouver', get_post_meta( $venue->ID, '_oe_address', true ) );
-		$this->assertSame( '49.2797', get_post_meta( $venue->ID, '_oe_lat', true ) );
+		$this->assertSame( '350 W Georgia St, Vancouver', get_post_meta( $venue->ID, '_feriae_address', true ) );
+		$this->assertSame( '49.2797', get_post_meta( $venue->ID, '_feriae_lat', true ) );
 
 		$weekly = $events['Weekly meetup'];
-		$this->assertSame( 'https://meet.example.com/abc', get_post_meta( $weekly->ID, '_oe_url', true ), 'An online link in LOCATION.' );
-		$this->assertSame( '', (string) get_post_meta( $weekly->ID, '_oe_venue_id', true ) ?: '' );
+		$this->assertSame( 'https://meet.example.com/abc', get_post_meta( $weekly->ID, '_feriae_url', true ), 'An online link in LOCATION.' );
+		$this->assertSame( '', (string) get_post_meta( $weekly->ID, '_feriae_venue_id', true ) ?: '' );
 		$this->assertSame(
 			array(
 				'rrule'   => 'FREQ=WEEKLY;COUNT=6',
@@ -199,11 +199,11 @@ final class FeedsTest extends TestCase {
 			'Cancelled and moved dates are skipped in the series.'
 		);
 		$this->assertCount( 4, $this->rows( $weekly->ID ), 'Six weeks minus two.' );
-		$this->assertSame( self::day( 21, 'Y-m-d' ) . ' 19:00:00', get_post_meta( $events['Weekly meetup (late start)']->ID, '_oe_start', true ) );
+		$this->assertSame( self::day( 21, 'Y-m-d' ) . ' 19:00:00', get_post_meta( $events['Weekly meetup (late start)']->ID, '_feriae_start', true ) );
 
 		$fair = $events['Spring fair'];
-		$this->assertSame( '1', get_post_meta( $fair->ID, '_oe_all_day', true ) );
-		$this->assertSame( self::day( 31, 'Y-m-d' ) . ' 00:00:00', get_post_meta( $fair->ID, '_oe_end', true ), 'DTEND is exclusive for dates.' );
+		$this->assertSame( '1', get_post_meta( $fair->ID, '_feriae_all_day', true ) );
+		$this->assertSame( self::day( 31, 'Y-m-d' ) . ' 00:00:00', get_post_meta( $fair->ID, '_feriae_end', true ), 'DTEND is exclusive for dates.' );
 	}
 
 	public function test_syncing_again_updates_instead_of_duplicating(): void {
@@ -271,17 +271,17 @@ final class FeedsTest extends TestCase {
 
 		$feed = $this->feed();
 		$this->assertSame( self::URL, $feed->url() );
-		$raw = (string) get_post_meta( $feed->id(), '_oe_feed_url', true );
+		$raw = (string) get_post_meta( $feed->id(), '_feriae_feed_url', true );
 		$this->assertStringNotContainsString( 'private-0123456789abcdef', base64_decode( $raw ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode
 		$this->assertSame( 'calendar.google.com/…/basic.ics', Feed::mask( $feed->url() ) );
 
-		$list = rest_do_request( new \WP_REST_Request( 'GET', '/openevents/v1/feeds' ) );
+		$list = rest_do_request( new \WP_REST_Request( 'GET', '/feriae/v1/feeds' ) );
 		$this->assertSame( 200, $list->get_status() );
 		$this->assertStringNotContainsString( '0123456789abcdef', (string) wp_json_encode( $list->get_data() ), 'The secret address is never sent back.' );
 		$this->assertSame( 'calendar.google.com/…/basic.ics', $list->get_data()[0]['address'] );
 
 		// An address that can't be decrypted any more (the site's keys changed).
-		update_post_meta( $feed->id(), '_oe_feed_url', base64_encode( str_repeat( 'x', 64 ) ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
+		update_post_meta( $feed->id(), '_feriae_feed_url', base64_encode( str_repeat( 'x', 64 ) ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
 		$report = Feed::get( $feed->id() )->sync();
 		$this->assertFalse( $report['ok'] );
 		$this->assertStringContainsString( 'enter its address again', $report['message'] );
@@ -289,8 +289,8 @@ final class FeedsTest extends TestCase {
 
 	public function test_only_administrators(): void {
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
-		$this->assertSame( 403, rest_do_request( new \WP_REST_Request( 'GET', '/openevents/v1/feeds' ) )->get_status() );
-		$request = new \WP_REST_Request( 'POST', '/openevents/v1/feeds/import' );
+		$this->assertSame( 403, rest_do_request( new \WP_REST_Request( 'GET', '/feriae/v1/feeds' ) )->get_status() );
+		$request = new \WP_REST_Request( 'POST', '/feriae/v1/feeds/import' );
 		$request->set_param( 'ics', self::calendar( self::events() ) );
 		$this->assertSame( 403, rest_do_request( $request )->get_status() );
 		$this->assertSame( array(), Importer::event_ids( 0 ) );
@@ -313,18 +313,18 @@ final class FeedsTest extends TestCase {
 		global $wpdb;
 		$this->body = self::calendar( self::events() );
 		$feed       = $this->feed();
-		$wpdb->insert( $wpdb->options, array( 'option_name' => 'openevents_feed_lock_' . $feed->id(), 'option_value' => (string) ( time() + 600 ), 'autoload' => 'off' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->insert( $wpdb->options, array( 'option_name' => 'feriae_feed_lock_' . $feed->id(), 'option_value' => (string) ( time() + 600 ), 'autoload' => 'off' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		$this->assertStringContainsString( 'already being synced', $feed->sync()['message'] );
 		$this->assertSame( array(), $this->requests );
 
 		// A lock left by a sync that died is taken over.
-		$wpdb->update( $wpdb->options, array( 'option_value' => (string) ( time() - 1 ) ), array( 'option_name' => 'openevents_feed_lock_' . $feed->id() ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->update( $wpdb->options, array( 'option_value' => (string) ( time() - 1 ) ), array( 'option_name' => 'feriae_feed_lock_' . $feed->id() ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		$this->assertTrue( $feed->sync()['ok'] );
 	}
 
 	public function test_import_a_file_through_rest(): void {
 		$import = function (): array {
-			$request = new \WP_REST_Request( 'POST', '/openevents/v1/feeds/import' );
+			$request = new \WP_REST_Request( 'POST', '/feriae/v1/feeds/import' );
 			$request->set_param( 'ics', self::calendar( self::events() ) );
 			$request->set_param( 'post_status', 'draft' );
 			$response = rest_do_request( $request );
@@ -337,14 +337,14 @@ final class FeedsTest extends TestCase {
 		$this->assertSame( 4, $again['unchanged'], 'Importing the same file again changes nothing.' );
 		$this->assertSame( array( 'draft' ), array_values( array_unique( array_map( 'get_post_status', Importer::event_ids( 0 ) ) ) ) );
 
-		$bad = new \WP_REST_Request( 'POST', '/openevents/v1/feeds/import' );
+		$bad = new \WP_REST_Request( 'POST', '/feriae/v1/feeds/import' );
 		$bad->set_param( 'ics', 'name,date' );
 		$this->assertSame( 400, rest_do_request( $bad )->get_status() );
 	}
 
 	public function test_rest_adds_syncs_and_deletes_a_feed(): void {
 		$this->body = self::calendar( self::events() );
-		$create     = new \WP_REST_Request( 'POST', '/openevents/v1/feeds' );
+		$create     = new \WP_REST_Request( 'POST', '/feriae/v1/feeds' );
 		$create->set_param( 'url', self::URL );
 		$create->set_param( 'frequency', 'hourly' );
 		$response = rest_do_request( $create );
@@ -355,17 +355,17 @@ final class FeedsTest extends TestCase {
 		$this->assertSame( 4, $data['last']['created'] );
 		$this->assertNotSame( '', $data['next'] );
 
-		$sync = rest_do_request( new \WP_REST_Request( 'POST', "/openevents/v1/feeds/{$data['id']}/sync" ) );
+		$sync = rest_do_request( new \WP_REST_Request( 'POST', "/feriae/v1/feeds/{$data['id']}/sync" ) );
 		$this->assertTrue( $sync->get_data()['result']['not_modified'] );
 
-		$edit = new \WP_REST_Request( 'POST', "/openevents/v1/feeds/{$data['id']}" );
+		$edit = new \WP_REST_Request( 'POST', "/feriae/v1/feeds/{$data['id']}" );
 		$edit->set_param( 'name', 'Team' );
 		$edit->set_param( 'url', '' );
 		$this->assertSame( 'Team', rest_do_request( $edit )->get_data()['name'] );
 		$this->assertSame( self::URL, Feed::get( $data['id'] )->url(), 'An empty address keeps the old one.' );
 
 		$ids    = Importer::event_ids( $data['id'] );
-		$delete = new \WP_REST_Request( 'DELETE', "/openevents/v1/feeds/{$data['id']}" );
+		$delete = new \WP_REST_Request( 'DELETE', "/feriae/v1/feeds/{$data['id']}" );
 		$delete->set_param( 'events', 'trash' );
 		$this->assertSame( 4, rest_do_request( $delete )->get_data()['trashed'] );
 		$this->assertNull( Feed::get( $data['id'] ) );
@@ -378,7 +378,7 @@ final class FeedsTest extends TestCase {
 		$daily      = $this->feed( array( 'frequency' => 'daily' ) );
 		$manual     = $this->feed( array( 'frequency' => 'manual' ) );
 
-		\OpenEvents\Modules\Feeds\Module::run();
+		\Feriae\Modules\Feeds\Module::run();
 		$this->assertCount( 2, $this->requests, 'New feeds are due straight away.' );
 		$report = Feed::get( $daily->id() )->last();
 		$this->assertSame( 1, $report['unsupported'] );
@@ -387,7 +387,7 @@ final class FeedsTest extends TestCase {
 
 		$this->assertEqualsWithDelta( time() + DAY_IN_SECONDS, Feed::get( $daily->id() )->next(), 5 );
 		$this->assertSame( 0, Feed::get( $manual->id() )->next(), 'Manual feeds sync only when asked.' );
-		\OpenEvents\Modules\Feeds\Module::run();
+		\Feriae\Modules\Feeds\Module::run();
 		$this->assertCount( 2, $this->requests, 'Nothing is due.' );
 	}
 }

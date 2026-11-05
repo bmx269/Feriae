@@ -2,10 +2,10 @@
 /**
  * Outcome of a gateway step.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Tickets;
+namespace Feriae\Modules\Tickets;
 
 /**
  * redirect: send the buyer to $url. paid: payment confirmed ($txn).

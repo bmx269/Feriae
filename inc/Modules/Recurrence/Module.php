@@ -2,17 +2,17 @@
 /**
  * Recurrence module.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Recurrence;
+namespace Feriae\Modules\Recurrence;
 
 use DateTimeImmutable;
-use OpenEvents\Content\Event;
-use OpenEvents\Modules\AbstractModule;
-use OpenEvents\Occurrences\Generator;
-use OpenEvents\Occurrences\Occurrence;
-use OpenEvents\Occurrences\Sync;
+use Feriae\Content\Event;
+use Feriae\Modules\AbstractModule;
+use Feriae\Occurrences\Generator;
+use Feriae\Occurrences\Occurrence;
+use Feriae\Occurrences\Sync;
 
 /**
  * Repeating events. A rule expands into rows in the occurrences table, so
@@ -24,7 +24,7 @@ use OpenEvents\Occurrences\Sync;
  */
 final class Module extends AbstractModule {
 
-	public const CRON_HOOK = 'openevents_recurrence_extend';
+	public const CRON_HOOK = 'feriae_recurrence_extend';
 
 	/** Slots per day in a sequence number; see sequence(). */
 	private const SLOTS = 8;
@@ -34,11 +34,11 @@ final class Module extends AbstractModule {
 	}
 
 	public function label(): string {
-		return __( 'Recurring events', 'openevents' );
+		return __( 'Recurring events', 'feriae' );
 	}
 
 	public function description(): string {
-		return __( 'Repeat events daily, weekly, monthly, or yearly, skip or add dates, and edit one date or the rest of a series.', 'openevents' );
+		return __( 'Repeat events daily, weekly, monthly, or yearly, skip or add dates, and edit one date or the rest of a series.', 'feriae' );
 	}
 
 	public function version(): string {
@@ -46,19 +46,19 @@ final class Module extends AbstractModule {
 	}
 
 	public function install(): void {
-		update_option( \OpenEvents\Installer::FLUSH_OPTION, 1 );
+		update_option( \Feriae\Installer::FLUSH_OPTION, 1 );
 	}
 
 	public function boot(): void {
 		add_action( 'init', array( self::class, 'rewrite' ) );
-		add_filter( 'query_vars', static fn( array $vars ) => array_merge( $vars, array( 'oe_occurrence' ) ) );
-		add_filter( 'openevents/meta_fields', array( $this, 'meta_fields' ), 10, 2 );
-		add_filter( 'openevents/occurrences/generate', array( self::class, 'expand' ), 10, 2 );
-		add_filter( 'openevents/event_details/rows', array( $this, 'detail_rows' ), 10, 3 );
+		add_filter( 'query_vars', static fn( array $vars ) => array_merge( $vars, array( 'feriae_occurrence' ) ) );
+		add_filter( 'feriae/meta_fields', array( $this, 'meta_fields' ), 10, 2 );
+		add_filter( 'feriae/occurrences/generate', array( self::class, 'expand' ), 10, 2 );
+		add_filter( 'feriae/event_details/rows', array( $this, 'detail_rows' ), 10, 3 );
 		add_action( self::CRON_HOOK, array( self::class, 'extend_all' ) );
 		add_action( 'init', array( self::class, 'schedule_cron' ) );
 		( new Rest() )->register();
-		add_action( 'openevents/uninstall', array( self::class, 'unschedule_cron' ) );
+		add_action( 'feriae/uninstall', array( self::class, 'unschedule_cron' ) );
 	}
 
 	/**
@@ -67,12 +67,12 @@ final class Module extends AbstractModule {
 	 * @return array<string, array<string, mixed>>
 	 */
 	public function meta_fields( array $fields, string $post_type ): array {
-		if ( ! in_array( $post_type, openevents_event_post_types(), true ) ) {
+		if ( ! in_array( $post_type, feriae_event_post_types(), true ) ) {
 			return $fields;
 		}
 		$fields[ Series::PARENT_KEY ] = array(
 			'type'              => 'integer',
-			'description'       => __( 'The event this one was split or detached from.', 'openevents' ),
+			'description'       => __( 'The event this one was split or detached from.', 'feriae' ),
 			'sanitize_callback' => 'absint',
 		);
 		$fields[ Recurrence::META_KEY ] = array(
@@ -84,16 +84,16 @@ final class Module extends AbstractModule {
 					'type'                 => 'object',
 					'properties'           => array(
 						'rrule'   => array(
-							'description' => __( 'RFC 5545 RRULE, e.g. FREQ=WEEKLY;BYDAY=MO,WE;UNTIL=20271231. Empty for no repeat.', 'openevents' ),
+							'description' => __( 'RFC 5545 RRULE, e.g. FREQ=WEEKLY;BYDAY=MO,WE;UNTIL=20271231. Empty for no repeat.', 'feriae' ),
 							'type'        => 'string',
 						),
 						'rdates'  => array(
-							'description' => __( 'Extra start times, "Y-m-d H:i:s" in the event timezone.', 'openevents' ),
+							'description' => __( 'Extra start times, "Y-m-d H:i:s" in the event timezone.', 'feriae' ),
 							'type'        => 'array',
 							'items'       => array( 'type' => 'string' ),
 						),
 						'exdates' => array(
-							'description' => __( 'Skipped dates, "Y-m-d".', 'openevents' ),
+							'description' => __( 'Skipped dates, "Y-m-d".', 'feriae' ),
 							'type'        => 'array',
 							'items'       => array(
 								'type'   => 'string',
@@ -113,15 +113,15 @@ final class Module extends AbstractModule {
 	 * the form TEC uses, so links from a TEC site keep working.
 	 */
 	public static function rewrite(): void {
-		if ( ! openevents()->settings()->registers_event_type() ) {
+		if ( ! feriae()->settings()->registers_event_type() ) {
 			return;
 		}
-		$base = preg_quote( openevents()->settings()->single_slug(), '#' );
-		add_rewrite_rule( "^{$base}/([^/]+)/(\\d{4}-\\d{2}-\\d{2})/?$", 'index.php?post_type=' . \OpenEvents\Content\PostTypes::EVENT . '&name=$matches[1]&oe_occurrence=$matches[2]', 'top' );
+		$base = preg_quote( feriae()->settings()->single_slug(), '#' );
+		add_rewrite_rule( "^{$base}/([^/]+)/(\\d{4}-\\d{2}-\\d{2})/?$", 'index.php?post_type=' . \Feriae\Content\PostTypes::EVENT . '&name=$matches[1]&feriae_occurrence=$matches[2]', 'top' );
 	}
 
 	/**
-	 * `openevents/occurrences/generate`: one row per date.
+	 * `feriae/occurrences/generate`: one row per date.
 	 *
 	 * @param array<int, array<string, mixed>> $rows  Rows from the event's own dates.
 	 * @param Event                            $event Event.
@@ -202,7 +202,7 @@ final class Module extends AbstractModule {
 		 * @param string $modifier A DateTime modifier, e.g. "+2 years", applied to
 		 *                         today or the series start, whichever is later.
 		 */
-		$modifier = (string) apply_filters( 'openevents/recurrence/horizon', '+2 years' );
+		$modifier = (string) apply_filters( 'feriae/recurrence/horizon', '+2 years' );
 		$now      = new DateTimeImmutable( 'now', $start->getTimezone() );
 		return ( $start > $now ? $start : $now )->modify( $modifier );
 	}
@@ -220,12 +220,12 @@ final class Module extends AbstractModule {
 			return $rows;
 		}
 
-		$html = $recurrence->rule ? esc_html( Describer::describe( $recurrence->rule, $start ) ) : esc_html__( 'On several dates', 'openevents' );
+		$html = $recurrence->rule ? esc_html( Describer::describe( $recurrence->rule, $start ) ) : esc_html__( 'On several dates', 'feriae' );
 
-		$next = openevents()->occurrences()->query(
+		$next = feriae()->occurrences()->query(
 			array(
 				'event_ids'      => array( $event->id() ),
-				'ends_after'     => \OpenEvents\Occurrences\Repository::now(),
+				'ends_after'     => \Feriae\Occurrences\Repository::now(),
 				'include_hidden' => true,
 				'per_page'       => 6,
 				'count'          => false,
@@ -238,18 +238,18 @@ final class Module extends AbstractModule {
 			foreach ( array_slice( $next, 0, 5 ) as $other ) {
 				$items .= sprintf(
 					'<li><a href="%s"><time datetime="%s">%s</time></a></li>',
-					esc_url( openevents_occurrence_url( $other ) ),
-					esc_attr( \OpenEvents\Frontend\Formatter::iso( $other->start, $other->all_day ) ),
-					esc_html( \OpenEvents\Frontend\Formatter::range( $other ) )
+					esc_url( feriae_occurrence_url( $other ) ),
+					esc_attr( \Feriae\Frontend\Formatter::iso( $other->start, $other->all_day ) ),
+					esc_html( \Feriae\Frontend\Formatter::range( $other ) )
 				);
 			}
-			$html .= '<ul class="oe-details__dates" aria-label="' . esc_attr__( 'Other dates', 'openevents' ) . '">' . $items . '</ul>';
+			$html .= '<ul class="feriae-details__dates" aria-label="' . esc_attr__( 'Other dates', 'feriae' ) . '">' . $items . '</ul>';
 		}
 
 		// Right after the date.
 		$repeat = array(
 			'repeats' => array(
-				'label' => __( 'Repeats', 'openevents' ),
+				'label' => __( 'Repeats', 'feriae' ),
 				'html'  => $html,
 			),
 		);

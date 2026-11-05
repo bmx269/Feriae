@@ -27,21 +27,21 @@ How the plugin reaches parity with The Events Calendar (TEC), Events Calendar Pr
 Priority order, set 2026-10-27. Everything here is free: no paid tier, no platform fees.
 
 1. ✅ **RSVP module** (done 2026-10-27; tests in `RsvpTest.php`, `rsvp.spec.js`)
-   - Tables: `oe_ticket_types`, `oe_attendees`. Capacity is enforced with one atomic conditional `UPDATE`, so two people can't take the last seat.
+   - Tables: `feriae_ticket_types`, `feriae_attendees`. Capacity is enforced with one atomic conditional `UPDATE`, so two people can't take the last seat.
    - Configured in the editor's Event panel and saved with the post: capacity, guests per response, deadline, and whether to offer "not going".
    - RSVP form in event details. It works without JavaScript and on cached pages: no nonces, with honeypot, timing, and rate-limit checks instead.
    - Responding again with the same email updates the earlier response. Switching to "not going" frees the seats.
    - Confirmation email with a private link to change or cancel.
    - Admin attendee list: search, filter by event, CSV export, check-in.
 2. ✅ **Tickets module** (done 2026-10-27): pay at the door, Stripe, and PayPal; tests in `TicketsTest.php`, `GatewaysTest.php`, `TicketsModuleTest.php`, `tickets.spec.js`
-   - Several ticket types per event: price, capacity, sale window. `oe_orders` / `oe_order_items`.
+   - Several ticket types per event: price, capacity, sale window. `feriae_orders` / `feriae_order_items`.
    - Gateway interface. Built-in: "Pay at the door" (manual), Stripe Checkout, and PayPal (Orders v2), all with webhooks. A WooCommerce adapter later.
    - Order emails with check-in passes (QR codes), refunds from the admin.
 3. ✅ **Calendar import** (`feeds` module; tests in `FeedsTest.php`, `feeds.spec.js`)
    - Add a calendar by its iCal address: Google Calendar (public or secret), Outlook, Apple Calendar, Meetup, other event sites. No API keys or OAuth. The address is encrypted at rest and masked in the admin.
    - Scheduled sync (hourly, daily, weekly, or by hand) with conditional requests. Events are matched by UID, so updates replace rather than duplicate; events edited here are left alone; upcoming events that leave the calendar are unpublished. Each feed maps to a category, a post type, and publish or draft.
    - RRULE/RDATE/EXDATE onto the recurrence module; cancelled single dates are skipped, moved ones become their own events. Private events and past events aren't imported.
-   - One-off `.ics` file import, REST routes, abilities, and `wp openevents import-ics` / `sync-feeds`.
+   - One-off `.ics` file import, REST routes, abilities, and `wp feriae import-ics` / `sync-feeds`.
 
 - ✅ **Waitlists** for RSVPs (automatic promotion) and ticket types (held, time-limited offers); tests in `WaitlistTest.php`, `WaitlistFormsTest.php`, `waitlist.spec.js`.
 - ✅ **Attendee questions on RSVP waitlists**: asked when joining and carried onto attendees at promotion; covered by the privacy tools, including guests; tests in `WaitlistQuestionsTest.php`, `waitlist.spec.js`.
@@ -58,15 +58,15 @@ Done in Phase 2 groundwork:
 
 ## Phase 3: TEC parity and migration (importer in progress)
 
-- **TEC importer** (admin screen and `wp openevents import-tec`), following `docs/research/tec-data-model.md`:
+- **TEC importer** (admin screen and `wp feriae import-tec`), following `docs/research/tec-data-model.md`:
   - Batched and resumable. It runs with Sync suspended, then rebuilds.
-  - Idempotent through `_oe_source_tec_id`.
+  - Idempotent through `_feriae_source_tec_id`.
   - Maps category colour term meta.
   - Optional 301 redirects from old permalinks.
 - **Event Tickets importer** (RSVP and Tickets Commerce), following `docs/research/event-tickets-data-model.md`. Keeps security codes.
 - CSV import (TEC column names accepted).
 - Venue filter on the calendar block (category filter, keyword search, and the day view are done).
-- ✅ Event status: scheduled, cancelled, postponed (with a note), for the whole event or one date of a repeating event; closes bookings; shown in listings, event pages, iCal (STATUS), and REST; `openevents/set-event-status` ability; TEC status imported (tests in `EventStatusTest.php`, `event-status.spec.js`).
+- ✅ Event status: scheduled, cancelled, postponed (with a note), for the whole event or one date of a repeating event; closes bookings; shown in listings, event pages, iCal (STATUS), and REST; `feriae/set-event-status` ability; TEC status imported (tests in `EventStatusTest.php`, `event-status.spec.js`).
 - `Event` JSON-LD with Offer, Place, and Organizer.
 - Venue map embed (OpenStreetMap; Google optional).
 - Add WP trunk and PHP 8.5 to the CI matrix; MySQL job alongside SQLite.
@@ -74,8 +74,8 @@ Done in Phase 2 groundwork:
 ## Phase 4: Recurrence module (free) (in progress, moved ahead of the TEC importer)
 
 - ✅ RRULE engine (RFC 5545 subset), RDATE/EXDATE, expansion into occurrences with stable ids, rolling two-year horizon extended by cron (done 2026-10-28; tests in `RuleTest.php`, `RecurrenceTest.php`, `recurrence.spec.js`).
-- ✅ Repeat panel in the editor with a live preview; editing scope "this date / this and following / all" (detach and split into new events linked by `_oe_series_parent`); skip and add dates.
-- ✅ Per-date links (`?oe_occurrence=`), event pages showing the requested date, the rule in words, and the next dates; REST preview and date actions.
+- ✅ Repeat panel in the editor with a live preview; editing scope "this date / this and following / all" (detach and split into new events linked by `_feriae_series_parent`); skip and add dates.
+- ✅ Per-date links (`?feriae_occurrence=`), event pages showing the requested date, the rule in words, and the next dates; REST preview and date actions.
 - ✅ Per-date RSVP and tickets: each date has its own capacity, waitlist, and attendee list, keyed by the date's sequence (stable across rebuilds); emails and private links keep their date (tests in `PerDateCapacityTest.php`, `per-date.spec.js`).
 - Import of TEC Pro `_EventRecurrence` rules (with the TEC importer).
 - RRULE export in iCal feeds (dates are exported expanded today).
@@ -95,7 +95,7 @@ Done in Phase 2 groundwork:
 ## Phase 6: Pro views and extras
 
 - ✅ Week and day views (done 2026-10-29; tests in `WeekDayViewsTest.php`, `week-day.spec.js`).
-- Photo, map, and summary views (through `openevents/calendar/views`).
+- Photo, map, and summary views (through `feriae/calendar/views`).
 - Additional fields (filterable), duplicate event, related events, virtual events.
 - Admin event list built on DataViews.
 

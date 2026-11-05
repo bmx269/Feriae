@@ -42,4 +42,4 @@ From a shallow clone of [event-tickets](https://github.com/the-events-calendar/e
 4. Group v1 attendees by `_tribe_rsvp_order` to synthesise orders.
 5. Prices are decimal strings and order items are serialized PHP.
 6. **Keep security codes.** They are printed in existing QR codes.
-7. Series-pass check-ins clone attendees per occurrence (`_tec_attendee_clone_of`). Fold them into `oe_attendees.occurrence_id`.
+7. Series-pass check-ins clone attendees per occurrence (`_tec_attendee_clone_of`). Fold them into `feriae_attendees.occurrence_id`.

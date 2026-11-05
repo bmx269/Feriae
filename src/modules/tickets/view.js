@@ -14,7 +14,7 @@ import formObject from '../shared/form-object';
 const nextFrame = () =>
 	new Promise( ( resolve ) => window.requestAnimationFrame( resolve ) );
 
-const { state } = store( 'openevents/tickets', {
+const { state } = store( 'feriae/tickets', {
 	state: {
 		/** Chosen quantity per ticket type id (set from the quantity pickers). */
 		quantities: {},
@@ -145,8 +145,8 @@ const { state } = store( 'openevents/tickets', {
 			}
 			context.busy = false;
 			yield nextFrame();
-			form.closest( '.oe-tickets' )
-				?.querySelector( '.oe-tickets__live' )
+			form.closest( '.feriae-tickets' )
+				?.querySelector( '.feriae-tickets__live' )
 				?.focus();
 		} ),
 	},

@@ -2,10 +2,10 @@
 /**
  * Saved attendee question sets.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Attendance;
+namespace Feriae\Attendance;
 
 use WP_REST_Request;
 use WP_REST_Response;
@@ -16,13 +16,13 @@ use WP_REST_Server;
  * Tickets Plus calls them fieldsets). Applying a set copies its questions to
  * the RSVP or ticket, so later edits to the set don't change past events.
  *
- * GET  /openevents/v1/field-sets         [ { name, fields } ]
- * POST /openevents/v1/field-sets         { name, fields } adds or replaces by name
- * DELETE /openevents/v1/field-sets/{n}   removes the set at index n
+ * GET  /feriae/v1/field-sets         [ { name, fields } ]
+ * POST /feriae/v1/field-sets         { name, fields } adds or replaces by name
+ * DELETE /feriae/v1/field-sets/{n}   removes the set at index n
  */
 final class FieldSets {
 
-	public const OPTION = 'openevents_field_sets';
+	public const OPTION = 'feriae_field_sets';
 
 	private static bool $registered = false;
 
@@ -65,7 +65,7 @@ final class FieldSets {
 	public static function routes(): void {
 		$can = static fn() => current_user_can( 'edit_posts' );
 		register_rest_route(
-			'openevents/v1',
+			'feriae/v1',
 			'/field-sets',
 			array(
 				array(
@@ -89,7 +89,7 @@ final class FieldSets {
 			)
 		);
 		register_rest_route(
-			'openevents/v1',
+			'feriae/v1',
 			'/field-sets/(?P<index>\d+)',
 			array(
 				'methods'             => WP_REST_Server::DELETABLE,

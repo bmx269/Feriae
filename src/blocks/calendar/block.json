@@ -1,13 +1,13 @@
 {
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
-	"name": "openevents/calendar",
+	"name": "feriae/calendar",
 	"title": "Calendar",
-	"category": "openevents",
+	"category": "feriae",
 	"icon": "calendar-alt",
 	"description": "Month and list views of your events, with navigation that works with or without JavaScript.",
 	"keywords": [ "events", "calendar", "month", "agenda" ],
-	"textdomain": "openevents",
+	"textdomain": "feriae",
 	"attributes": {
 		"views": {
 			"type": "array",

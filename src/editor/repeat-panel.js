@@ -21,28 +21,28 @@ import { DateField, display } from './event-panel';
 const EMPTY = { rrule: '', rdates: [], exdates: [] };
 
 const STATUS_LABELS = {
-	cancelled: __( 'Cancelled', 'openevents' ),
-	postponed: __( 'Postponed', 'openevents' ),
+	cancelled: __( 'Cancelled', 'feriae' ),
+	postponed: __( 'Postponed', 'feriae' ),
 };
 const DAYS = [ 'MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU' ];
 const DAY_NAMES = () => [
-	__( 'Monday', 'openevents' ),
-	__( 'Tuesday', 'openevents' ),
-	__( 'Wednesday', 'openevents' ),
-	__( 'Thursday', 'openevents' ),
-	__( 'Friday', 'openevents' ),
-	__( 'Saturday', 'openevents' ),
-	__( 'Sunday', 'openevents' ),
+	__( 'Monday', 'feriae' ),
+	__( 'Tuesday', 'feriae' ),
+	__( 'Wednesday', 'feriae' ),
+	__( 'Thursday', 'feriae' ),
+	__( 'Friday', 'feriae' ),
+	__( 'Saturday', 'feriae' ),
+	__( 'Sunday', 'feriae' ),
 ];
 /* translators: one-letter weekday abbreviations, Monday to Sunday */
-const DAY_LETTERS = () => __( 'M,T,W,T,F,S,S', 'openevents' ).split( ',' );
+const DAY_LETTERS = () => __( 'M,T,W,T,F,S,S', 'feriae' ).split( ',' );
 const ORDINALS = () => [
 	'',
-	__( 'first', 'openevents' ),
-	__( 'second', 'openevents' ),
-	__( 'third', 'openevents' ),
-	__( 'fourth', 'openevents' ),
-	__( 'fifth', 'openevents' ),
+	__( 'first', 'feriae' ),
+	__( 'second', 'feriae' ),
+	__( 'third', 'feriae' ),
+	__( 'fourth', 'feriae' ),
+	__( 'fifth', 'feriae' ),
 ];
 /** Parts the simple controls can edit; any other rule is edited as text. */
 const SIMPLE_PARTS = [
@@ -113,7 +113,7 @@ function monthlyOptions( start ) {
 		{
 			value: 'day',
 			/* translators: %d: day of the month */
-			label: sprintf( __( 'On day %d', 'openevents' ), day ),
+			label: sprintf( __( 'On day %d', 'feriae' ), day ),
 			parts: { BYMONTHDAY: String( day ), BYDAY: '' },
 		},
 	];
@@ -122,7 +122,7 @@ function monthlyOptions( start ) {
 			value: 'nth',
 			label: sprintf(
 				/* translators: 1: ordinal, e.g. "second"; 2: weekday */
-				__( 'On the %1$s %2$s', 'openevents' ),
+				__( 'On the %1$s %2$s', 'feriae' ),
 				ORDINALS()[ nth ],
 				name
 			),
@@ -133,7 +133,7 @@ function monthlyOptions( start ) {
 		options.push( {
 			value: 'last',
 			/* translators: %s: weekday */
-			label: sprintf( __( 'On the last %s', 'openevents' ), name ),
+			label: sprintf( __( 'On the last %s', 'feriae' ), name ),
 			parts: { BYDAY: `-1${ code }`, BYMONTHDAY: '' },
 		} );
 	}
@@ -155,7 +155,7 @@ function useOccurrenceIds( postId, enabled ) {
 			return;
 		}
 		apiFetch( {
-			path: `/openevents/v1/occurrences?event=${ postId }&per_page=100`,
+			path: `/feriae/v1/occurrences?event=${ postId }&per_page=100`,
 		} )
 			.then( ( items ) =>
 				setIds(
@@ -201,10 +201,10 @@ function Preview( { meta, recurrence, onSkip, dateStatus, onStatus, postId } ) {
 	const settings = getSettings();
 
 	const request = JSON.stringify( {
-		start: meta._oe_start,
-		end: meta._oe_end || '',
-		timezone: meta._oe_timezone || '',
-		all_day: !! meta._oe_all_day,
+		start: meta._feriae_start,
+		end: meta._feriae_end || '',
+		timezone: meta._feriae_timezone || '',
+		all_day: !! meta._feriae_all_day,
 		rrule: recurrence.rrule,
 		rdates: recurrence.rdates,
 		exdates: recurrence.exdates,
@@ -214,7 +214,7 @@ function Preview( { meta, recurrence, onSkip, dateStatus, onStatus, postId } ) {
 	useEffect( () => {
 		const timer = setTimeout( () => {
 			apiFetch( {
-				path: '/openevents/v1/recurrence/preview',
+				path: '/feriae/v1/recurrence/preview',
 				method: 'POST',
 				data: JSON.parse( request ),
 			} )
@@ -234,7 +234,7 @@ function Preview( { meta, recurrence, onSkip, dateStatus, onStatus, postId } ) {
 		setBusy( true );
 		try {
 			const created = await apiFetch( {
-				path: `/openevents/v1/events/${ postId }/occurrences/${ id }/${ action }`,
+				path: `/feriae/v1/events/${ postId }/occurrences/${ id }/${ action }`,
 				method: 'POST',
 			} );
 			window.location.href = created.edit_link;
@@ -254,14 +254,14 @@ function Preview( { meta, recurrence, onSkip, dateStatus, onStatus, postId } ) {
 	if ( ! result ) {
 		return <Spinner />;
 	}
-	const format = meta._oe_all_day
+	const format = meta._feriae_all_day
 		? settings.formats.date
 		: `${ settings.formats.date } ${ settings.formats.time }`;
 
 	return (
-		<div className="oe-editor-panel__preview">
+		<div className="feriae-editor-panel__preview">
 			{ result.description && <p>{ result.description }</p> }
-			<ul aria-label={ __( 'Next dates', 'openevents' ) }>
+			<ul aria-label={ __( 'Next dates', 'feriae' ) }>
 				{ result.dates.map( ( date, index ) => {
 					const dateState = dateStatus.find(
 						( entry ) => entry.date === date.start.slice( 0, 10 )
@@ -271,7 +271,7 @@ function Preview( { meta, recurrence, onSkip, dateStatus, onStatus, postId } ) {
 							<span>
 								{ display( format, date.start ) }
 								{ dateState && (
-									<span className="oe-editor-panel__tag">
+									<span className="feriae-editor-panel__tag">
 										{ STATUS_LABELS[ dateState ] }
 									</span>
 								) }
@@ -280,7 +280,7 @@ function Preview( { meta, recurrence, onSkip, dateStatus, onStatus, postId } ) {
 								icon="ellipsis"
 								label={ sprintf(
 									/* translators: %s: date */
-									__( 'Actions for %s', 'openevents' ),
+									__( 'Actions for %s', 'feriae' ),
 									display( format, date.start )
 								) }
 								toggleProps={ {
@@ -303,7 +303,7 @@ function Preview( { meta, recurrence, onSkip, dateStatus, onStatus, postId } ) {
 												>
 													{ __(
 														'Mark this date as scheduled',
-														'openevents'
+														'feriae'
 													) }
 												</MenuItem>
 											) : (
@@ -319,7 +319,7 @@ function Preview( { meta, recurrence, onSkip, dateStatus, onStatus, postId } ) {
 													>
 														{ __(
 															'Cancel this date',
-															'openevents'
+															'feriae'
 														) }
 													</MenuItem>
 													<MenuItem
@@ -333,7 +333,7 @@ function Preview( { meta, recurrence, onSkip, dateStatus, onStatus, postId } ) {
 													>
 														{ __(
 															'Postpone this date',
-															'openevents'
+															'feriae'
 														) }
 													</MenuItem>
 												</>
@@ -349,7 +349,7 @@ function Preview( { meta, recurrence, onSkip, dateStatus, onStatus, postId } ) {
 												>
 													{ __(
 														'Skip this date',
-														'openevents'
+														'feriae'
 													) }
 												</MenuItem>
 												<MenuItem
@@ -365,7 +365,7 @@ function Preview( { meta, recurrence, onSkip, dateStatus, onStatus, postId } ) {
 												>
 													{ __(
 														'Edit only this date',
-														'openevents'
+														'feriae'
 													) }
 												</MenuItem>
 												<MenuItem
@@ -381,14 +381,14 @@ function Preview( { meta, recurrence, onSkip, dateStatus, onStatus, postId } ) {
 												>
 													{ __(
 														'Edit this and following dates',
-														'openevents'
+														'feriae'
 													) }
 												</MenuItem>
 												{ ! canSplit && (
-													<p className="oe-editor-panel__hint">
+													<p className="feriae-editor-panel__hint">
 														{ __(
 															'Publish and save your changes to edit one date or the rest of the series separately.',
-															'openevents'
+															'feriae'
 														) }
 													</p>
 												) }
@@ -402,12 +402,12 @@ function Preview( { meta, recurrence, onSkip, dateStatus, onStatus, postId } ) {
 				} ) }
 			</ul>
 			{ result.more && (
-				<p className="oe-editor-panel__hint">
+				<p className="feriae-editor-panel__hint">
 					{ result.finite
-						? __( 'More dates follow.', 'openevents' )
+						? __( 'More dates follow.', 'feriae' )
 						: __(
 								'Repeats with no end date. Dates are added two years ahead.',
-								'openevents'
+								'feriae'
 						  ) }
 				</p>
 			) }
@@ -416,16 +416,16 @@ function Preview( { meta, recurrence, onSkip, dateStatus, onStatus, postId } ) {
 }
 
 export default function RepeatPanel( { meta, setMeta, postId, config } ) {
-	const recurrence = { ...EMPTY, ...( meta._oe_recurrence || {} ) };
+	const recurrence = { ...EMPTY, ...( meta._feriae_recurrence || {} ) };
 	const update = ( changes ) =>
-		setMeta( { _oe_recurrence: { ...recurrence, ...changes } } );
+		setMeta( { _feriae_recurrence: { ...recurrence, ...changes } } );
 	// One date cancelled or postponed on its own (see Content\EventStatus).
-	const dateStatus = meta._oe_date_status || [];
+	const dateStatus = meta._feriae_date_status || [];
 	const setDateStatus = ( date, status, reason = '' ) => {
 		const day = date.slice( 0, 10 );
 		const others = dateStatus.filter( ( entry ) => entry.date !== day );
 		setMeta( {
-			_oe_date_status: status
+			_feriae_date_status: status
 				? [ ...others, { date: day, status, reason } ].sort( ( a, b ) =>
 						a.date.localeCompare( b.date )
 				  )
@@ -440,7 +440,7 @@ export default function RepeatPanel( { meta, setMeta, postId, config } ) {
 		) ||
 			( parts.FREQ === 'MONTHLY' &&
 				! monthlyOptions(
-					meta._oe_start || '2000-01-01 00:00:00'
+					meta._feriae_start || '2000-01-01 00:00:00'
 				).some(
 					( option ) =>
 						( option.parts.BYDAY || '' ) ===
@@ -453,17 +453,17 @@ export default function RepeatPanel( { meta, setMeta, postId, config } ) {
 	// added with a button rather than on change.
 	const [ draft, setDraft ] = useState( '' );
 
-	if ( ! meta._oe_start ) {
+	if ( ! meta._feriae_start ) {
 		return (
-			<p className="oe-editor-panel__hint">
-				{ __( 'Set a start date to repeat this event.', 'openevents' ) }
+			<p className="feriae-editor-panel__hint">
+				{ __( 'Set a start date to repeat this event.', 'feriae' ) }
 			</p>
 		);
 	}
 
 	const setParts = ( changes ) =>
 		update( { rrule: build( { ...parts, ...changes } ) } );
-	const start = startDate( meta._oe_start );
+	const start = startDate( meta._feriae_start );
 	const weekday = DAYS[ ( start.getUTCDay() + 6 ) % 7 ];
 
 	const frequency = custom ? 'CUSTOM' : parts.FREQ || '';
@@ -482,23 +482,26 @@ export default function RepeatPanel( { meta, setMeta, postId, config } ) {
 			next.BYDAY = weekday;
 		}
 		if ( value === 'MONTHLY' ) {
-			Object.assign( next, monthlyOptions( meta._oe_start )[ 0 ].parts );
+			Object.assign(
+				next,
+				monthlyOptions( meta._feriae_start )[ 0 ].parts
+			);
 		}
 		update( { rrule: build( next ) } );
 	};
 
 	const units = {
-		DAILY: ( n ) => _n( 'day', 'days', n, 'openevents' ),
-		WEEKLY: ( n ) => _n( 'week', 'weeks', n, 'openevents' ),
-		MONTHLY: ( n ) => _n( 'month', 'months', n, 'openevents' ),
-		YEARLY: ( n ) => _n( 'year', 'years', n, 'openevents' ),
+		DAILY: ( n ) => _n( 'day', 'days', n, 'feriae' ),
+		WEEKLY: ( n ) => _n( 'week', 'weeks', n, 'feriae' ),
+		MONTHLY: ( n ) => _n( 'month', 'months', n, 'feriae' ),
+		YEARLY: ( n ) => _n( 'year', 'years', n, 'feriae' ),
 	};
 	const interval = parseInt( parts.INTERVAL || '1', 10 );
 	// A weekly rule without BYDAY repeats on the start's weekday.
 	const days = parts.BYDAY
 		? parts.BYDAY.split( ',' ).filter( Boolean )
 		: [ weekday ];
-	const monthly = monthlyOptions( meta._oe_start );
+	const monthly = monthlyOptions( meta._feriae_start );
 	const monthlyValue =
 		monthly.find(
 			( option ) =>
@@ -523,17 +526,17 @@ export default function RepeatPanel( { meta, setMeta, postId, config } ) {
 			<SelectControl
 				__next40pxDefaultSize
 				__nextHasNoMarginBottom
-				label={ __( 'Repeats', 'openevents' ) }
+				label={ __( 'Repeats', 'feriae' ) }
 				value={ frequency }
 				options={ [
-					{ value: '', label: __( 'Does not repeat', 'openevents' ) },
-					{ value: 'DAILY', label: __( 'Daily', 'openevents' ) },
-					{ value: 'WEEKLY', label: __( 'Weekly', 'openevents' ) },
-					{ value: 'MONTHLY', label: __( 'Monthly', 'openevents' ) },
-					{ value: 'YEARLY', label: __( 'Yearly', 'openevents' ) },
+					{ value: '', label: __( 'Does not repeat', 'feriae' ) },
+					{ value: 'DAILY', label: __( 'Daily', 'feriae' ) },
+					{ value: 'WEEKLY', label: __( 'Weekly', 'feriae' ) },
+					{ value: 'MONTHLY', label: __( 'Monthly', 'feriae' ) },
+					{ value: 'YEARLY', label: __( 'Yearly', 'feriae' ) },
 					{
 						value: 'CUSTOM',
-						label: __( 'Custom rule', 'openevents' ),
+						label: __( 'Custom rule', 'feriae' ),
 					},
 				] }
 				onChange={ setFrequency }
@@ -543,10 +546,10 @@ export default function RepeatPanel( { meta, setMeta, postId, config } ) {
 				<TextControl
 					__next40pxDefaultSize
 					__nextHasNoMarginBottom
-					label={ __( 'Rule (iCalendar RRULE)', 'openevents' ) }
+					label={ __( 'Rule (iCalendar RRULE)', 'feriae' ) }
 					help={ __(
 						'For example FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=-1 for the last weekday of each month.',
-						'openevents'
+						'feriae'
 					) }
 					value={ recurrence.rrule }
 					onChange={ ( rrule ) => update( { rrule } ) }
@@ -562,7 +565,7 @@ export default function RepeatPanel( { meta, setMeta, postId, config } ) {
 						min={ 1 }
 						label={ sprintf(
 							/* translators: %s: unit, e.g. "weeks" */
-							__( 'Every how many %s', 'openevents' ),
+							__( 'Every how many %s', 'feriae' ),
 							units[ parts.FREQ ]( 2 )
 						) }
 						value={ String( interval ) }
@@ -576,8 +579,8 @@ export default function RepeatPanel( { meta, setMeta, postId, config } ) {
 					/>
 
 					{ parts.FREQ === 'WEEKLY' && (
-						<fieldset className="oe-editor-panel__days">
-							<legend>{ __( 'On', 'openevents' ) }</legend>
+						<fieldset className="feriae-editor-panel__days">
+							<legend>{ __( 'On', 'feriae' ) }</legend>
 							{ DAYS.map( ( code, index ) => (
 								<Button
 									key={ code }
@@ -611,7 +614,7 @@ export default function RepeatPanel( { meta, setMeta, postId, config } ) {
 
 					{ parts.FREQ === 'MONTHLY' && (
 						<RadioControl
-							label={ __( 'On', 'openevents' ) }
+							label={ __( 'On', 'feriae' ) }
 							selected={ monthlyValue }
 							options={ monthly.map( ( { value, label } ) => ( {
 								value,
@@ -628,22 +631,22 @@ export default function RepeatPanel( { meta, setMeta, postId, config } ) {
 					) }
 
 					<RadioControl
-						label={ __( 'Ends', 'openevents' ) }
+						label={ __( 'Ends', 'feriae' ) }
 						selected={ ends }
 						options={ [
 							{
 								value: 'never',
-								label: __( 'Never', 'openevents' ),
+								label: __( 'Never', 'feriae' ),
 							},
 							{
 								value: 'until',
-								label: __( 'On a date', 'openevents' ),
+								label: __( 'On a date', 'feriae' ),
 							},
 							{
 								value: 'count',
 								label: __(
 									'After a number of dates',
-									'openevents'
+									'feriae'
 								),
 							},
 						] }
@@ -664,7 +667,7 @@ export default function RepeatPanel( { meta, setMeta, postId, config } ) {
 					/>
 					{ ends === 'until' && (
 						<DateField
-							label={ __( 'Last date', 'openevents' ) }
+							label={ __( 'Last date', 'feriae' ) }
 							value={ untilValue }
 							allDay
 							onChange={ ( value ) =>
@@ -683,7 +686,7 @@ export default function RepeatPanel( { meta, setMeta, postId, config } ) {
 							__nextHasNoMarginBottom
 							type="number"
 							min={ 1 }
-							label={ __( 'Number of dates', 'openevents' ) }
+							label={ __( 'Number of dates', 'feriae' ) }
 							value={ parts.COUNT }
 							onChange={ ( value ) =>
 								setParts( {
@@ -720,10 +723,10 @@ export default function RepeatPanel( { meta, setMeta, postId, config } ) {
 
 			{ dateStatus.length > 0 && (
 				<div>
-					<h3 className="oe-editor-panel__subhead">
-						{ __( 'Cancelled and postponed dates', 'openevents' ) }
+					<h3 className="feriae-editor-panel__subhead">
+						{ __( 'Cancelled and postponed dates', 'feriae' ) }
 					</h3>
-					<ul className="oe-editor-panel__list">
+					<ul className="feriae-editor-panel__list">
 						{ dateStatus.map( ( entry ) => (
 							<li key={ entry.date }>
 								<TextControl
@@ -731,7 +734,7 @@ export default function RepeatPanel( { meta, setMeta, postId, config } ) {
 									__nextHasNoMarginBottom
 									label={ sprintf(
 										/* translators: 1: date, 2: status such as "Cancelled" */
-										__( '%1$s (%2$s): note', 'openevents' ),
+										__( '%1$s (%2$s): note', 'feriae' ),
 										display(
 											getSettings().formats.date,
 											`${ entry.date } 00:00:00`
@@ -740,7 +743,7 @@ export default function RepeatPanel( { meta, setMeta, postId, config } ) {
 									) }
 									help={ __(
 										'Optional, shown with the date. For example, the reason.',
-										'openevents'
+										'feriae'
 									) }
 									value={ entry.reason || '' }
 									onChange={ ( reason ) =>
@@ -757,7 +760,7 @@ export default function RepeatPanel( { meta, setMeta, postId, config } ) {
 										setDateStatus( entry.date, '' )
 									}
 								>
-									{ __( 'Mark as scheduled', 'openevents' ) }
+									{ __( 'Mark as scheduled', 'feriae' ) }
 								</Button>
 							</li>
 						) ) }
@@ -767,10 +770,10 @@ export default function RepeatPanel( { meta, setMeta, postId, config } ) {
 
 			{ recurrence.exdates.length > 0 && (
 				<div>
-					<h3 className="oe-editor-panel__subhead">
-						{ __( 'Skipped dates', 'openevents' ) }
+					<h3 className="feriae-editor-panel__subhead">
+						{ __( 'Skipped dates', 'feriae' ) }
 					</h3>
-					<ul className="oe-editor-panel__list">
+					<ul className="feriae-editor-panel__list">
 						{ recurrence.exdates.map( ( date ) => (
 							<li key={ date }>
 								<span>
@@ -789,7 +792,7 @@ export default function RepeatPanel( { meta, setMeta, postId, config } ) {
 										} )
 									}
 								>
-									{ __( 'Restore', 'openevents' ) }
+									{ __( 'Restore', 'feriae' ) }
 								</Button>
 							</li>
 						) ) }
@@ -798,11 +801,11 @@ export default function RepeatPanel( { meta, setMeta, postId, config } ) {
 			) }
 
 			<div>
-				<h3 className="oe-editor-panel__subhead">
-					{ __( 'Extra dates', 'openevents' ) }
+				<h3 className="feriae-editor-panel__subhead">
+					{ __( 'Extra dates', 'feriae' ) }
 				</h3>
 				{ recurrence.rdates.length > 0 && (
-					<ul className="oe-editor-panel__list">
+					<ul className="feriae-editor-panel__list">
 						{ recurrence.rdates.map( ( date ) => (
 							<li key={ date }>
 								<span>
@@ -823,16 +826,16 @@ export default function RepeatPanel( { meta, setMeta, postId, config } ) {
 										} )
 									}
 								>
-									{ __( 'Remove', 'openevents' ) }
+									{ __( 'Remove', 'feriae' ) }
 								</Button>
 							</li>
 						) ) }
 					</ul>
 				) }
 				<DateField
-					label={ __( 'New date', 'openevents' ) }
+					label={ __( 'New date', 'feriae' ) }
 					value={ draft }
-					emptyLabel={ __( 'Choose…', 'openevents' ) }
+					emptyLabel={ __( 'Choose…', 'feriae' ) }
 					onChange={ setDraft }
 					onClear={ () => setDraft( '' ) }
 					is12Hour={ config.timeFormat12h }
@@ -850,7 +853,7 @@ export default function RepeatPanel( { meta, setMeta, postId, config } ) {
 						setDraft( '' );
 					} }
 				>
-					{ __( 'Add date', 'openevents' ) }
+					{ __( 'Add date', 'feriae' ) }
 				</Button>
 			</div>
 		</Flex>

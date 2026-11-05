@@ -73,10 +73,10 @@ export function DateField( {
 					: `${ settings.formats.date } ${ settings.formats.time }`,
 				value
 		  )
-		: emptyLabel || __( 'Not set', 'openevents' );
+		: emptyLabel || __( 'Not set', 'feriae' );
 
 	return (
-		<Flex justify="space-between" className="oe-editor-panel__row">
+		<Flex justify="space-between" className="feriae-editor-panel__row">
 			<span>{ label }</span>
 			<Dropdown
 				popoverProps={ { placement: 'left-start', offset: 36 } }
@@ -87,7 +87,7 @@ export function DateField( {
 						aria-expanded={ isOpen }
 						aria-label={ sprintf(
 							/* translators: 1: field label, 2: current value */
-							__( '%1$s: %2$s', 'openevents' ),
+							__( '%1$s: %2$s', 'feriae' ),
 							label,
 							labelText
 						) }
@@ -96,7 +96,7 @@ export function DateField( {
 					</Button>
 				) }
 				renderContent={ () => (
-					<div className="oe-editor-panel__picker">
+					<div className="feriae-editor-panel__picker">
 						<DateTimePicker
 							currentDate={ toPicker( value ) }
 							onChange={ ( next ) =>
@@ -106,7 +106,7 @@ export function DateField( {
 						/>
 						{ onClear && value && (
 							<Button variant="link" onClick={ onClear }>
-								{ __( 'Clear', 'openevents' ) }
+								{ __( 'Clear', 'feriae' ) }
 							</Button>
 						) }
 					</div>
@@ -194,7 +194,7 @@ function LinkedPostField( { postType, label, createLabel, value, onChange } ) {
 }
 
 function OrganizersField( { value, onChange } ) {
-	const [ options, create ] = useLinkedPosts( 'oe_organizer' );
+	const [ options, create ] = useLinkedPosts( 'feriae_organizer' );
 	const byId = useMemo(
 		() => new Map( options.map( ( o ) => [ Number( o.value ), o.label ] ) ),
 		[ options ]
@@ -225,7 +225,7 @@ function OrganizersField( { value, onChange } ) {
 		<FormTokenField
 			__next40pxDefaultSize
 			__nextHasNoMarginBottom
-			label={ __( 'Organizers', 'openevents' ) }
+			label={ __( 'Organizers', 'feriae' ) }
 			value={ ( value || [] )
 				.map( ( id ) => byId.get( id ) )
 				.filter( Boolean ) }
@@ -233,10 +233,7 @@ function OrganizersField( { value, onChange } ) {
 			onChange={ handleChange }
 			__experimentalExpandOnFocus
 			__experimentalShowHowTo={ false }
-			help={ __(
-				'Type a new name to create an organizer.',
-				'openevents'
-			) }
+			help={ __( 'Type a new name to create an organizer.', 'feriae' ) }
 		/>
 	);
 }
@@ -248,9 +245,9 @@ export default function EventPanel( {
 	isDedicated,
 	config,
 } ) {
-	const start = meta._oe_start;
-	const end = meta._oe_end;
-	const allDay = !! meta._oe_all_day;
+	const start = meta._feriae_start;
+	const end = meta._feriae_end;
+	const allDay = !! meta._feriae_all_day;
 	const isEvent = isDedicated || !! start;
 
 	const timezoneOptions = useMemo(
@@ -259,7 +256,7 @@ export default function EventPanel( {
 				value: '',
 				label: sprintf(
 					/* translators: %s: site timezone */
-					__( 'Site timezone (%s)', 'openevents' ),
+					__( 'Site timezone (%s)', 'feriae' ),
 					config.siteTimezone || 'UTC'
 				),
 			},
@@ -273,16 +270,16 @@ export default function EventPanel( {
 
 	// Moving the start keeps the event's length, so the end never lands before it.
 	const changeStart = ( value ) => {
-		const changes = { _oe_start: value };
+		const changes = { _feriae_start: value };
 		const oldStart = parse( start );
 		const oldEnd = parse( end );
 		const newStart = parse( value );
 		if ( newStart && oldStart && oldEnd && oldEnd >= oldStart ) {
-			changes._oe_end = format(
+			changes._feriae_end = format(
 				new Date( newStart.getTime() + ( oldEnd - oldStart ) )
 			);
 		} else if ( newStart && ( ! oldEnd || oldEnd < newStart ) ) {
-			changes._oe_end = format(
+			changes._feriae_end = format(
 				new Date( newStart.getTime() + 3600000 )
 			);
 		}
@@ -295,17 +292,19 @@ export default function EventPanel( {
 		return (
 			<ToggleControl
 				__nextHasNoMarginBottom
-				label={ __( 'This is an event', 'openevents' ) }
+				label={ __( 'This is an event', 'feriae' ) }
 				help={ __(
 					'Adds a date so this item shows on the calendar.',
-					'openevents'
+					'feriae'
 				) }
 				checked={ false }
 				onChange={ () => {
 					const s = nextHour();
 					setMeta( {
-						_oe_start: format( s ),
-						_oe_end: format( new Date( s.getTime() + 3600000 ) ),
+						_feriae_start: format( s ),
+						_feriae_end: format(
+							new Date( s.getTime() + 3600000 )
+						),
 					} );
 				} }
 			/>
@@ -317,28 +316,30 @@ export default function EventPanel( {
 			{ ! isDedicated && (
 				<ToggleControl
 					__nextHasNoMarginBottom
-					label={ __( 'This is an event', 'openevents' ) }
+					label={ __( 'This is an event', 'feriae' ) }
 					checked
-					onChange={ () => setMeta( { _oe_start: '', _oe_end: '' } ) }
+					onChange={ () =>
+						setMeta( { _feriae_start: '', _feriae_end: '' } )
+					}
 				/>
 			) }
 			<ToggleControl
 				__nextHasNoMarginBottom
-				label={ __( 'All day', 'openevents' ) }
+				label={ __( 'All day', 'feriae' ) }
 				checked={ allDay }
-				onChange={ ( value ) => setMeta( { _oe_all_day: value } ) }
+				onChange={ ( value ) => setMeta( { _feriae_all_day: value } ) }
 			/>
 			<DateField
-				label={ __( 'Starts', 'openevents' ) }
+				label={ __( 'Starts', 'feriae' ) }
 				value={ start }
 				onChange={ changeStart }
 				allDay={ allDay }
 				is12Hour={ config.timeFormat12h }
 			/>
 			<DateField
-				label={ __( 'Ends', 'openevents' ) }
+				label={ __( 'Ends', 'feriae' ) }
 				value={ end }
-				onChange={ ( value ) => setMeta( { _oe_end: value } ) }
+				onChange={ ( value ) => setMeta( { _feriae_end: value } ) }
 				allDay={ allDay }
 				is12Hour={ config.timeFormat12h }
 			/>
@@ -346,7 +347,7 @@ export default function EventPanel( {
 				<Notice status="warning" isDismissible={ false }>
 					{ __(
 						'The end is before the start. The event will be saved as ending when it starts.',
-						'openevents'
+						'feriae'
 					) }
 				</Notice>
 			) }
@@ -354,132 +355,134 @@ export default function EventPanel( {
 				<ComboboxControl
 					__next40pxDefaultSize
 					__nextHasNoMarginBottom
-					label={ __( 'Timezone', 'openevents' ) }
-					value={ meta._oe_timezone || '' }
+					label={ __( 'Timezone', 'feriae' ) }
+					value={ meta._feriae_timezone || '' }
 					options={ timezoneOptions }
 					onChange={ ( value ) =>
-						setMeta( { _oe_timezone: value || '' } )
+						setMeta( { _feriae_timezone: value || '' } )
 					}
 				/>
 			) }
 			<LinkedPostField
-				postType="oe_venue"
-				label={ __( 'Venue', 'openevents' ) }
+				postType="feriae_venue"
+				label={ __( 'Venue', 'feriae' ) }
 				createLabel={ ( name ) =>
 					sprintf(
 						/* translators: %s: venue name */
-						__( 'Add “%s” as a new venue', 'openevents' ),
+						__( 'Add “%s” as a new venue', 'feriae' ),
 						name
 					)
 				}
-				value={ meta._oe_venue_id }
-				onChange={ ( id ) => setMeta( { _oe_venue_id: id } ) }
+				value={ meta._feriae_venue_id }
+				onChange={ ( id ) => setMeta( { _feriae_venue_id: id } ) }
 			/>
 			{ ( config.modules || [] ).includes( 'series' ) && (
 				<LinkedPostField
-					postType="oe_series"
-					label={ __( 'Series', 'openevents' ) }
+					postType="feriae_series"
+					label={ __( 'Series', 'feriae' ) }
 					createLabel={ ( name ) =>
 						sprintf(
 							/* translators: %s: series name */
-							__( 'Add “%s” as a new series', 'openevents' ),
+							__( 'Add “%s” as a new series', 'feriae' ),
 							name
 						)
 					}
-					value={ meta._oe_series_id }
-					onChange={ ( id ) => setMeta( { _oe_series_id: id } ) }
+					value={ meta._feriae_series_id }
+					onChange={ ( id ) => setMeta( { _feriae_series_id: id } ) }
 				/>
 			) }
 			<OrganizersField
-				value={ meta._oe_organizer_ids }
-				onChange={ ( ids ) => setMeta( { _oe_organizer_ids: ids } ) }
+				value={ meta._feriae_organizer_ids }
+				onChange={ ( ids ) =>
+					setMeta( { _feriae_organizer_ids: ids } )
+				}
 			/>
 			<Flex align="flex-start">
 				<TextControl
 					__next40pxDefaultSize
 					__nextHasNoMarginBottom
-					label={ __( 'Cost', 'openevents' ) }
-					help={ __( '0 shows “Free”.', 'openevents' ) }
-					value={ meta._oe_cost || '' }
-					onChange={ ( value ) => setMeta( { _oe_cost: value } ) }
+					label={ __( 'Cost', 'feriae' ) }
+					help={ __( '0 shows “Free”.', 'feriae' ) }
+					value={ meta._feriae_cost || '' }
+					onChange={ ( value ) => setMeta( { _feriae_cost: value } ) }
 				/>
 				<TextControl
 					__next40pxDefaultSize
 					__nextHasNoMarginBottom
-					label={ __( 'Symbol', 'openevents' ) }
-					value={ meta._oe_currency_symbol || '' }
+					label={ __( 'Symbol', 'feriae' ) }
+					value={ meta._feriae_currency_symbol || '' }
 					onChange={ ( value ) =>
-						setMeta( { _oe_currency_symbol: value } )
+						setMeta( { _feriae_currency_symbol: value } )
 					}
-					className="oe-editor-panel__symbol"
+					className="feriae-editor-panel__symbol"
 				/>
 			</Flex>
 			<TextControl
 				__next40pxDefaultSize
 				__nextHasNoMarginBottom
 				type="url"
-				label={ __( 'Event website', 'openevents' ) }
-				value={ meta._oe_url || '' }
-				onChange={ ( value ) => setMeta( { _oe_url: value } ) }
+				label={ __( 'Event website', 'feriae' ) }
+				value={ meta._feriae_url || '' }
+				onChange={ ( value ) => setMeta( { _feriae_url: value } ) }
 			/>
 			<SelectControl
 				__next40pxDefaultSize
 				__nextHasNoMarginBottom
-				label={ __( 'Status', 'openevents' ) }
+				label={ __( 'Status', 'feriae' ) }
 				help={ __(
 					'Cancelled and postponed events stay listed with a label, and stop taking RSVPs and ticket orders.',
-					'openevents'
+					'feriae'
 				) }
-				value={ meta._oe_status || 'scheduled' }
+				value={ meta._feriae_status || 'scheduled' }
 				options={ [
 					{
 						value: 'scheduled',
-						label: __( 'Scheduled', 'openevents' ),
+						label: __( 'Scheduled', 'feriae' ),
 					},
 					{
 						value: 'cancelled',
-						label: __( 'Cancelled', 'openevents' ),
+						label: __( 'Cancelled', 'feriae' ),
 					},
 					{
 						value: 'postponed',
-						label: __( 'Postponed', 'openevents' ),
+						label: __( 'Postponed', 'feriae' ),
 					},
 				] }
-				onChange={ ( value ) => setMeta( { _oe_status: value } ) }
+				onChange={ ( value ) => setMeta( { _feriae_status: value } ) }
 			/>
-			{ ( meta._oe_status || 'scheduled' ) !== 'scheduled' && (
+			{ ( meta._feriae_status || 'scheduled' ) !== 'scheduled' && (
 				<TextControl
 					__next40pxDefaultSize
 					__nextHasNoMarginBottom
-					label={ __( 'Note for visitors', 'openevents' ) }
+					label={ __( 'Note for visitors', 'feriae' ) }
 					help={ __(
 						'Optional, shown with the status. For example, the reason or what happens next.',
-						'openevents'
+						'feriae'
 					) }
 					maxLength={ 500 }
-					value={ meta._oe_status_reason || '' }
+					value={ meta._feriae_status_reason || '' }
 					onChange={ ( value ) =>
-						setMeta( { _oe_status_reason: value } )
+						setMeta( { _feriae_status_reason: value } )
 					}
 				/>
 			) }
 			<ToggleControl
 				__nextHasNoMarginBottom
-				label={ __( 'Featured event', 'openevents' ) }
-				checked={ !! meta._oe_featured }
-				onChange={ ( value ) => setMeta( { _oe_featured: value } ) }
+				label={ __( 'Featured event', 'feriae' ) }
+				checked={ !! meta._feriae_featured }
+				onChange={ ( value ) => setMeta( { _feriae_featured: value } ) }
 			/>
 			<ToggleControl
 				__nextHasNoMarginBottom
-				label={ __( 'Hide from event listings', 'openevents' ) }
-				help={ __( 'Still reachable by its link.', 'openevents' ) }
-				checked={ !! meta._oe_hide_from_listings }
+				label={ __( 'Hide from event listings', 'feriae' ) }
+				help={ __( 'Still reachable by its link.', 'feriae' ) }
+				checked={ !! meta._feriae_hide_from_listings }
 				onChange={ ( value ) =>
-					setMeta( { _oe_hide_from_listings: value } )
+					setMeta( { _feriae_hide_from_listings: value } )
 				}
 			/>
 			<Slot
-				name="OpenEventsEventPanel"
+				name="FeriaeEventPanel"
 				fillProps={ { meta, setMeta, postType } }
 			/>
 		</Flex>

@@ -5,9 +5,9 @@ test.describe( 'Week and day views', () => {
 	test( 'week view navigates in place and opens a day', async ( {
 		page,
 	} ) => {
-		await page.goto( '/events/?oe_view=week' );
-		const calendar = page.locator( '.oe-calendar' );
-		await expect( calendar.locator( '.oe-week__day' ) ).toHaveCount( 7 );
+		await page.goto( '/events/?feriae_view=week' );
+		const calendar = page.locator( '.feriae-calendar' );
+		await expect( calendar.locator( '.feriae-week__day' ) ).toHaveCount( 7 );
 		await expect(
 			calendar.getByRole( 'link', { name: 'Week', exact: true } )
 		).toHaveAttribute( 'aria-current', 'page' );
@@ -20,29 +20,29 @@ test.describe( 'Week and day views', () => {
 				'wcag21aa',
 				'wcag22aa',
 			] )
-			.include( '.oe-calendar' )
+			.include( '.feriae-calendar' )
 			.analyze();
 		expect( violations.map( ( v ) => v.id ) ).toEqual( [] );
 
 		const title = await calendar
-			.locator( '.oe-calendar__title' )
+			.locator( '.feriae-calendar__title' )
 			.textContent();
 		const url = page.url();
 		await calendar.getByRole( 'link', { name: 'Next week' } ).click();
 		await expect(
-			calendar.locator( '.oe-calendar__title' )
+			calendar.locator( '.feriae-calendar__title' )
 		).not.toHaveText( title );
 		// Updated in place, and focus moves to the new heading.
-		await expect( calendar.locator( '.oe-calendar__title' ) ).toBeFocused();
+		await expect( calendar.locator( '.feriae-calendar__title' ) ).toBeFocused();
 		expect( page.url() ).not.toBe( url );
 
-		const firstDay = calendar.locator( '.oe-week__date a' ).first();
+		const firstDay = calendar.locator( '.feriae-week__date a' ).first();
 		const date = await firstDay
 			.locator( 'time' )
 			.getAttribute( 'datetime' );
 		await firstDay.click();
-		await expect( page.locator( '.oe-calendar--day' ) ).toBeVisible();
-		await expect( page ).toHaveURL( new RegExp( `oe_date=${ date }` ) );
+		await expect( page.locator( '.feriae-calendar--day' ) ).toBeVisible();
+		await expect( page ).toHaveURL( new RegExp( `feriae_date=${ date }` ) );
 	} );
 
 	test( 'week and day views work without JavaScript', async ( {
@@ -52,12 +52,12 @@ test.describe( 'Week and day views', () => {
 			javaScriptEnabled: false,
 		} );
 		const page = await context.newPage();
-		await page.goto( '/events/?oe_view=week' );
+		await page.goto( '/events/?feriae_view=week' );
 		await page.getByRole( 'link', { name: 'Day', exact: true } ).click();
-		await expect( page.locator( '.oe-calendar--day' ) ).toBeVisible();
+		await expect( page.locator( '.feriae-calendar--day' ) ).toBeVisible();
 		await page.getByRole( 'link', { name: 'Next day' } ).click();
 		await expect( page ).toHaveURL(
-			/oe_view=day.*oe_date=\d{4}-\d{2}-\d{2}/
+			/feriae_view=day.*feriae_date=\d{4}-\d{2}-\d{2}/
 		);
 		await context.close();
 	} );

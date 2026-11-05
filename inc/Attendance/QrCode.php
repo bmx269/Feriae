@@ -2,10 +2,10 @@
 /**
  * QR codes for check-in passes.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Attendance;
+namespace Feriae\Attendance;
 
 /**
  * A small QR Code encoder (ISO/IEC 18004, model 2): byte mode, error
@@ -102,7 +102,7 @@ final class QrCode {
 			}
 		}
 		return sprintf(
-			'<svg class="oe-qr" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %1$d %1$d" role="img" aria-label="%2$s" shape-rendering="crispEdges"><rect width="%1$d" height="%1$d" fill="#fff"/><path fill="#000" d="%3$s"/></svg>',
+			'<svg class="feriae-qr" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %1$d %1$d" role="img" aria-label="%2$s" shape-rendering="crispEdges"><rect width="%1$d" height="%1$d" fill="#fff"/><path fill="#000" d="%3$s"/></svg>',
 			$size,
 			esc_attr( $label ),
 			$path

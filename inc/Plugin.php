@@ -2,30 +2,30 @@
 /**
  * Service wiring.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents;
+namespace Feriae;
 
-use OpenEvents\Admin\AdminColumns;
-use OpenEvents\Admin\AdminApp;
-use OpenEvents\Content\Meta;
-use OpenEvents\Content\PostTypes;
-use OpenEvents\Frontend\Blocks;
-use OpenEvents\Frontend\Editor;
-use OpenEvents\Frontend\Templates;
-use OpenEvents\Integrations\Abilities;
-use OpenEvents\Integrations\BlockBindings;
-use OpenEvents\Modules\Registry;
-use OpenEvents\Occurrences\Repository;
-use OpenEvents\Occurrences\Sync;
-use OpenEvents\Rest\OccurrencesController;
+use Feriae\Admin\AdminColumns;
+use Feriae\Admin\AdminApp;
+use Feriae\Content\Meta;
+use Feriae\Content\PostTypes;
+use Feriae\Frontend\Blocks;
+use Feriae\Frontend\Editor;
+use Feriae\Frontend\Templates;
+use Feriae\Integrations\Abilities;
+use Feriae\Integrations\BlockBindings;
+use Feriae\Modules\Registry;
+use Feriae\Occurrences\Repository;
+use Feriae\Occurrences\Sync;
+use Feriae\Rest\OccurrencesController;
 
 /**
  * Holds the shared service instances and registers their hooks.
  *
- * Add-ons reach services through openevents(), e.g.
- * openevents()->occurrences()->query( [ ... ] ).
+ * Add-ons reach services through feriae(), e.g.
+ * feriae()->occurrences()->query( [ ... ] ).
  */
 final class Plugin {
 
@@ -51,7 +51,7 @@ final class Plugin {
 		 *
 		 * @param Plugin $plugin Plugin instance.
 		 */
-		do_action( 'openevents/loaded', $plugin );
+		do_action( 'feriae/loaded', $plugin );
 	}
 
 	private function __construct() {
@@ -64,12 +64,12 @@ final class Plugin {
 		Installer::register();
 		( new PostTypes( $this->settings ) )->register();
 		( new Meta( $this->settings ) )->register();
-		\OpenEvents\Content\Attributes::register();
+		\Feriae\Content\Attributes::register();
 		( new Sync() )->register();
-		\OpenEvents\Attendance\Cleanup::register();
-		\OpenEvents\Attendance\Privacy::register();
-		\OpenEvents\Attendance\Pass::register();
-		\OpenEvents\Attendance\CheckIn::register();
+		\Feriae\Attendance\Cleanup::register();
+		\Feriae\Attendance\Privacy::register();
+		\Feriae\Attendance\Pass::register();
+		\Feriae\Attendance\CheckIn::register();
 		$rest = new OccurrencesController( $this->occurrences );
 		$rest->register();
 		( new Abilities( $rest ) )->register();
@@ -84,7 +84,7 @@ final class Plugin {
 		}
 
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
-			\WP_CLI::add_command( 'openevents', Cli\Command::class );
+			\WP_CLI::add_command( 'feriae', Cli\Command::class );
 		}
 
 		$this->modules->boot();

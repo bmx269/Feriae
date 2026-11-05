@@ -17,19 +17,19 @@ test.describe( 'Passes and check-in', () => {
 		// Organisers can open anyone's pass from the attendee list.
 		const { body } = await rest(
 			page,
-			'/openevents/v1/attendees?search=mae@example.com'
+			'/feriae/v1/attendees?search=mae@example.com'
 		);
 		const attendee = body[ 0 ];
-		expect( attendee.pass_url ).toContain( 'oe_pass=' );
+		expect( attendee.pass_url ).toContain( 'feriae_pass=' );
 
 		await page.goto( attendee.pass_url );
 		await expect( page.getByRole( 'heading', { level: 1 } ) ).toHaveText(
 			'Weekly Storytime'
 		);
-		await expect( page.locator( '.oe-pass__code' ) ).toHaveText(
+		await expect( page.locator( '.feriae-pass__code' ) ).toHaveText(
 			attendee.code
 		);
-		const { violations } = await scan( page, '.oe-pass' );
+		const { violations } = await scan( page, '.feriae-pass' );
 		expect( violations.map( ( v ) => v.id ) ).toEqual( [] );
 
 		// Read the QR code as a phone would.
@@ -46,7 +46,7 @@ test.describe( 'Passes and check-in', () => {
 			image.height
 		);
 		expect( decoded?.data ).toContain(
-			`page=openevents-check-in&code=${ attendee.code }`
+			`page=feriae-check-in&code=${ attendee.code }`
 		);
 
 		// The link only looks them up; staff tap to check in.
@@ -73,7 +73,7 @@ test.describe( 'Passes and check-in', () => {
 		await field.press( 'Enter' );
 		await expect( status ).toContainText( 'No booking with that code' );
 
-		const result = await scan( page, '.oe-check-in' );
+		const result = await scan( page, '.feriae-check-in' );
 		expect( result.violations.map( ( v ) => v.id ) ).toEqual( [] );
 	} );
 } );

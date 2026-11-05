@@ -8,8 +8,8 @@ test.describe( 'RSVP', () => {
 		page,
 	} ) => {
 		await page.goto( '/events/next-month-gala/' );
-		const rsvp = page.locator( '.oe-rsvp' );
-		await expect( rsvp.locator( '.oe-rsvp__count' ) ).toHaveText(
+		const rsvp = page.locator( '.feriae-rsvp' );
+		await expect( rsvp.locator( '.feriae-rsvp__count' ) ).toHaveText(
 			/6 going · 114 spots left/
 		);
 
@@ -19,11 +19,11 @@ test.describe( 'RSVP', () => {
 		await humanPause( page );
 		await rsvp.getByRole( 'button', { name: 'RSVP' } ).click();
 
-		const message = rsvp.locator( '.oe-rsvp__live' );
+		const message = rsvp.locator( '.feriae-rsvp__live' );
 		await expect( message ).toHaveText( /You’re going, party of 2/ );
 		await expect( message ).toBeFocused();
-		await expect( rsvp.locator( '.oe-rsvp__form' ) ).toBeHidden();
-		await expect( rsvp.locator( '.oe-rsvp__count' ) ).toHaveText(
+		await expect( rsvp.locator( '.feriae-rsvp__form' ) ).toBeHidden();
+		await expect( rsvp.locator( '.feriae-rsvp__count' ) ).toHaveText(
 			/8 going · 112 spots left/
 		);
 	} );
@@ -36,8 +36,8 @@ test.describe( 'RSVP', () => {
 		} );
 		const page = await context.newPage();
 		await page.goto( '/events/intro-to-bookbinding-3-places/' );
-		const rsvp = page.locator( '.oe-rsvp' );
-		await expect( rsvp.locator( '.oe-rsvp__count' ) ).toHaveText(
+		const rsvp = page.locator( '.feriae-rsvp' );
+		await expect( rsvp.locator( '.feriae-rsvp__count' ) ).toHaveText(
 			/2 going · 1 spot left/
 		);
 
@@ -46,7 +46,7 @@ test.describe( 'RSVP', () => {
 		await humanPause( page );
 		await rsvp.getByRole( 'button', { name: 'RSVP' } ).click();
 
-		await expect( page ).toHaveURL( /oe_rsvp=going/ );
+		await expect( page ).toHaveURL( /feriae_rsvp=going/ );
 		await expect( rsvp.getByRole( 'status' ).first() ).toHaveText(
 			/You’re going!/
 		);
@@ -61,14 +61,14 @@ test.describe( 'RSVP', () => {
 		page,
 	} ) => {
 		await page.goto( '/events/next-month-gala/' );
-		const rsvp = page.locator( '.oe-rsvp' );
+		const rsvp = page.locator( '.feriae-rsvp' );
 		await rsvp.getByLabel( 'Name' ).fill( 'Someone Else' );
 		await rsvp.getByLabel( 'Email' ).fill( 'grace@example.com' );
 		await rsvp.getByRole( 'radio', { name: 'Not going' } ).check();
 		await humanPause( page );
 		await rsvp.getByRole( 'button', { name: 'RSVP' } ).click();
 
-		await expect( rsvp.locator( '.oe-rsvp__live' ) ).toHaveText(
+		await expect( rsvp.locator( '.feriae-rsvp__live' ) ).toHaveText(
 			/already responded/
 		);
 	} );
@@ -77,7 +77,7 @@ test.describe( 'RSVP', () => {
 		page,
 	} ) => {
 		await page.goto(
-			'/wp-admin/edit.php?post_type=oe_event&page=openevents-attendees'
+			'/wp-admin/edit.php?post_type=feriae_event&page=feriae-attendees'
 		);
 		await expect(
 			page.getByRole( 'heading', { name: 'Attendees' } )

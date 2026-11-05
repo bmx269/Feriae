@@ -2,10 +2,10 @@
 /**
  * RFC 5545 reader.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Feeds;
+namespace Feriae\Modules\Feeds;
 
 use DateInterval;
 use DateTimeImmutable;
@@ -13,7 +13,7 @@ use DateTimeZone;
 
 /**
  * Reads the VEVENTs of an iCalendar document (Google Calendar, Outlook,
- * Apple Calendar, Meetup, another OpenEvents or TEC site).
+ * Apple Calendar, Meetup, another Feriae or TEC site).
  *
  * Times keep the zone they were written in (TZID, including Outlook's Windows
  * names and Mozilla-style prefixed ids); UTC and floating times use the
@@ -63,7 +63,7 @@ final class Parser {
 	/** @var array<string, true>|null Zone ids PHP knows, including old aliases. */
 	private static ?array $known = null;
 
-	/** @var array<string, true>|null Current zone ids (what `_oe_timezone` accepts). */
+	/** @var array<string, true>|null Current zone ids (what `_feriae_timezone` accepts). */
 	private static ?array $canonical = null;
 
 	private DateTimeZone $default;
@@ -222,7 +222,7 @@ final class Parser {
 		$uid     = self::text( $first( 'UID' )[1] ?? '', 255 );
 
 		return new Item(
-			uid: '' !== $uid ? $uid : 'oe-' . md5( $start->format( 'c' ) . $summary ),
+			uid: '' !== $uid ? $uid : 'feriae-' . md5( $start->format( 'c' ) . $summary ),
 			start: $start,
 			end: $end,
 			all_day: $all_day,

@@ -2,14 +2,14 @@
 /**
  * Editing one date, or the rest of a series.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Recurrence;
+namespace Feriae\Modules\Recurrence;
 
-use OpenEvents\Content\Event;
-use OpenEvents\Content\Meta;
-use OpenEvents\Occurrences\Occurrence;
+use Feriae\Content\Event;
+use Feriae\Content\Meta;
+use Feriae\Occurrences\Occurrence;
 use WP_Error;
 
 /**
@@ -21,12 +21,12 @@ use WP_Error;
  * - This and following (split): the series ends the day before, and a new event
  *   carries the rule from this date on.
  *
- * New events record where they came from in `_oe_series_parent`, so a series
+ * New events record where they came from in `_feriae_series_parent`, so a series
  * can be listed (or re-joined) later.
  */
 final class Series {
 
-	public const PARENT_KEY = '_oe_series_parent';
+	public const PARENT_KEY = '_feriae_series_parent';
 
 	/** Meta that belongs to one post and must not be copied. */
 	private const SKIP_META = array( '_edit_lock', '_edit_last', '_wp_old_slug', '_wp_old_date', '_encloseme', '_pingme', Recurrence::META_KEY, self::PARENT_KEY );
@@ -37,7 +37,7 @@ final class Series {
 	public static function skip( Event $event, Occurrence $occurrence ): true|WP_Error {
 		$recurrence = Recurrence::for_event( $event );
 		if ( ! $recurrence ) {
-			return new WP_Error( 'openevents_not_recurring', __( 'This event does not repeat.', 'openevents' ), array( 'status' => 400 ) );
+			return new WP_Error( 'feriae_not_recurring', __( 'This event does not repeat.', 'feriae' ), array( 'status' => 400 ) );
 		}
 		$exdates   = $recurrence->exdates;
 		$exdates[] = $occurrence->start->format( 'Y-m-d' );
@@ -53,7 +53,7 @@ final class Series {
 	public static function detach( Event $event, Occurrence $occurrence ): int|WP_Error {
 		$recurrence = Recurrence::for_event( $event );
 		if ( ! $recurrence ) {
-			return new WP_Error( 'openevents_not_recurring', __( 'This event does not repeat.', 'openevents' ), array( 'status' => 400 ) );
+			return new WP_Error( 'feriae_not_recurring', __( 'This event does not repeat.', 'feriae' ), array( 'status' => 400 ) );
 		}
 
 		$id = self::copy( $event, $occurrence, Recurrence::empty_meta() );
@@ -73,10 +73,10 @@ final class Series {
 		$recurrence = Recurrence::for_event( $event );
 		$start      = $event->start();
 		if ( ! $recurrence || ! $start ) {
-			return new WP_Error( 'openevents_not_recurring', __( 'This event does not repeat.', 'openevents' ), array( 'status' => 400 ) );
+			return new WP_Error( 'feriae_not_recurring', __( 'This event does not repeat.', 'feriae' ), array( 'status' => 400 ) );
 		}
 		if ( 0 === $occurrence->sequence || $occurrence->start <= $start ) {
-			return new WP_Error( 'openevents_split_first', __( 'This is the first date. Edit the event itself to change every date.', 'openevents' ), array( 'status' => 400 ) );
+			return new WP_Error( 'feriae_split_first', __( 'This is the first date. Edit the event itself to change every date.', 'feriae' ), array( 'status' => 400 ) );
 		}
 
 		$date   = $occurrence->start->format( 'Y-m-d' );
@@ -160,8 +160,8 @@ final class Series {
 
 		$root = (int) get_post_meta( $post->ID, self::PARENT_KEY, true ) ?: $post->ID;
 		update_post_meta( $id, self::PARENT_KEY, $root );
-		update_post_meta( $id, '_oe_start', $occurrence->start->format( Meta::DATETIME_FORMAT ) );
-		update_post_meta( $id, '_oe_end', $occurrence->end->format( Meta::DATETIME_FORMAT ) );
+		update_post_meta( $id, '_feriae_start', $occurrence->start->format( Meta::DATETIME_FORMAT ) );
+		update_post_meta( $id, '_feriae_end', $occurrence->end->format( Meta::DATETIME_FORMAT ) );
 		update_post_meta( $id, Recurrence::META_KEY, $recurrence );
 
 		/**
@@ -172,7 +172,7 @@ final class Series {
 		 * @param Event      $event      Original event.
 		 * @param Occurrence $occurrence Date the new event starts on.
 		 */
-		do_action( 'openevents/recurrence/copied', $id, $event, $occurrence );
+		do_action( 'feriae/recurrence/copied', $id, $event, $occurrence );
 		return $id;
 	}
 }

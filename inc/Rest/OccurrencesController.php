@@ -2,28 +2,28 @@
 /**
  * REST: occurrences.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Rest;
+namespace Feriae\Rest;
 
-use OpenEvents\Content\Event;
-use OpenEvents\Content\PostTypes;
-use OpenEvents\Occurrences\Occurrence;
-use OpenEvents\Occurrences\Repository;
+use Feriae\Content\Event;
+use Feriae\Content\PostTypes;
+use Feriae\Occurrences\Occurrence;
+use Feriae\Occurrences\Repository;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_REST_Server;
 
 /**
- * GET /openevents/v1/occurrences
+ * GET /feriae/v1/occurrences
  *
  * Dated, published event instances for calendars, apps, and integrations. Event
  * content and meta are editable through the core routes (/wp/v2/events etc.).
  */
 final class OccurrencesController {
 
-	public const NAMESPACE = 'openevents/v1';
+	public const NAMESPACE = 'feriae/v1';
 
 	public function __construct( private Repository $repository ) {}
 
@@ -41,17 +41,17 @@ final class OccurrencesController {
 				'permission_callback' => '__return_true', // Only published events are returned.
 				'args'                => array(
 					'start'      => array(
-						'description' => __( 'Local date (Y-m-d). Returns occurrences overlapping [start, end]. Defaults to upcoming.', 'openevents' ),
+						'description' => __( 'Local date (Y-m-d). Returns occurrences overlapping [start, end]. Defaults to upcoming.', 'feriae' ),
 						'type'        => 'string',
 						'format'      => 'date',
 					),
 					'end'        => array(
-						'description' => __( 'Local date (Y-m-d), inclusive.', 'openevents' ),
+						'description' => __( 'Local date (Y-m-d), inclusive.', 'feriae' ),
 						'type'        => 'string',
 						'format'      => 'date',
 					),
 					'past'       => array(
-						'description' => __( 'Return past occurrences, newest first.', 'openevents' ),
+						'description' => __( 'Return past occurrences, newest first.', 'feriae' ),
 						'type'        => 'boolean',
 						'default'     => false,
 					),
@@ -65,12 +65,12 @@ final class OccurrencesController {
 						'default' => 0,
 					),
 					'series'     => array(
-						'description' => __( 'Limit to one series (series module).', 'openevents' ),
+						'description' => __( 'Limit to one series (series module).', 'feriae' ),
 						'type'        => 'integer',
 						'default'     => 0,
 					),
 					'event'      => array(
-						'description' => __( 'Limit to one event id.', 'openevents' ),
+						'description' => __( 'Limit to one event id.', 'feriae' ),
 						'type'        => 'integer',
 						'default'     => 0,
 					),
@@ -79,7 +79,7 @@ final class OccurrencesController {
 						'default' => '',
 					),
 					'post_type'  => array(
-						'description' => __( 'Limit to event-enabled post types.', 'openevents' ),
+						'description' => __( 'Limit to event-enabled post types.', 'feriae' ),
 						'type'        => 'array',
 						'items'       => array( 'type' => 'string' ),
 						'default'     => array(),
@@ -107,7 +107,7 @@ final class OccurrencesController {
 			'series'     => $request['series'],
 			'event_ids'  => $request['event'] ? array( $request['event'] ) : array(),
 			'search'     => $request['search'],
-			'post_types' => array_values( array_intersect( (array) $request['post_type'], openevents()->settings()->event_post_types() ) ),
+			'post_types' => array_values( array_intersect( (array) $request['post_type'], feriae()->settings()->event_post_types() ) ),
 			'per_page'     => $request['per_page'],
 			'page'         => $request['page'],
 			'prime_images' => true,
@@ -142,7 +142,7 @@ final class OccurrencesController {
 			'event_id'   => $occurrence->event_id,
 			'post_type'  => $event ? $event->post->post_type : '',
 			'title'      => $event ? get_the_title( $event->post ) : '',
-			'link'       => $event ? openevents_occurrence_url( $occurrence ) : '',
+			'link'       => $event ? feriae_occurrence_url( $occurrence ) : '',
 			'excerpt'    => $event ? get_the_excerpt( $event->post ) : '',
 			'start'      => $occurrence->start->format( DATE_ATOM ),
 			'end'        => $occurrence->end->format( DATE_ATOM ),
@@ -152,7 +152,7 @@ final class OccurrencesController {
 			'all_day'    => $occurrence->all_day,
 			// Scheduled, cancelled, or postponed (this date's, or the whole event's).
 			'status'        => $occurrence->event_status,
-			'status_reason' => \OpenEvents\Content\EventStatus::reason( $occurrence ),
+			'status_reason' => \Feriae\Content\EventStatus::reason( $occurrence ),
 			'cost'       => $event ? $event->cost() : '',
 			'image'      => $event ? get_the_post_thumbnail_url( $event->post, 'large' ) : false,
 			'venue'      => $venue ? array(
@@ -171,6 +171,6 @@ final class OccurrencesController {
 		 * @param array      $data       Response data.
 		 * @param Occurrence $occurrence Occurrence.
 		 */
-		return apply_filters( 'openevents/rest/occurrence', $data, $occurrence );
+		return apply_filters( 'feriae/rest/occurrence', $data, $occurrence );
 	}
 }

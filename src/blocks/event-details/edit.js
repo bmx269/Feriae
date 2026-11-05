@@ -4,18 +4,18 @@ import { PanelBody, ToggleControl } from '@wordpress/components';
 import ServerSideRender from '@wordpress/server-side-render';
 
 const TOGGLES = [
-	[ 'showVenue', __( 'Venue', 'openevents' ) ],
-	[ 'showOrganizers', __( 'Organizers', 'openevents' ) ],
-	[ 'showCost', __( 'Cost', 'openevents' ) ],
-	[ 'showCategories', __( 'Categories', 'openevents' ) ],
-	[ 'showLinks', __( 'Calendar links', 'openevents' ) ],
+	[ 'showVenue', __( 'Venue', 'feriae' ) ],
+	[ 'showOrganizers', __( 'Organizers', 'feriae' ) ],
+	[ 'showCost', __( 'Cost', 'feriae' ) ],
+	[ 'showCategories', __( 'Categories', 'feriae' ) ],
+	[ 'showLinks', __( 'Calendar links', 'feriae' ) ],
 ];
 
 export default function Edit( { attributes, setAttributes, context } ) {
 	return (
 		<div { ...useBlockProps() }>
 			<InspectorControls>
-				<PanelBody title={ __( 'Show', 'openevents' ) }>
+				<PanelBody title={ __( 'Show', 'feriae' ) }>
 					{ TOGGLES.map( ( [ key, label ] ) => (
 						<ToggleControl
 							key={ key }
@@ -30,14 +30,14 @@ export default function Edit( { attributes, setAttributes, context } ) {
 					<p className="description">
 						{ __(
 							'The preview shows the last saved event details.',
-							'openevents'
+							'feriae'
 						) }
 					</p>
 				</PanelBody>
 			</InspectorControls>
 			<div inert="">
 				<ServerSideRender
-					block="openevents/event-details"
+					block="feriae/event-details"
 					attributes={ attributes }
 					urlQueryArgs={
 						context.postId ? { post_id: context.postId } : {}

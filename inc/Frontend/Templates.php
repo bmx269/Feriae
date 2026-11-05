@@ -2,14 +2,14 @@
 /**
  * Templates for block and classic themes.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Frontend;
+namespace Feriae\Frontend;
 
-use OpenEvents\Content\PostTypes;
+use Feriae\Content\PostTypes;
 
-use const OpenEvents\PLUGIN_DIR;
+use const Feriae\PLUGIN_DIR;
 
 /**
  * Block themes: plugin-registered templates for the Events post type, editable
@@ -26,7 +26,7 @@ final class Templates {
 		// Late, as TEC does: page-builder archive layouts built around another
 		// plugin's loop would otherwise replace the calendar with an empty loop.
 		add_filter( 'template_include', array( $this, 'classic_archive' ), 50 );
-		add_shortcode( 'openevents_calendar', array( self::class, 'calendar_shortcode' ) );
+		add_shortcode( 'feriae_calendar', array( self::class, 'calendar_shortcode' ) );
 		add_filter( 'the_content', array( $this, 'prepend_details' ), 5 );
 		add_filter( 'posts_pre_query', array( $this, 'skip_archive_query' ), 10, 2 );
 		add_filter( 'single_template_hierarchy', array( $this, 'single_hierarchy' ) );
@@ -39,7 +39,7 @@ final class Templates {
 	 *
 	 *   single-{type}-{slug}
 	 *   single-event-category-{category}   (each assigned category, then its parents)
-	 *   single-{type}                       (e.g. single-oe_event, single-post)
+	 *   single-{type}                       (e.g. single-feriae_event, single-post)
 	 *   single-event                        (base template for every event type*)
 	 *   single
 	 *
@@ -51,7 +51,7 @@ final class Templates {
 	 */
 	public function single_hierarchy( array $templates ): array {
 		$post  = get_queried_object();
-		$event = $post instanceof \WP_Post ? openevents_get_event( $post ) : null;
+		$event = $post instanceof \WP_Post ? feriae_get_event( $post ) : null;
 		if ( ! $event ) {
 			return $templates;
 		}
@@ -69,7 +69,7 @@ final class Templates {
 			}
 		}
 
-		$use_base = PostTypes::EVENT === $type || openevents()->settings()->get( 'event_template' );
+		$use_base = PostTypes::EVENT === $type || feriae()->settings()->get( 'event_template' );
 		$out      = array();
 		foreach ( $templates as $template ) {
 			if ( "single-{$type}.php" === $template ) {
@@ -90,7 +90,7 @@ final class Templates {
 		 * @param \WP_Post $post      Event post.
 		 * @param string[] $templates Core's original hierarchy.
 		 */
-		return apply_filters( 'openevents/single_template_hierarchy', array_values( array_unique( $out ) ), $post, $templates );
+		return apply_filters( 'feriae/single_template_hierarchy', array_values( array_unique( $out ) ), $post, $templates );
 	}
 
 	/**
@@ -101,8 +101,8 @@ final class Templates {
 	 */
 	public function template_types( array $types ): array {
 		$types['single-event'] = array(
-			'title'       => __( 'Single Event', 'openevents' ),
-			'description' => __( 'Displays a single event of any event post type.', 'openevents' ),
+			'title'       => __( 'Single Event', 'feriae' ),
+			'description' => __( 'Displays a single event of any event post type.', 'feriae' ),
 		);
 		$terms = get_terms(
 			array(
@@ -114,9 +114,9 @@ final class Templates {
 		foreach ( is_array( $terms ) ? $terms : array() as $term ) {
 			$types[ 'single-event-category-' . $term->slug ] = array(
 				/* translators: %s: event category name */
-				'title'       => sprintf( __( 'Single Event: %s', 'openevents' ), $term->name ),
+				'title'       => sprintf( __( 'Single Event: %s', 'feriae' ), $term->name ),
 				/* translators: %s: event category name */
-				'description' => sprintf( __( 'Displays events in the %s category (and its subcategories).', 'openevents' ), $term->name ),
+				'description' => sprintf( __( 'Displays events in the %s category (and its subcategories).', 'feriae' ), $term->name ),
 			);
 		}
 		return $types;
@@ -143,7 +143,7 @@ final class Templates {
 			 *
 			 * @param bool $skip Whether to skip.
 			 */
-			&& apply_filters( 'openevents/skip_archive_query', true )
+			&& apply_filters( 'feriae/skip_archive_query', true )
 		) {
 			$query->found_posts   = 0;
 			$query->max_num_pages = 0;
@@ -159,20 +159,20 @@ final class Templates {
 		if ( ! wp_is_block_theme() ) {
 			return;
 		}
-		// The base template serves every event post type; the rest belong to oe_event.
-		$templates = array( 'single-event' => __( 'Single Event (all event types)', 'openevents' ) );
-		if ( openevents()->settings()->registers_event_type() ) {
+		// The base template serves every event post type; the rest belong to feriae_event.
+		$templates = array( 'single-event' => __( 'Single Event (all event types)', 'feriae' ) );
+		if ( feriae()->settings()->registers_event_type() ) {
 			$templates += array(
-				'single-' . PostTypes::EVENT      => __( 'Single Event', 'openevents' ),
-				'archive-' . PostTypes::EVENT     => __( 'Events Calendar', 'openevents' ),
-				'taxonomy-' . PostTypes::CATEGORY => __( 'Event Category', 'openevents' ),
+				'single-' . PostTypes::EVENT      => __( 'Single Event', 'feriae' ),
+				'archive-' . PostTypes::EVENT     => __( 'Events Calendar', 'feriae' ),
+				'taxonomy-' . PostTypes::CATEGORY => __( 'Event Category', 'feriae' ),
 			);
 		}
 		foreach ( $templates as $slug => $title ) {
 			$file = PLUGIN_DIR . '/templates/' . $slug . '.html';
 			if ( is_readable( $file ) ) {
 				register_block_template(
-					'openevents//' . $slug,
+					'feriae//' . $slug,
 					array(
 						'title'   => $title,
 						'content' => (string) file_get_contents( $file ), // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
@@ -186,15 +186,15 @@ final class Templates {
 		/**
 		 * Filters whether classic themes get the plugin's events archive. Return
 		 * false to design the archive in a page builder (place the calendar with
-		 * the [openevents_calendar] shortcode).
+		 * the [feriae_calendar] shortcode).
 		 *
 		 * @param bool $use Whether to use the plugin's archive template.
 		 */
-		if ( wp_is_block_theme() || ! apply_filters( 'openevents/classic_archive', true ) ) {
+		if ( wp_is_block_theme() || ! apply_filters( 'feriae/classic_archive', true ) ) {
 			return $template;
 		}
 		if ( is_post_type_archive( PostTypes::EVENT ) || is_tax( PostTypes::CATEGORY ) ) {
-			$theme = locate_template( array( 'openevents/archive.php' ) );
+			$theme = locate_template( array( 'feriae/archive.php' ) );
 			return $theme ?: PLUGIN_DIR . '/templates/classic/archive.php';
 		}
 		return $template;
@@ -208,22 +208,22 @@ final class Templates {
 			|| ! in_the_loop()
 			|| ! is_main_query()
 			|| get_queried_object_id() !== $post_id
-			|| ! openevents()->settings()->get( 'append_details' )
+			|| ! feriae()->settings()->get( 'append_details' )
 			|| EventDetails::was_rendered( $post_id )
-			|| has_block( 'openevents/event-details', $content )
+			|| has_block( 'feriae/event-details', $content )
 		) {
 			return $content;
 		}
 		$details = EventDetails::render( $post_id );
 		if ( $details ) {
 			// The block isn't on the page, so its stylesheet hasn't been enqueued.
-			wp_enqueue_style( generate_block_asset_handle( 'openevents/event-details', 'style' ) );
+			wp_enqueue_style( generate_block_asset_handle( 'feriae/event-details', 'style' ) );
 		}
-		return $details ? '<div class="wp-block-openevents-event-details oe-details">' . $details . '</div>' . $content : $content;
+		return $details ? '<div class="wp-block-feriae-event-details feriae-details">' . $details . '</div>' . $content : $content;
 	}
 
 	/**
-	 * [openevents_calendar] places the calendar anywhere shortcodes run (page
+	 * [feriae_calendar] places the calendar anywhere shortcodes run (page
 	 * builders, widgets). Attributes: views ("month,week,day,list"), view (default
 	 * view), categories (ids or slugs), legend, filters (yes/no), per_page.
 	 *
@@ -240,7 +240,7 @@ final class Templates {
 				'per_page'   => 0,
 			),
 			is_array( $atts ) ? $atts : array(),
-			'openevents_calendar'
+			'feriae_calendar'
 		);
 		$categories = array();
 		foreach ( array_filter( array_map( 'trim', explode( ',', (string) $atts['categories'] ) ) ) as $item ) {
@@ -260,6 +260,6 @@ final class Templates {
 			'showFilters' => 'no' !== $atts['filters'],
 			'perPage'     => absint( $atts['per_page'] ),
 		);
-		return do_blocks( '<!-- wp:openevents/calendar ' . wp_json_encode( $attributes ) . ' /-->' );
+		return do_blocks( '<!-- wp:feriae/calendar ' . wp_json_encode( $attributes ) . ' /-->' );
 	}
 }

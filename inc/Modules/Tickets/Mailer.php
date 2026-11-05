@@ -2,16 +2,16 @@
 /**
  * Ticket emails.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Tickets;
+namespace Feriae\Modules\Tickets;
 
-use OpenEvents\Attendance\Attendees;
-use OpenEvents\Attendance\Money;
-use OpenEvents\Attendance\Order;
-use OpenEvents\Attendance\TicketTypes;
-use OpenEvents\Frontend\Formatter;
+use Feriae\Attendance\Attendees;
+use Feriae\Attendance\Money;
+use Feriae\Attendance\Order;
+use Feriae\Attendance\TicketTypes;
+use Feriae\Frontend\Formatter;
 
 /**
  * Order confirmation: what was bought, payment status, each ticket's
@@ -24,35 +24,35 @@ final class Mailer {
 		$types = new TicketTypes();
 		$lines = array(
 			/* translators: %s: buyer name */
-			sprintf( __( 'Hi %s,', 'openevents' ), $order->name ),
+			sprintf( __( 'Hi %s,', 'feriae' ), $order->name ),
 			'',
 			Order::UNPAID === $order->status
 				/* translators: %s: event title */
-				? sprintf( __( 'Your tickets for %s are reserved. Payment is due before the event.', 'openevents' ), $title )
+				? sprintf( __( 'Your tickets for %s are reserved. Payment is due before the event.', 'feriae' ), $title )
 				/* translators: %s: event title */
-				: sprintf( __( 'Thanks for your order! Here are your tickets for %s.', 'openevents' ), $title ),
+				: sprintf( __( 'Thanks for your order! Here are your tickets for %s.', 'feriae' ), $title ),
 			'',
 		);
 
 		$type       = Checkout::order_type( $order );
-		$occurrence = ( $type ? \OpenEvents\Attendance\TicketTypes::date_of( $type ) : null ) ?? openevents()->occurrences()->for_event( $order->event_id );
+		$occurrence = ( $type ? \Feriae\Attendance\TicketTypes::date_of( $type ) : null ) ?? feriae()->occurrences()->for_event( $order->event_id );
 		if ( $occurrence ) {
 			/* translators: %s: date and time */
-			$lines[] = sprintf( __( 'When: %s', 'openevents' ), Formatter::range( $occurrence ) );
+			$lines[] = sprintf( __( 'When: %s', 'feriae' ), Formatter::range( $occurrence ) );
 		}
-		$venue = openevents_get_event( $order->event_id )?->venue();
+		$venue = feriae_get_event( $order->event_id )?->venue();
 		if ( $venue ) {
 			/* translators: %s: venue */
-			$lines[] = sprintf( __( 'Where: %s', 'openevents' ), wp_strip_all_tags( get_the_title( $venue ) ) );
+			$lines[] = sprintf( __( 'Where: %s', 'feriae' ), wp_strip_all_tags( get_the_title( $venue ) ) );
 		}
 		$lines[] = '';
 
-		foreach ( ( new \OpenEvents\Attendance\Orders() )->items( $order->id ) as $item ) {
+		foreach ( ( new \Feriae\Attendance\Orders() )->items( $order->id ) as $item ) {
 			$type    = $types->get( (int) $item->ticket_type_id );
 			$lines[] = sprintf( '%d × %s — %s', (int) $item->quantity, $type ? $type->name : '', Money::format( (int) $item->unit_price_minor * (int) $item->quantity, $order->currency ) );
 		}
 		/* translators: %s: order total */
-		$lines[] = sprintf( __( 'Total: %s', 'openevents' ), Money::format( $order->total_minor, $order->currency ) );
+		$lines[] = sprintf( __( 'Total: %s', 'feriae' ), Money::format( $order->total_minor, $order->currency ) );
 		if ( Order::UNPAID === $order->status ) {
 			$manual = Gateways::get( 'manual' );
 			if ( $manual ) {
@@ -60,21 +60,21 @@ final class Mailer {
 			}
 		}
 		$lines[] = '';
-		$lines[] = __( 'Passes (show one per person at the door, on your phone or printed):', 'openevents' );
+		$lines[] = __( 'Passes (show one per person at the door, on your phone or printed):', 'feriae' );
 		foreach ( ( new Attendees() )->group( $order->uuid ) as $i => $attendee ) {
 			$holder  = $types->get( $attendee->ticket_type_id );
 			$lines[] = sprintf( '  %d. %s, %s (%s)', $i + 1, $attendee->name, $holder ? $holder->name : '', $attendee->security_code );
-			$lines[] = '     ' . \OpenEvents\Attendance\Pass::url( $attendee );
+			$lines[] = '     ' . \Feriae\Attendance\Pass::url( $attendee );
 		}
 		$lines[] = '';
 		/* translators: %s: order number */
-		$lines[] = sprintf( __( 'Order: %s', 'openevents' ), $order->uuid );
-		$lines[] = $type ? \OpenEvents\Attendance\TicketTypes::url( $type ) : get_permalink( $order->event_id );
+		$lines[] = sprintf( __( 'Order: %s', 'feriae' ), $order->uuid );
+		$lines[] = $type ? \Feriae\Attendance\TicketTypes::url( $type ) : get_permalink( $order->event_id );
 
 		$email = array(
 			'to'      => $order->email,
 			/* translators: %s: event title */
-			'subject' => sprintf( __( 'Your tickets: %s', 'openevents' ), $title ),
+			'subject' => sprintf( __( 'Your tickets: %s', 'feriae' ), $title ),
 			'message' => implode( "\n", $lines ),
 			'headers' => array(),
 		);
@@ -85,7 +85,7 @@ final class Mailer {
 		 * @param array $email to, subject, message, headers.
 		 * @param Order $order Order.
 		 */
-		$email = apply_filters( 'openevents/tickets/email', $email, $order );
+		$email = apply_filters( 'feriae/tickets/email', $email, $order );
 		if ( $email ) {
 			wp_mail( $email['to'], $email['subject'], $email['message'], $email['headers'] );
 		}

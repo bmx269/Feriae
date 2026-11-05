@@ -1,16 +1,16 @@
 @use "../shared/base";
 @use "../shared/card";
 
-.oe-upcoming {
+.feriae-upcoming {
 	&__items {
 		display: grid;
-		gap: var(--oe-gap);
+		gap: var(--feriae-gap);
 		margin: 0;
 		padding: 0;
 		list-style: none;
 	}
 
 	&__empty {
-		color: var(--oe-muted);
+		color: var(--feriae-muted);
 	}
 }

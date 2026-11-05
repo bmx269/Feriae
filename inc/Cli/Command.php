@@ -2,19 +2,19 @@
 /**
  * WP-CLI commands.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Cli;
+namespace Feriae\Cli;
 
-use OpenEvents\Content\PostTypes;
-use OpenEvents\Installer;
-use OpenEvents\Occurrences\Repository;
-use OpenEvents\Occurrences\Sync;
+use Feriae\Content\PostTypes;
+use Feriae\Installer;
+use Feriae\Occurrences\Repository;
+use Feriae\Occurrences\Sync;
 use WP_CLI;
 
 /**
- * Manage OpenEvents data.
+ * Manage Feriae data.
  */
 final class Command {
 
@@ -33,7 +33,7 @@ final class Command {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp openevents rebuild --batch=1000
+	 *     wp feriae rebuild --batch=1000
 	 *
 	 * @param string[]             $args       Positional args.
 	 * @param array<string, mixed> $assoc_args Options.
@@ -52,7 +52,7 @@ final class Command {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp openevents stats
+	 *     wp feriae stats
 	 */
 	public function stats(): void {
 		global $wpdb;
@@ -137,8 +137,8 @@ final class Command {
 					'post_title'   => sprintf( 'Generated event %d', $i + 1 ),
 					'post_excerpt' => 'Load-test event.',
 					'meta_input'   => array(
-						'_oe_start' => $start->format( 'Y-m-d H:i:s' ),
-						'_oe_end'   => $end->format( 'Y-m-d H:i:s' ),
+						'_feriae_start' => $start->format( 'Y-m-d H:i:s' ),
+						'_feriae_end'   => $end->format( 'Y-m-d H:i:s' ),
 					),
 				)
 			);
@@ -170,7 +170,7 @@ final class Command {
 	 * : Show what would be imported, and change nothing.
 	 *
 	 * [--verify]
-	 * : Compare TEC's data with what OpenEvents has now.
+	 * : Compare TEC's data with what Feriae has now.
 	 *
 	 * [--rollback]
 	 * : Undo the conversion and remove imported rows.
@@ -180,9 +180,9 @@ final class Command {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp openevents import-tec --preview
-	 *     wp openevents import-tec
-	 *     wp openevents import-tec --verify
+	 *     wp feriae import-tec --preview
+	 *     wp feriae import-tec
+	 *     wp feriae import-tec --verify
 	 *
 	 * @subcommand import-tec
 	 *
@@ -190,7 +190,7 @@ final class Command {
 	 * @param array<string, mixed> $assoc_args Flags.
 	 */
 	public function import_tec( array $args, array $assoc_args ): void {
-		$importer = new \OpenEvents\Import\Tec( static fn( string $message ) => \WP_CLI::log( $message ) );
+		$importer = new \Feriae\Import\Tec( static fn( string $message ) => \WP_CLI::log( $message ) );
 		if ( ! empty( $assoc_args['preview'] ) ) {
 			\WP_CLI::print_value( $importer->preview(), array( 'format' => 'yaml' ) );
 			return;
@@ -205,7 +205,7 @@ final class Command {
 			\WP_CLI::success( 'Rolled back. Reactivate TEC to use it again.' );
 			return;
 		}
-		\WP_CLI::confirm( 'Convert TEC data to OpenEvents? Back up the database first.', $assoc_args );
+		\WP_CLI::confirm( 'Convert TEC data to Feriae? Back up the database first.', $assoc_args );
 		$start  = microtime( true );
 		$report = $importer->run();
 		\WP_CLI::print_value( $report, array( 'format' => 'yaml' ) );
@@ -243,7 +243,7 @@ final class Command {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp openevents import-ics calendar.ics --category=12 --status=draft
+	 *     wp feriae import-ics calendar.ics --category=12 --status=draft
 	 *
 	 * @subcommand import-ics
 	 *
@@ -253,23 +253,23 @@ final class Command {
 	public function import_ics( array $args, array $assoc_args ): void {
 		self::require_module( 'feeds' );
 		$file = (string) $args[0];
-		if ( ! is_readable( $file ) || filesize( $file ) > \OpenEvents\Modules\Feeds\Rest::MAX_FILE ) {
+		if ( ! is_readable( $file ) || filesize( $file ) > \Feriae\Modules\Feeds\Rest::MAX_FILE ) {
 			\WP_CLI::error( 'The file can’t be read, or is larger than 5 MB.' );
 		}
 		$ics = (string) file_get_contents( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- local file.
-		if ( ! \OpenEvents\Modules\Feeds\Parser::is_calendar( $ics ) ) {
+		if ( ! \Feriae\Modules\Feeds\Parser::is_calendar( $ics ) ) {
 			\WP_CLI::error( 'That file isn’t an iCal (.ics) calendar.' );
 		}
-		$options = \OpenEvents\Modules\Feeds\Feed::options(
+		$options = \Feriae\Modules\Feeds\Feed::options(
 			array(
 				'category'    => $assoc_args['category'] ?? 0,
 				'post_status' => $assoc_args['status'] ?? 'publish',
 				'post_type'   => $assoc_args['post-type'] ?? '',
 			)
 		);
-		$parser   = new \OpenEvents\Modules\Feeds\Parser();
-		$importer = new \OpenEvents\Modules\Feeds\Importer( 0, $options['post_type'], $options['post_status'], $options['category'], absint( $assoc_args['author'] ?? get_current_user_id() ) );
-		$report   = \OpenEvents\Modules\Feeds\Importer::report( array( 'skipped' => $parser->skipped ) + $importer->import( $parser->parse( $ics ), false ) );
+		$parser   = new \Feriae\Modules\Feeds\Parser();
+		$importer = new \Feriae\Modules\Feeds\Importer( 0, $options['post_type'], $options['post_status'], $options['category'], absint( $assoc_args['author'] ?? get_current_user_id() ) );
+		$report   = \Feriae\Modules\Feeds\Importer::report( array( 'skipped' => $parser->skipped ) + $importer->import( $parser->parse( $ics ), false ) );
 		\WP_CLI::success( $report['message'] );
 	}
 
@@ -283,8 +283,8 @@ final class Command {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp openevents sync-feeds
-	 *     wp openevents sync-feeds 42
+	 *     wp feriae sync-feeds
+	 *     wp feriae sync-feeds 42
 	 *
 	 * @subcommand sync-feeds
 	 *
@@ -293,8 +293,8 @@ final class Command {
 	public function sync_feeds( array $args ): void {
 		self::require_module( 'feeds' );
 		$feeds = $args
-			? array_filter( array_map( static fn( $id ) => \OpenEvents\Modules\Feeds\Feed::get( (int) $id ), $args ) )
-			: \OpenEvents\Modules\Feeds\Feed::all();
+			? array_filter( array_map( static fn( $id ) => \Feriae\Modules\Feeds\Feed::get( (int) $id ), $args ) )
+			: \Feriae\Modules\Feeds\Feed::all();
 		if ( ! $feeds ) {
 			\WP_CLI::error( 'No calendar feeds found. Add one under Events → Calendar import.' );
 		}
@@ -311,8 +311,8 @@ final class Command {
 	}
 
 	private static function require_module( string $id ): void {
-		if ( ! openevents()->modules()->is_enabled( $id ) ) {
-			\WP_CLI::error( sprintf( 'Turn on the "%s" module first (Events → Settings → Modules).', openevents()->modules()->get( $id )?->label() ?? $id ) );
+		if ( ! feriae()->modules()->is_enabled( $id ) ) {
+			\WP_CLI::error( sprintf( 'Turn on the "%s" module first (Events → Settings → Modules).', feriae()->modules()->get( $id )?->label() ?? $id ) );
 		}
 	}
 }

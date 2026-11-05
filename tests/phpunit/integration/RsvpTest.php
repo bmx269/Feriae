@@ -2,18 +2,18 @@
 /**
  * RSVP module.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Tests\Integration;
+namespace Feriae\Tests\Integration;
 
-use OpenEvents\Attendance\Attendee;
-use OpenEvents\Attendance\Attendees;
-use OpenEvents\Attendance\TicketTypes;
-use OpenEvents\Modules\Rsvp\Admin;
-use OpenEvents\Modules\Rsvp\Form;
-use OpenEvents\Modules\Rsvp\Service;
-use OpenEvents\Tests\TestCase;
+use Feriae\Attendance\Attendee;
+use Feriae\Attendance\Attendees;
+use Feriae\Attendance\TicketTypes;
+use Feriae\Modules\Rsvp\Admin;
+use Feriae\Modules\Rsvp\Form;
+use Feriae\Modules\Rsvp\Service;
+use Feriae\Tests\TestCase;
 
 final class RsvpTest extends TestCase {
 
@@ -28,14 +28,14 @@ final class RsvpTest extends TestCase {
 	/**
 	 * An upcoming event (in 5 days) with RSVP settings.
 	 *
-	 * @param array<string, mixed> $config _oe_rsvp overrides.
+	 * @param array<string, mixed> $config _feriae_rsvp overrides.
 	 */
 	private function rsvp_event( array $config = array(), int $days = 5 ): int {
 		$day = current_datetime()->modify( "+{$days} days" )->format( 'Y-m-d' );
 		$id  = $this->event(
 			array(
-				'_oe_start' => "{$day} 19:00:00",
-				'_oe_end'   => "{$day} 21:00:00",
+				'_feriae_start' => "{$day} 19:00:00",
+				'_feriae_end'   => "{$day} 21:00:00",
 			)
 		);
 		update_post_meta( $id, Service::META_KEY, array_merge( array( 'enabled' => true ), $config ) );
@@ -73,7 +73,7 @@ final class RsvpTest extends TestCase {
 	}
 
 	private function token_from_last_email(): string {
-		preg_match( '/oe_rsvp_token=([a-f0-9]+)/', $this->last_email()->body, $m );
+		preg_match( '/feriae_rsvp_token=([a-f0-9]+)/', $this->last_email()->body, $m );
 		return $m[1] ?? '';
 	}
 
@@ -202,7 +202,7 @@ final class RsvpTest extends TestCase {
 		$this->assertSame( 'deadline', $this->rsvp->closed_reason( $deadline ) );
 		$this->assertSame( 'closed', $this->respond( $deadline )->code );
 
-		$disabled = $this->event( array( '_oe_start' => current_datetime()->modify( '+3 days' )->format( 'Y-m-d H:i:s' ) ) );
+		$disabled = $this->event( array( '_feriae_start' => current_datetime()->modify( '+3 days' )->format( 'Y-m-d H:i:s' ) ) );
 		$this->assertSame( 'disabled', $this->respond( $disabled )->code );
 	}
 
@@ -225,7 +225,7 @@ final class RsvpTest extends TestCase {
 	public function test_rest_responses_and_status_codes(): void {
 		$id      = $this->rsvp_event( array( 'capacity' => 1 ) );
 		$request = static function ( array $body ) use ( $id ) {
-			$r = new \WP_REST_Request( 'POST', "/openevents/v1/events/{$id}/rsvp" );
+			$r = new \WP_REST_Request( 'POST', "/feriae/v1/events/{$id}/rsvp" );
 			$r->set_body_params( array_merge( array( 'name' => 'Ada', 'status' => 'going', 'quantity' => 1, 'ts' => Service::sign_timestamp( time() - 10 ) ), $body ) );
 			return rest_do_request( $r );
 		};
@@ -237,7 +237,7 @@ final class RsvpTest extends TestCase {
 		$this->assertSame( 409, $request( array( 'email' => 'b@example.com' ) )->get_status() );
 		$this->assertSame( 422, $request( array( 'email' => 'bad' ) )->get_status() );
 
-		$summary = rest_do_request( new \WP_REST_Request( 'GET', "/openevents/v1/events/{$id}/rsvp" ) )->get_data();
+		$summary = rest_do_request( new \WP_REST_Request( 'GET', "/feriae/v1/events/{$id}/rsvp" ) )->get_data();
 		$this->assertSame( 1, $summary['going'] );
 		$this->assertSame( 0, $summary['remaining'] );
 	}
@@ -246,7 +246,7 @@ final class RsvpTest extends TestCase {
 		$id = $this->rsvp_event( array( 'capacity' => 1 ) );
 		$this->respond( $id );
 
-		$list = new \WP_REST_Request( 'GET', '/openevents/v1/attendees' );
+		$list = new \WP_REST_Request( 'GET', '/feriae/v1/attendees' );
 		$list->set_param( 'event', $id );
 		$this->assertGreaterThanOrEqual( 401, rest_do_request( $list )->get_status(), 'Anonymous users are refused.' );
 
@@ -257,11 +257,11 @@ final class RsvpTest extends TestCase {
 		$this->assertSame( 'Ada Lovelace', $attendee['name'] );
 		$this->assertSame( '1', $response->get_headers()['X-WP-Total'] );
 
-		$checkin = new \WP_REST_Request( 'POST', '/openevents/v1/attendees/' . $attendee['id'] );
+		$checkin = new \WP_REST_Request( 'POST', '/feriae/v1/attendees/' . $attendee['id'] );
 		$checkin->set_body_params( array( 'checked_in' => true ) );
 		$this->assertTrue( rest_do_request( $checkin )->get_data()['checked_in'] );
 
-		$cancel = new \WP_REST_Request( 'POST', '/openevents/v1/attendees/' . $attendee['id'] );
+		$cancel = new \WP_REST_Request( 'POST', '/feriae/v1/attendees/' . $attendee['id'] );
 		$cancel->set_body_params( array( 'status' => 'cancelled' ) );
 		rest_do_request( $cancel );
 		$this->assertSame( 0, $this->sold( $id ), 'Cancelling from the admin frees the seat.' );
@@ -269,10 +269,10 @@ final class RsvpTest extends TestCase {
 
 	public function test_form_markup_is_accessible_and_cache_safe(): void {
 		$id   = $this->rsvp_event( array( 'max_per_response' => 4 ) );
-		$html = Form::render( openevents_get_event( $id ), $this->rsvp->ticket_type( $id ), $this->rsvp );
+		$html = Form::render( feriae_get_event( $id ), $this->rsvp->ticket_type( $id ), $this->rsvp );
 
-		$this->assertStringContainsString( '<label for="oe-rsvp-' . $id . '-name">Name</label>', $html );
-		$this->assertStringContainsString( '<label for="oe-rsvp-' . $id . '-email">Email</label>', $html );
+		$this->assertStringContainsString( '<label for="feriae-rsvp-' . $id . '-name">Name</label>', $html );
+		$this->assertStringContainsString( '<label for="feriae-rsvp-' . $id . '-email">Email</label>', $html );
 		$this->assertStringContainsString( '<legend>Are you going?</legend>', $html );
 		$this->assertStringContainsString( 'aria-live="polite"', $html );
 		$this->assertStringContainsString( 'name="website" tabindex="-1"', $html, 'Honeypot is out of the tab order.' );
@@ -284,7 +284,7 @@ final class RsvpTest extends TestCase {
 	public function test_full_event_offers_only_not_going(): void {
 		$id = $this->rsvp_event( array( 'capacity' => 1 ) );
 		$this->respond( $id );
-		$html = Form::render( openevents_get_event( $id ), $this->rsvp->ticket_type( $id ), $this->rsvp );
+		$html = Form::render( feriae_get_event( $id ), $this->rsvp->ticket_type( $id ), $this->rsvp );
 
 		$this->assertStringContainsString( 'This event is full.', $html );
 		$this->assertMatchesRegularExpression( '/value="going"[^>]*disabled/', $html );

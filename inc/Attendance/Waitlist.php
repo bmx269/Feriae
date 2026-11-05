@@ -2,10 +2,10 @@
 /**
  * Waitlist storage.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Attendance;
+namespace Feriae\Attendance;
 
 final class Waitlist {
 

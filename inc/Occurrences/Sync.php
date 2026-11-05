@@ -1,15 +1,15 @@
 <?php
 /**
- * Keeps oe_occurrences in step with event posts and meta.
+ * Keeps feriae_occurrences in step with event posts and meta.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Occurrences;
+namespace Feriae\Occurrences;
 
-use OpenEvents\Content\Event;
-use OpenEvents\Content\Meta;
-use OpenEvents\Installer;
+use Feriae\Content\Event;
+use Feriae\Content\Meta;
+use Feriae\Installer;
 
 /**
  * Rewrites an event's occurrences whenever its schedule or status can have changed.
@@ -26,7 +26,7 @@ use OpenEvents\Installer;
 final class Sync {
 
 	/** Longest occurrence seen, in seconds. Bounds range scans (see Repository). */
-	public const MAX_DURATION_OPTION = 'openevents_max_duration';
+	public const MAX_DURATION_OPTION = 'feriae_max_duration';
 
 	private static ?Sync $instance = null;
 
@@ -59,19 +59,19 @@ final class Sync {
 		// Anything shown in cached listings invalidates them: category assignment and
 		// colours, venue/organizer details, display settings, and enabled modules.
 		add_action( 'set_object_terms', array( Repository::class, 'bump_cache' ) );
-		add_action( 'saved_' . \OpenEvents\Content\PostTypes::CATEGORY, array( Repository::class, 'bump_cache' ) );
-		add_action( 'delete_' . \OpenEvents\Content\PostTypes::CATEGORY, array( Repository::class, 'bump_cache' ) );
-		add_action( 'save_post_' . \OpenEvents\Content\PostTypes::VENUE, array( Repository::class, 'bump_cache' ) );
-		add_action( 'save_post_' . \OpenEvents\Content\PostTypes::ORGANIZER, array( Repository::class, 'bump_cache' ) );
-		add_action( 'update_option_' . \OpenEvents\Settings::OPTION, array( Repository::class, 'bump_cache' ) );
-		add_action( 'update_option_' . \OpenEvents\Settings::MODULES_OPTION, array( Repository::class, 'bump_cache' ) );
+		add_action( 'saved_' . \Feriae\Content\PostTypes::CATEGORY, array( Repository::class, 'bump_cache' ) );
+		add_action( 'delete_' . \Feriae\Content\PostTypes::CATEGORY, array( Repository::class, 'bump_cache' ) );
+		add_action( 'save_post_' . \Feriae\Content\PostTypes::VENUE, array( Repository::class, 'bump_cache' ) );
+		add_action( 'save_post_' . \Feriae\Content\PostTypes::ORGANIZER, array( Repository::class, 'bump_cache' ) );
+		add_action( 'update_option_' . \Feriae\Settings::OPTION, array( Repository::class, 'bump_cache' ) );
+		add_action( 'update_option_' . \Feriae\Settings::MODULES_OPTION, array( Repository::class, 'bump_cache' ) );
 		add_action( 'update_option_date_format', array( Repository::class, 'bump_cache' ) );
 		add_action( 'update_option_time_format', array( Repository::class, 'bump_cache' ) );
 		add_action( 'update_option_start_of_week', array( Repository::class, 'bump_cache' ) );
 	}
 
 	public function register_rest_hooks(): void {
-		foreach ( openevents()->settings()->event_post_types() as $post_type ) {
+		foreach ( feriae()->settings()->event_post_types() as $post_type ) {
 			add_action( 'rest_after_insert_' . $post_type, array( $this, 'on_rest_insert' ) );
 		}
 	}
@@ -123,7 +123,7 @@ final class Sync {
 
 	/**
 	 * Pauses syncing for bulk imports. Call resume() afterwards, then
-	 * `wp openevents rebuild` (or sync each id) to write the rows.
+	 * `wp feriae rebuild` (or sync each id) to write the rows.
 	 */
 	public function suspend(): void {
 		$this->suspended = true;
@@ -142,7 +142,7 @@ final class Sync {
 		global $wpdb;
 
 		unset( $this->pending[ $event_id ] );
-		openevents()->occurrences()->forget( $event_id );
+		feriae()->occurrences()->forget( $event_id );
 		$event = Event::get( $event_id );
 		if ( ! $event ) {
 			return;
@@ -197,7 +197,7 @@ final class Sync {
 			 *
 			 * @param int $event_id Event id.
 			 */
-			do_action( 'openevents/occurrences/synced', $event_id );
+			do_action( 'feriae/occurrences/synced', $event_id );
 		}
 	}
 
@@ -218,7 +218,7 @@ final class Sync {
 	 */
 	public function rebuild_all( int $batch = 500, ?callable $progress = null ): int {
 		global $wpdb;
-		$types = openevents()->settings()->event_post_types();
+		$types = feriae()->settings()->event_post_types();
 		if ( ! $types ) {
 			return 0;
 		}

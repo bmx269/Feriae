@@ -12,7 +12,7 @@ import WaitlistScreen from './waitlist-screen';
 import './attendance.scss';
 import './admin.scss';
 
-const root = document.getElementById( 'openevents-attendance' );
+const root = document.getElementById( 'feriae-attendance' );
 if ( root ) {
 	createRoot( root ).render(
 		{

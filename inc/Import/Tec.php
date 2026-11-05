@@ -2,35 +2,35 @@
 /**
  * Importer for The Events Calendar (with Pro) and Event Tickets (with Plus).
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Import;
+namespace Feriae\Import;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OpenEvents\Attendance\Fields;
-use OpenEvents\Attendance\FieldSets;
-use OpenEvents\Attendance\Money;
-use OpenEvents\Attendance\Schema;
-use OpenEvents\Attendance\TicketTypes;
-use OpenEvents\Content\EventStatus;
-use OpenEvents\Content\Meta;
-use OpenEvents\Content\PostTypes;
-use OpenEvents\Modules\Recurrence\Recurrence;
-use OpenEvents\Modules\Recurrence\Rule;
-use OpenEvents\Modules\Series\Module as Series;
-use OpenEvents\Modules\Tickets\Module as Tickets;
-use OpenEvents\Occurrences\Sync;
-use OpenEvents\Settings;
+use Feriae\Attendance\Fields;
+use Feriae\Attendance\FieldSets;
+use Feriae\Attendance\Money;
+use Feriae\Attendance\Schema;
+use Feriae\Attendance\TicketTypes;
+use Feriae\Content\EventStatus;
+use Feriae\Content\Meta;
+use Feriae\Content\PostTypes;
+use Feriae\Modules\Recurrence\Recurrence;
+use Feriae\Modules\Recurrence\Rule;
+use Feriae\Modules\Series\Module as Series;
+use Feriae\Modules\Tickets\Module as Tickets;
+use Feriae\Occurrences\Sync;
+use Feriae\Settings;
 
 /**
  * Converts a TEC site in place: events, venues, organizers, and series keep
  * their post ids, slugs, content, images, and other plugins' meta; their
- * post type (and categories' taxonomy) changes, and OpenEvents meta is
+ * post type (and categories' taxonomy) changes, and Feriae meta is
  * written next to TEC's, which stays for a rollback.
  *
- * Tickets, orders, and attendees are copied into the OpenEvents tables, with
+ * Tickets, orders, and attendees are copied into the Feriae tables, with
  * check-in codes, check-ins, and attendee answers. What's left behind is
  * reported: legacy per-date posts TEC no longer shows, and attendance data
  * whose event was deleted (see the cleanup advice in the report).
@@ -40,7 +40,7 @@ use OpenEvents\Settings;
  */
 final class Tec {
 
-	/** TEC post type => OpenEvents post type. */
+	/** TEC post type => Feriae post type. */
 	public const TYPES = array(
 		'tribe_venue'        => PostTypes::VENUE,
 		'tribe_organizer'    => PostTypes::ORGANIZER,
@@ -143,14 +143,14 @@ final class Tec {
 		$sync->resume();
 		$this->step( 'Rebuilding occurrences' );
 		$this->report['occurrences'] = $sync->rebuild_all();
-		update_option( \OpenEvents\Installer::FLUSH_OPTION, 1 );
+		update_option( \Feriae\Installer::FLUSH_OPTION, 1 );
 
 		$this->report['verify'] = $this->verify();
 		return $this->report;
 	}
 
 	/**
-	 * Compares what TEC had with what OpenEvents now has.
+	 * Compares what TEC had with what Feriae now has.
 	 *
 	 * @return array<string, mixed>
 	 */
@@ -161,7 +161,7 @@ final class Tec {
 		foreach ( self::TYPES as $from => $to ) {
 			$left        = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = %s AND post_status <> 'auto-draft'", $from ) );
 			$out[ $to ]  = array(
-				'converted'        => (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->postmeta} m JOIN {$wpdb->posts} p ON p.ID = m.post_id WHERE m.meta_key = '_oe_source_tec' AND m.meta_value = %s AND p.post_type = %s", $from, $to ) ),
+				'converted'        => (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->postmeta} m JOIN {$wpdb->posts} p ON p.ID = m.post_id WHERE m.meta_key = '_feriae_source_tec' AND m.meta_value = %s AND p.post_type = %s", $from, $to ) ),
 				'still TEC type'   => $left,
 			);
 		}
@@ -189,7 +189,7 @@ final class Tec {
 		$missing  = array();
 		$checked  = 0;
 		$rows     = $wpdb->get_results( "SELECT o.post_id, o.start_date FROM {$wpdb->prefix}tec_occurrences o JOIN {$wpdb->posts} p ON p.ID = o.post_id WHERE p.post_status = 'publish' AND p.post_type = '" . PostTypes::EVENT . "' AND o.start_date_utc <= '{$horizon}'" );
-		$have_raw = $wpdb->get_results( 'SELECT event_id, start_local FROM ' . \OpenEvents\Installer::occurrences_table() );
+		$have_raw = $wpdb->get_results( 'SELECT event_id, start_local FROM ' . \Feriae\Installer::occurrences_table() );
 		$have     = array();
 		foreach ( $have_raw as $row ) {
 			$have[ $row->event_id . '|' . $row->start_local ] = true;
@@ -202,7 +202,7 @@ final class Tec {
 		}
 		$out['dates'] = array(
 			'TEC occurrences checked' => $checked,
-			'missing in OpenEvents'   => count( $missing ),
+			'missing in Feriae'   => count( $missing ),
 			'examples'                => array_slice( $missing, 0, 10 ),
 		);
 		// phpcs:enable
@@ -211,7 +211,7 @@ final class Tec {
 
 	/**
 	 * Undoes the conversion: post types and the category taxonomy go back, and
-	 * rows the import added to the OpenEvents tables are deleted. TEC's own
+	 * rows the import added to the Feriae tables are deleted. TEC's own
 	 * meta was never removed, so TEC can be switched back on afterwards.
 	 *
 	 * @return array<string, int>
@@ -221,9 +221,9 @@ final class Tec {
 		// phpcs:disable WordPress.DB
 		$out = array();
 		foreach ( self::TYPES as $from => $to ) {
-			$out[ $from ] = (int) $wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->posts} p JOIN {$wpdb->postmeta} m ON m.post_id = p.ID AND m.meta_key = '_oe_source_tec' AND m.meta_value = %s SET p.post_type = %s WHERE p.post_type = %s", $from, $from, $to ) );
+			$out[ $from ] = (int) $wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->posts} p JOIN {$wpdb->postmeta} m ON m.post_id = p.ID AND m.meta_key = '_feriae_source_tec' AND m.meta_value = %s SET p.post_type = %s WHERE p.post_type = %s", $from, $from, $to ) );
 		}
-		$out['categories'] = (int) $wpdb->query( "UPDATE {$wpdb->term_taxonomy} tt JOIN {$wpdb->termmeta} tm ON tm.term_id = tt.term_id AND tm.meta_key = '_oe_source_tec' SET tt.taxonomy = 'tribe_events_cat' WHERE tt.taxonomy = '" . PostTypes::CATEGORY . "'" );
+		$out['categories'] = (int) $wpdb->query( "UPDATE {$wpdb->term_taxonomy} tt JOIN {$wpdb->termmeta} tm ON tm.term_id = tt.term_id AND tm.meta_key = '_feriae_source_tec' SET tt.taxonomy = 'tribe_events_cat' WHERE tt.taxonomy = '" . PostTypes::CATEGORY . "'" );
 		foreach ( array( 'tec_attendee' => Schema::attendees(), 'tec_order' => Schema::orders(), 'tec_ticket' => Schema::ticket_types(), 'tec_waitlist' => Schema::waitlist() ) as $source => $table ) {
 			$ids = ImportMap::all( $source );
 			foreach ( array_chunk( array_values( $ids ), 500 ) as $chunk ) {
@@ -238,19 +238,19 @@ final class Tec {
 		}
 		foreach ( array( '_menu_item_object' ) as $key ) {
 			foreach ( self::TYPES + array( 'tribe_events_cat' => PostTypes::CATEGORY ) as $from => $to ) {
-				$wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->postmeta} m JOIN {$wpdb->postmeta} s ON s.post_id = m.post_id AND s.meta_key = '_oe_source_tec' SET m.meta_value = %s WHERE m.meta_key = %s AND m.meta_value = %s", $from, $key, $to ) );
+				$wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->postmeta} m JOIN {$wpdb->postmeta} s ON s.post_id = m.post_id AND s.meta_key = '_feriae_source_tec' SET m.meta_value = %s WHERE m.meta_key = %s AND m.meta_value = %s", $from, $key, $to ) );
 			}
 		}
-		$wpdb->query( 'DELETE FROM ' . \OpenEvents\Installer::occurrences_table() );
+		$wpdb->query( 'DELETE FROM ' . \Feriae\Installer::occurrences_table() );
 		// phpcs:enable
-		update_option( \OpenEvents\Installer::FLUSH_OPTION, 1 );
+		update_option( \Feriae\Installer::FLUSH_OPTION, 1 );
 		return $out;
 	}
 
 	private function settings(): void {
 		$this->step( 'Settings' );
 		$tec      = (array) get_option( 'tribe_events_calendar_options', array() );
-		$settings = openevents()->settings();
+		$settings = feriae()->settings();
 		$current  = $settings->all();
 		$view     = (string) ( $tec['viewOption'] ?? 'month' );
 		update_option(
@@ -272,7 +272,7 @@ final class Tec {
 		);
 		$modules = array_values( array_unique( array_merge( $settings->enabled_modules(), array( 'ical', 'recurrence', 'series', 'rsvp', 'tickets' ) ) ) );
 		update_option( Settings::MODULES_OPTION, $modules );
-		update_option( 'openevents_setup_complete', 1 );
+		update_option( 'feriae_setup_complete', 1 );
 		$this->report['settings'] = array(
 			'events slug' => $tec['eventsSlug'] ?? 'events',
 			'single slug' => $tec['singleEventSlug'] ?? 'event',
@@ -286,10 +286,10 @@ final class Tec {
 		// phpcs:disable WordPress.DB
 		$terms = $wpdb->get_col( "SELECT term_id FROM {$wpdb->term_taxonomy} WHERE taxonomy = 'tribe_events_cat'" );
 		foreach ( $terms as $term_id ) {
-			update_term_meta( (int) $term_id, '_oe_source_tec', 'tribe_events_cat' );
+			update_term_meta( (int) $term_id, '_feriae_source_tec', 'tribe_events_cat' );
 			$color = (string) get_term_meta( (int) $term_id, 'tec-events-cat-colors-primary', true );
-			if ( $color && ! get_term_meta( (int) $term_id, 'oe_color', true ) ) {
-				update_term_meta( (int) $term_id, 'oe_color', sanitize_hex_color( $color ) );
+			if ( $color && ! get_term_meta( (int) $term_id, 'feriae_color', true ) ) {
+				update_term_meta( (int) $term_id, 'feriae_color', sanitize_hex_color( $color ) );
 			}
 		}
 		$wpdb->query( "UPDATE {$wpdb->term_taxonomy} SET taxonomy = '" . PostTypes::CATEGORY . "' WHERE taxonomy = 'tribe_events_cat'" );
@@ -314,7 +314,7 @@ final class Tec {
 				$in = implode( ',', $chunk );
 				$wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->posts} SET post_type = %s WHERE ID IN ({$in})", $to ) );
 				foreach ( $chunk as $id ) {
-					update_post_meta( $id, '_oe_source_tec', $from );
+					update_post_meta( $id, '_feriae_source_tec', $from );
 					clean_post_cache( $id );
 				}
 			}
@@ -327,20 +327,20 @@ final class Tec {
 	private function venues_and_organizers(): void {
 		$this->step( 'Venue and organizer details' );
 		$venue = array(
-			'_oe_address'     => array( '_VenueAddress' ),
-			'_oe_city'        => array( '_VenueCity' ),
-			'_oe_region'      => array( '_VenueStateProvince', '_VenueState', '_VenueProvince' ),
-			'_oe_postal_code' => array( '_VenueZip' ),
-			'_oe_country'     => array( '_VenueCountry' ),
-			'_oe_phone'       => array( '_VenuePhone' ),
-			'_oe_website'     => array( '_VenueURL' ),
-			'_oe_lat'         => array( '_VenueLat' ),
-			'_oe_lng'         => array( '_VenueLng' ),
+			'_feriae_address'     => array( '_VenueAddress' ),
+			'_feriae_city'        => array( '_VenueCity' ),
+			'_feriae_region'      => array( '_VenueStateProvince', '_VenueState', '_VenueProvince' ),
+			'_feriae_postal_code' => array( '_VenueZip' ),
+			'_feriae_country'     => array( '_VenueCountry' ),
+			'_feriae_phone'       => array( '_VenuePhone' ),
+			'_feriae_website'     => array( '_VenueURL' ),
+			'_feriae_lat'         => array( '_VenueLat' ),
+			'_feriae_lng'         => array( '_VenueLng' ),
 		);
 		$organizer = array(
-			'_oe_email'   => array( '_OrganizerEmail' ),
-			'_oe_phone'   => array( '_OrganizerPhone' ),
-			'_oe_website' => array( '_OrganizerWebsite' ),
+			'_feriae_email'   => array( '_OrganizerEmail' ),
+			'_feriae_phone'   => array( '_OrganizerPhone' ),
+			'_feriae_website' => array( '_OrganizerWebsite' ),
 		);
 		foreach ( array( PostTypes::VENUE => $venue, PostTypes::ORGANIZER => $organizer ) as $type => $map ) {
 			foreach ( $this->converted( $type ) as $id ) {
@@ -385,22 +385,22 @@ final class Tec {
 				$tz = ( '' === ( $m[1] ?? '' ) || 0.0 === (float) $m[1] ) ? 'UTC' : '';
 			}
 			$values = array(
-				'_oe_start'              => Meta::sanitize_datetime( $meta( '_EventStartDate' ) ),
-				'_oe_end'                => Meta::sanitize_datetime( $meta( '_EventEndDate' ) ),
-				'_oe_timezone'           => Meta::sanitize_timezone( $tz ),
-				'_oe_all_day'            => in_array( strtolower( (string) $meta( '_EventAllDay' ) ), array( 'yes', '1', 'true' ), true ),
-				'_oe_venue_id'           => (int) $meta( '_EventVenueID' ),
-				'_oe_organizer_ids'      => array_values( array_filter( array_map( 'intval', get_post_meta( $id, '_EventOrganizerID' ) ) ) ),
-				'_oe_cost'               => (string) ( get_post_meta( $id, '_EventCost' )[0] ?? '' ),
-				'_oe_currency_symbol'    => (string) $meta( '_EventCurrencySymbol' ),
-				'_oe_url'                => esc_url_raw( (string) $meta( '_EventURL' ) ),
-				'_oe_featured'           => (bool) $meta( '_tribe_featured' ),
-				'_oe_hide_from_listings' => '' !== (string) $meta( '_EventHideFromUpcoming' ) && 'no' !== strtolower( (string) $meta( '_EventHideFromUpcoming' ) ),
+				'_feriae_start'              => Meta::sanitize_datetime( $meta( '_EventStartDate' ) ),
+				'_feriae_end'                => Meta::sanitize_datetime( $meta( '_EventEndDate' ) ),
+				'_feriae_timezone'           => Meta::sanitize_timezone( $tz ),
+				'_feriae_all_day'            => in_array( strtolower( (string) $meta( '_EventAllDay' ) ), array( 'yes', '1', 'true' ), true ),
+				'_feriae_venue_id'           => (int) $meta( '_EventVenueID' ),
+				'_feriae_organizer_ids'      => array_values( array_filter( array_map( 'intval', get_post_meta( $id, '_EventOrganizerID' ) ) ) ),
+				'_feriae_cost'               => (string) ( get_post_meta( $id, '_EventCost' )[0] ?? '' ),
+				'_feriae_currency_symbol'    => (string) $meta( '_EventCurrencySymbol' ),
+				'_feriae_url'                => esc_url_raw( (string) $meta( '_EventURL' ) ),
+				'_feriae_featured'           => (bool) $meta( '_tribe_featured' ),
+				'_feriae_hide_from_listings' => '' !== (string) $meta( '_EventHideFromUpcoming' ) && 'no' !== strtolower( (string) $meta( '_EventHideFromUpcoming' ) ),
 			);
 			$status = self::status( (string) $meta( '_tribe_events_status' ), (string) get_post_field( 'post_title', $id ) );
 			if ( EventStatus::SCHEDULED !== $status ) {
-				$values['_oe_status']        = $status;
-				$values['_oe_status_reason'] = EventStatus::sanitize_reason( $meta( '_tribe_events_status_reason' ) );
+				$values['_feriae_status']        = $status;
+				$values['_feriae_status_reason'] = EventStatus::sanitize_reason( $meta( '_tribe_events_status_reason' ) );
 				++$called;
 			}
 			if ( isset( $series[ $id ] ) ) {
@@ -446,7 +446,7 @@ final class Tec {
 	/**
 	 * TEC Pro "Additional fields": choice fields (checkbox, radio, dropdown)
 	 * become event attributes (taxonomies) with their options as terms; text
-	 * fields become labelled rows in the event details (`_oe_details`).
+	 * fields become labelled rows in the event details (`_feriae_details`).
 	 */
 	private function additional_fields(): void {
 		$this->step( 'Additional fields' );
@@ -455,7 +455,7 @@ final class Tec {
 			return;
 		}
 
-		$settings   = openevents()->settings()->all();
+		$settings   = feriae()->settings()->all();
 		$attributes = (array) $settings['attributes'];
 		$choices    = array();
 		$texts      = array();
@@ -480,8 +480,8 @@ final class Tec {
 
 		if ( $choices ) {
 			update_option( Settings::OPTION, Settings::sanitize( array_merge( $settings, array( 'attributes' => $attributes ) ) ) );
-			\OpenEvents\Content\Attributes::register_taxonomies();
-			$by_label = array_flip( \OpenEvents\Content\Attributes::all() );
+			\Feriae\Content\Attributes::register_taxonomies();
+			$by_label = array_flip( \Feriae\Content\Attributes::all() );
 			foreach ( $choices as $name => $choice ) {
 				$taxonomy = $by_label[ $choice['label'] ] ?? '';
 				foreach ( $choice['options'] as $option ) {
@@ -514,7 +514,7 @@ final class Tec {
 				}
 			}
 			if ( $details ) {
-				update_post_meta( $id, '_oe_details', Meta::sanitize_details( $details ) );
+				update_post_meta( $id, '_feriae_details', Meta::sanitize_details( $details ) );
 			}
 		}
 		$this->report['additional fields'] = array(
@@ -525,7 +525,7 @@ final class Tec {
 	}
 
 	/**
-	 * `_oe_recurrence` from a TEC rset (DTSTART, DTEND, RRULE, RDATE, EXDATE
+	 * `_feriae_recurrence` from a TEC rset (DTSTART, DTEND, RRULE, RDATE, EXDATE
 	 * lines), or null when it holds no repeat.
 	 *
 	 * @return array{rrule: string, rdates: string[], exdates: string[]}|null
@@ -623,7 +623,7 @@ final class Tec {
 	}
 
 	/**
-	 * OpenEvents questions from Event Tickets Plus field definitions, and how
+	 * Feriae questions from Event Tickets Plus field definitions, and how
 	 * ET+ answer keys map to them (checkbox answers are stored per option as
 	 * "{slug}_{md5(option)}").
 	 *
@@ -662,10 +662,10 @@ final class Tec {
 	}
 
 	/**
-	 * Answers from ET+ attendee meta, keyed by OpenEvents question keys.
+	 * Answers from ET+ attendee meta, keyed by Feriae question keys.
 	 *
 	 * @param array<string, mixed> $answers ET+ attendee meta.
-	 * @param array<string, string> $keys   ET+ slug => OpenEvents key.
+	 * @param array<string, string> $keys   ET+ slug => Feriae key.
 	 * @return array<string, mixed>
 	 */
 	public static function answers( array $answers, array $keys ): array {
@@ -757,7 +757,7 @@ final class Tec {
 					array(
 						'kind'     => 'paid',
 						'name'     => $entry['name'],
-						'currency' => \OpenEvents\Modules\Tickets\Checkout::currency(),
+						'currency' => \Feriae\Modules\Tickets\Checkout::currency(),
 						'status'   => 'archived',
 						'settings' => array(
 							'fields'           => $entry['fields'],
@@ -810,8 +810,8 @@ final class Tec {
 				array(
 					'kind'     => 'paid',
 					/* translators: %d: ticket id */
-					'name'     => (string) ( $row->name ?: sprintf( __( 'Deleted ticket %d', 'openevents' ), (int) $row->ticket ) ),
-					'currency' => \OpenEvents\Modules\Tickets\Checkout::currency(),
+					'name'     => (string) ( $row->name ?: sprintf( __( 'Deleted ticket %d', 'feriae' ), (int) $row->ticket ) ),
+					'currency' => \Feriae\Modules\Tickets\Checkout::currency(),
 					'status'   => 'archived',
 				)
 			);
@@ -832,7 +832,7 @@ final class Tec {
 		$orders   = ImportMap::all( 'tec_order' );
 		$done     = ImportMap::all( 'tec_attendee' );
 		$types    = new TicketTypes();
-		$currency = \OpenEvents\Modules\Tickets\Checkout::currency();
+		$currency = \Feriae\Modules\Tickets\Checkout::currency();
 		$site_tz  = wp_timezone();
 		$utc      = new DateTimeZone( 'UTC' );
 		$imported = 0;
@@ -1095,11 +1095,11 @@ final class Tec {
 	}
 
 	/**
-	 * @return int[] Converted posts of an OpenEvents type.
+	 * @return int[] Converted posts of an Feriae type.
 	 */
 	private function converted( string $type ): array {
 		global $wpdb;
-		return array_map( 'intval', $wpdb->get_col( $wpdb->prepare( "SELECT p.ID FROM {$wpdb->posts} p JOIN {$wpdb->postmeta} m ON m.post_id = p.ID AND m.meta_key = '_oe_source_tec' WHERE p.post_type = %s", $type ) ) ); // phpcs:ignore WordPress.DB
+		return array_map( 'intval', $wpdb->get_col( $wpdb->prepare( "SELECT p.ID FROM {$wpdb->posts} p JOIN {$wpdb->postmeta} m ON m.post_id = p.ID AND m.meta_key = '_feriae_source_tec' WHERE p.post_type = %s", $type ) ) ); // phpcs:ignore WordPress.DB
 	}
 
 	private function has_tec_tables(): bool {

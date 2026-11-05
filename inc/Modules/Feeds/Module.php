@@ -2,12 +2,12 @@
 /**
  * Calendar import module.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Feeds;
+namespace Feriae\Modules\Feeds;
 
-use OpenEvents\Modules\AbstractModule;
+use Feriae\Modules\AbstractModule;
 
 /**
  * Imports events from iCal feeds (Google Calendar, Outlook, Apple Calendar,
@@ -15,7 +15,7 @@ use OpenEvents\Modules\AbstractModule;
  */
 final class Module extends AbstractModule {
 
-	public const CRON_HOOK = 'openevents_feeds_sync';
+	public const CRON_HOOK = 'feriae_feeds_sync';
 
 	/** Seconds a scheduled run spends importing before handing over to the next run. */
 	private const RUN_BUDGET = 25;
@@ -25,11 +25,11 @@ final class Module extends AbstractModule {
 	}
 
 	public function label(): string {
-		return __( 'Calendar import', 'openevents' );
+		return __( 'Calendar import', 'feriae' );
 	}
 
 	public function description(): string {
-		return __( 'Imports events from Google Calendar, Outlook, Apple Calendar, or any iCal feed and keeps them in sync, and imports .ics files.', 'openevents' );
+		return __( 'Imports events from Google Calendar, Outlook, Apple Calendar, or any iCal feed and keeps them in sync, and imports .ics files.', 'feriae' );
 	}
 
 	public function requires(): array {
@@ -42,7 +42,7 @@ final class Module extends AbstractModule {
 		add_action( self::CRON_HOOK, array( self::class, 'run' ) );
 		add_action( 'rest_api_init', array( new Rest(), 'routes' ) );
 		add_action( 'wp_abilities_api_init', array( Rest::class, 'abilities' ) );
-		add_action( 'openevents/uninstall', array( self::class, 'uninstall' ) );
+		add_action( 'feriae/uninstall', array( self::class, 'uninstall' ) );
 		if ( is_admin() ) {
 			( new Admin() )->register();
 		}

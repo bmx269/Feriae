@@ -1,13 +1,13 @@
 {
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
-	"name": "openevents/upcoming-events",
+	"name": "feriae/upcoming-events",
 	"title": "Upcoming Events",
-	"category": "openevents",
+	"category": "feriae",
 	"icon": "list-view",
 	"description": "A short list of the next events, for sidebars and landing pages.",
 	"keywords": [ "events", "upcoming", "list" ],
-	"textdomain": "openevents",
+	"textdomain": "feriae",
 	"attributes": {
 		"count": { "type": "integer", "default": 5 },
 		"categories": {

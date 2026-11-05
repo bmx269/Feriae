@@ -2,13 +2,13 @@
 /**
  * Door check-in: look people up by code and check them in.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Attendance;
+namespace Feriae\Attendance;
 
-use OpenEvents\Content\PostTypes;
-use OpenEvents\Frontend\Formatter;
+use Feriae\Content\PostTypes;
+use Feriae\Frontend\Formatter;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -17,8 +17,8 @@ use WP_REST_Server;
 /**
  * Events → Check-in, and its REST routes:
  *
- * GET  /openevents/v1/check-in?code=   Who a code belongs to.
- * POST /openevents/v1/check-in         Check in (code), or undo (code, undo).
+ * GET  /feriae/v1/check-in?code=   Who a code belongs to.
+ * POST /feriae/v1/check-in         Check in (code), or undo (code, undo).
  *
  * Staff only see attendees of events they can edit; any other code reads as
  * not found, so codes can't be probed. Opening a scanned QR link only looks
@@ -27,7 +27,7 @@ use WP_REST_Server;
  */
 final class CheckIn {
 
-	public const SLUG = 'openevents-check-in';
+	public const SLUG = 'feriae-check-in';
 
 	public static function register(): void {
 		$self = new self();
@@ -46,7 +46,7 @@ final class CheckIn {
 			'maxLength' => 2000, // A scanned check-in link, or the code alone.
 		);
 		register_rest_route(
-			'openevents/v1',
+			'feriae/v1',
 			'/check-in',
 			array(
 				array(
@@ -92,14 +92,14 @@ final class CheckIn {
 
 		if ( $request['undo'] ) {
 			$this->attendees->set_checked_in( $attendee->id, false );
-			return $this->response( $this->attendees->get( $attendee->id ), 'undone', __( 'Check-in undone.', 'openevents' ) );
+			return $this->response( $this->attendees->get( $attendee->id ), 'undone', __( 'Check-in undone.', 'feriae' ) );
 		}
 		if ( Attendee::GOING !== $attendee->status ) {
 			return new WP_Error(
-				'openevents_not_going',
+				'feriae_not_going',
 				Attendee::CANCELLED === $attendee->status || 'refunded' === $attendee->status
-					? __( 'This booking was cancelled. Don’t check them in.', 'openevents' )
-					: __( 'This booking isn’t confirmed (payment may not have gone through). Don’t check them in.', 'openevents' ),
+					? __( 'This booking was cancelled. Don’t check them in.', 'feriae' )
+					: __( 'This booking isn’t confirmed (payment may not have gone through). Don’t check them in.', 'feriae' ),
 				array(
 					'status' => 409,
 					'data'   => $this->data( $attendee ),
@@ -112,7 +112,7 @@ final class CheckIn {
 				$attendee,
 				'already',
 				/* translators: %s: time */
-				sprintf( __( 'Already checked in at %s.', 'openevents' ), self::time( (string) $attendee->checked_in_utc ) )
+				sprintf( __( 'Already checked in at %s.', 'feriae' ), self::time( (string) $attendee->checked_in_utc ) )
 			);
 		}
 
@@ -123,9 +123,9 @@ final class CheckIn {
 		 *
 		 * @param Attendee $attendee Attendee.
 		 */
-		do_action( 'openevents/checked_in', $attendee );
+		do_action( 'feriae/checked_in', $attendee );
 
-		return $this->response( $attendee, 'checked_in', __( 'Checked in.', 'openevents' ) );
+		return $this->response( $attendee, 'checked_in', __( 'Checked in.', 'feriae' ) );
 	}
 
 	/**
@@ -143,7 +143,7 @@ final class CheckIn {
 	}
 
 	private static function not_found(): WP_Error {
-		return new WP_Error( 'openevents_not_found', __( 'No booking with that code. Check the code, or look the person up in Attendees.', 'openevents' ), array( 'status' => 404 ) );
+		return new WP_Error( 'feriae_not_found', __( 'No booking with that code. Check the code, or look the person up in Attendees.', 'feriae' ), array( 'status' => 404 ) );
 	}
 
 	private function response( Attendee $attendee, string $result, string $message = '' ): WP_REST_Response {
@@ -168,16 +168,16 @@ final class CheckIn {
 		if ( $occurrence && $occurrence->is_called_off() ) {
 			$warnings[] = array(
 				'code'    => 'called_off',
-				'message' => \OpenEvents\Content\EventStatus::CANCELLED === $occurrence->event_status
-					? __( 'This date is cancelled.', 'openevents' )
-					: __( 'This date is postponed.', 'openevents' ),
+				'message' => \Feriae\Content\EventStatus::CANCELLED === $occurrence->event_status
+					? __( 'This date is cancelled.', 'feriae' )
+					: __( 'This date is postponed.', 'feriae' ),
 			);
 		}
 		if ( $occurrence && ! self::is_today( $occurrence ) ) {
 			$warnings[] = array(
 				'code'    => 'other_date',
 				/* translators: %s: date and time */
-				'message' => sprintf( __( 'This booking is for %s, not today.', 'openevents' ), Formatter::range( $occurrence ) ),
+				'message' => sprintf( __( 'This booking is for %s, not today.', 'feriae' ), Formatter::range( $occurrence ) ),
 			);
 		}
 		$order = ( new Orders() )->by_uuid( $attendee->group_uuid ); // An order's attendees share its uuid; RSVPs have none.
@@ -185,7 +185,7 @@ final class CheckIn {
 			$warnings[] = array(
 				'code'    => 'unpaid',
 				/* translators: %s: amount */
-				'message' => sprintf( __( 'Payment due at the door: %s for the whole order.', 'openevents' ), Money::format( $order->total_minor, $order->currency ) ),
+				'message' => sprintf( __( 'Payment due at the door: %s for the whole order.', 'feriae' ), Money::format( $order->total_minor, $order->currency ) ),
 			);
 		}
 
@@ -198,7 +198,7 @@ final class CheckIn {
 				'status'        => $attendee->status,
 				'checked_in'    => null !== $attendee->checked_in_utc,
 				'checked_in_at' => $attendee->checked_in_utc ? self::time( $attendee->checked_in_utc ) : '',
-				'ticket'        => $type ? ( 'rsvp' === $type->kind ? __( 'RSVP', 'openevents' ) : $type->name ) : '',
+				'ticket'        => $type ? ( 'rsvp' === $type->kind ? __( 'RSVP', 'feriae' ) : $type->name ) : '',
 				'event'         => html_entity_decode( get_the_title( $attendee->event_id ), ENT_QUOTES ),
 				'date'          => $occurrence ? Formatter::range( $occurrence ) : '',
 			),
@@ -213,7 +213,7 @@ final class CheckIn {
 	/**
 	 * Whether the date is on today, in its own timezone (or runs over it).
 	 */
-	private static function is_today( \OpenEvents\Occurrences\Occurrence $occurrence ): bool {
+	private static function is_today( \Feriae\Occurrences\Occurrence $occurrence ): bool {
 		$today = ( new \DateTimeImmutable( 'now', $occurrence->start->getTimezone() ) )->format( 'Y-m-d' );
 		return $occurrence->start->format( 'Y-m-d' ) <= $today && $today <= $occurrence->end->format( 'Y-m-d' );
 	}
@@ -224,9 +224,9 @@ final class CheckIn {
 
 	public function menu(): void {
 		add_submenu_page(
-			PostTypes::menu_parent( openevents()->settings() ),
-			__( 'Check-in', 'openevents' ),
-			__( 'Check-in', 'openevents' ),
+			PostTypes::menu_parent( feriae()->settings() ),
+			__( 'Check-in', 'feriae' ),
+			__( 'Check-in', 'feriae' ),
 			'edit_posts',
 			self::SLUG,
 			array( $this, 'render' )
@@ -236,7 +236,7 @@ final class CheckIn {
 	public function enqueue(): void {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		if ( self::SLUG === sanitize_key( wp_unslash( $_GET['page'] ?? '' ) ) ) {
-			\OpenEvents\Modules\Rsvp\Admin::enqueue_bundle();
+			\Feriae\Modules\Rsvp\Admin::enqueue_bundle();
 		}
 	}
 
@@ -244,9 +244,9 @@ final class CheckIn {
 		// A scanned pass opens this page with its code: look it up, don't check in.
 		$code = strtoupper( (string) preg_replace( '/[^A-Za-z0-9]/', '', wp_unslash( $_GET['code'] ?? '' ) ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- reduced to letters and digits.
 		printf(
-			'<div id="openevents-attendance" class="openevents-admin" data-screen="check-in" data-code="%s"><noscript>%s</noscript></div>',
+			'<div id="feriae-attendance" class="feriae-admin" data-screen="check-in" data-code="%s"><noscript>%s</noscript></div>',
 			esc_attr( substr( $code, 0, 32 ) ),
-			esc_html__( 'Check-in needs JavaScript. You can also check people in from the Attendees list.', 'openevents' )
+			esc_html__( 'Check-in needs JavaScript. You can also check people in from the Attendees list.', 'feriae' )
 		);
 	}
 }

@@ -28,7 +28,7 @@ jobs:
       - run: bash bin/build-zip.sh playground
       - name: Push to the playground branch
         run: |
-          mkdir publish && cp dist/openevents.zip publish/
+          mkdir publish && cp dist/feriae.zip publish/
           cd publish
           printf '# Playground build\n\nBuilt from %s by CI for the Playground demo. Not for development.\n' "$GITHUB_SHA" > README.md
           git init -q -b playground

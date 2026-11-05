@@ -2,11 +2,11 @@
 
 Reviewed October 2026: 10 pages of the [TEC support forum](https://wordpress.org/support/plugin/the-events-calendar/) (290 topics), 3 pages of the Event Tickets forum (72 topics), 3 pages each of 1★ and 2★ reviews (about 150), and 26 threads read in full. Counts come from keyword-matching titles and are approximate.
 
-| # | Theme | Topics | Root cause | How OpenEvents responds |
+| # | Theme | Topics | Root cause | How Feriae responds |
 | --- | --- | --- | --- | --- |
 | 1 | Updates break sites (fatals, "unusable after X.Y") | ~60 TEC, ~20 ET | Shared vendored "common" library and licence code running on free sites. One table name went past MySQL's 64-character limit when the site used a long prefix. | Single plugin, no licence code. Schema changes are idempotent, report through an admin notice, and never fatal (`Installer::schema_notice`). |
 | 2 | Calendar views/navigation don't render | ~50 | Views V2 fetches HTML fragments over REST/AJAX, so caching, security plugins, and a disabled REST API all break it. | Every view is server-rendered with real `<a href>` links. The Interactivity API only enhances those links. Works with JS off, behind page caches, and without REST. |
-| 3 | Theme/builder styling conflicts | ~27 plus reviews | Global typography and colour CSS, a forced `#tribe-events-pg-template` wrapper, inconsistent heading levels. | Blocks inherit theme.json. No global type or colour CSS, only `--oe-*` custom properties. No wrapper. Heading level is configurable. |
+| 3 | Theme/builder styling conflicts | ~27 plus reviews | Global typography and colour CSS, a forced `#tribe-events-pg-template` wrapper, inconsistent heading levels. | Blocks inherit theme.json. No global type or colour CSS, only `--feriae-*` custom properties. No wrapper. Heading level is configurable. |
 | 4 | Timezone/date errors | ~30 | Mixed storage modes, all-day handling lost in iCal. | UTC plus IANA timezone plus local wall-clock time per occurrence, all-day as its own flag, one formatter (`Frontend\Formatter`). |
 | 5 | Crawler traps, rewrite/SEO problems | ~25 | Unbounded calendar URL space, `posts_per_page` in query strings, runtime `flush_rewrite_rules()`. | Navigation URLs are `noindex,follow` with `rel=nofollow` links. Month range is clamped to ±5 years. Rewrite rules are only flushed through a flag on activation or settings change. |
 | 6 | Performance / DB bloat | ~15 plus reviews | 700+ duplicate queries, autoloaded transients with no expiry, N+1 attendee queries. | See ARCHITECTURE.md "Performance": indexed single-table reads, batch priming, object-cache only (no transients). |

@@ -32,7 +32,10 @@ const DEFAULTS = {
  * @return {boolean} Repeats.
  */
 export const repeats = ( meta ) =>
-	!! ( meta._oe_recurrence?.rrule || meta._oe_recurrence?.rdates?.length );
+	!! (
+		meta._feriae_recurrence?.rrule ||
+		meta._feriae_recurrence?.rdates?.length
+	);
 
 /**
  * Live "12 going · 8 spots left" summary for published events. A repeating
@@ -59,20 +62,20 @@ function Summary( { postId, config, repeats: perDate } ) {
 		if ( status !== 'publish' || isSaving || perDate ) {
 			return;
 		}
-		apiFetch( { path: `/openevents/v1/events/${ postId }/rsvp` } )
+		apiFetch( { path: `/feriae/v1/events/${ postId }/rsvp` } )
 			.then( setSummary )
 			.catch( () => setSummary( null ) );
 	}, [ postId, status, isSaving, perDate ] );
 
 	const attendees = (
 		<ExternalLink href={ `${ config.attendeesUrl }&event=${ postId }` }>
-			{ __( 'Attendees', 'openevents' ) }
+			{ __( 'Attendees', 'feriae' ) }
 		</ExternalLink>
 	);
 	if ( perDate ) {
 		return status === 'publish' ? (
 			<Flex justify="space-between" wrap>
-				<span>{ __( 'Counted per date.', 'openevents' ) }</span>
+				<span>{ __( 'Counted per date.', 'feriae' ) }</span>
 				{ attendees }
 			</Flex>
 		) : null;
@@ -86,12 +89,7 @@ function Summary( { postId, config, repeats: perDate } ) {
 				{ summary.going !== null &&
 					sprintf(
 						/* translators: %d: people going */
-						_n(
-							'%d going',
-							'%d going',
-							summary.going,
-							'openevents'
-						),
+						_n( '%d going', '%d going', summary.going, 'feriae' ),
 						summary.going
 					) }
 				{ summary.remaining !== null &&
@@ -101,7 +99,7 @@ function Summary( { postId, config, repeats: perDate } ) {
 							'%d spot left',
 							'%d spots left',
 							summary.remaining,
-							'openevents'
+							'feriae'
 						),
 						summary.remaining
 					) }` }
@@ -112,18 +110,18 @@ function Summary( { postId, config, repeats: perDate } ) {
 }
 
 export default function RsvpPanel( { meta, setMeta, postId, config } ) {
-	const rsvp = { ...DEFAULTS, ...( meta._oe_rsvp || {} ) };
+	const rsvp = { ...DEFAULTS, ...( meta._feriae_rsvp || {} ) };
 	const update = ( changes ) =>
-		setMeta( { _oe_rsvp: { ...rsvp, ...changes } } );
+		setMeta( { _feriae_rsvp: { ...rsvp, ...changes } } );
 
 	return (
 		<Flex direction="column" gap={ 4 }>
 			<ToggleControl
 				__nextHasNoMarginBottom
-				label={ __( 'Take RSVPs', 'openevents' ) }
+				label={ __( 'Take RSVPs', 'feriae' ) }
 				help={ __(
 					'Adds an RSVP form to the event page. Free for attendees.',
-					'openevents'
+					'feriae'
 				) }
 				checked={ rsvp.enabled }
 				onChange={ ( enabled ) => update( { enabled } ) }
@@ -135,14 +133,14 @@ export default function RsvpPanel( { meta, setMeta, postId, config } ) {
 						__nextHasNoMarginBottom
 						type="number"
 						min={ 0 }
-						label={ __( 'Capacity', 'openevents' ) }
+						label={ __( 'Capacity', 'feriae' ) }
 						help={
 							repeats( meta )
 								? __(
 										'For each date. 0 means unlimited.',
-										'openevents'
+										'feriae'
 								  )
-								: __( '0 means unlimited.', 'openevents' )
+								: __( '0 means unlimited.', 'feriae' )
 						}
 						value={ String( rsvp.capacity ) }
 						onChange={ ( value ) =>
@@ -157,8 +155,8 @@ export default function RsvpPanel( { meta, setMeta, postId, config } ) {
 					<SelectControl
 						__next40pxDefaultSize
 						__nextHasNoMarginBottom
-						label={ __( 'People per response', 'openevents' ) }
-						help={ __( 'Lets people bring guests.', 'openevents' ) }
+						label={ __( 'People per response', 'feriae' ) }
+						help={ __( 'Lets people bring guests.', 'feriae' ) }
 						value={ String( rsvp.max_per_response ) }
 						options={ [ 1, 2, 3, 4, 5, 6, 8, 10 ].map( ( n ) => ( {
 							value: String( n ),
@@ -169,19 +167,16 @@ export default function RsvpPanel( { meta, setMeta, postId, config } ) {
 						}
 					/>
 					<DateField
-						label={ __( 'RSVP deadline', 'openevents' ) }
+						label={ __( 'RSVP deadline', 'feriae' ) }
 						value={ rsvp.deadline }
-						emptyLabel={ __(
-							'When the event starts',
-							'openevents'
-						) }
+						emptyLabel={ __( 'When the event starts', 'feriae' ) }
 						onChange={ ( deadline ) => update( { deadline } ) }
 						onClear={ () => update( { deadline: '' } ) }
 						is12Hour={ config.timeFormat12h }
 					/>
 					<ToggleControl
 						__nextHasNoMarginBottom
-						label={ __( 'Offer “Not going”', 'openevents' ) }
+						label={ __( 'Offer “Not going”', 'feriae' ) }
 						checked={ rsvp.allow_not_going }
 						onChange={ ( value ) =>
 							update( { allow_not_going: value } )
@@ -189,7 +184,7 @@ export default function RsvpPanel( { meta, setMeta, postId, config } ) {
 					/>
 					<ToggleControl
 						__nextHasNoMarginBottom
-						label={ __( 'Show how many are going', 'openevents' ) }
+						label={ __( 'Show how many are going', 'feriae' ) }
 						checked={ rsvp.show_count }
 						onChange={ ( value ) =>
 							update( { show_count: value } )
@@ -197,16 +192,16 @@ export default function RsvpPanel( { meta, setMeta, postId, config } ) {
 					/>
 					<ToggleControl
 						__nextHasNoMarginBottom
-						label={ __( 'Waitlist when full', 'openevents' ) }
+						label={ __( 'Waitlist when full', 'feriae' ) }
 						help={ __(
 							'People join a queue and are confirmed automatically when a spot opens up.',
-							'openevents'
+							'feriae'
 						) }
 						checked={ !! rsvp.waitlist }
 						onChange={ ( value ) => update( { waitlist: value } ) }
 					/>
-					<h3 className="oe-editor-panel__subhead">
-						{ __( 'Questions for each person', 'openevents' ) }
+					<h3 className="feriae-editor-panel__subhead">
+						{ __( 'Questions for each person', 'feriae' ) }
 					</h3>
 					<AttendeeFields
 						fields={ rsvp.fields }

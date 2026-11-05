@@ -2,19 +2,19 @@
 /**
  * Occurrence value object.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Occurrences;
+namespace Feriae\Occurrences;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OpenEvents\Content\Event;
-use OpenEvents\Content\EventStatus;
-use OpenEvents\Content\Meta;
+use Feriae\Content\Event;
+use Feriae\Content\EventStatus;
+use Feriae\Content\Meta;
 
 /**
- * One dated instance of an event (a row in oe_occurrences).
+ * One dated instance of an event (a row in feriae_occurrences).
  */
 final class Occurrence {
 
@@ -30,7 +30,7 @@ final class Occurrence {
 	) {}
 
 	/**
-	 * @param object $row Database row from oe_occurrences.
+	 * @param object $row Database row from feriae_occurrences.
 	 */
 	public static function from_row( object $row ): Occurrence {
 		$tz = Event::resolve_timezone( (string) $row->timezone );

@@ -2,12 +2,12 @@
 /**
  * Events → Calendar import screen.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Feeds;
+namespace Feriae\Modules\Feeds;
 
-use OpenEvents\Content\PostTypes;
+use Feriae\Content\PostTypes;
 
 /**
  * The calendar list and the add and import forms, rendered by the attendance
@@ -15,7 +15,7 @@ use OpenEvents\Content\PostTypes;
  */
 final class Admin {
 
-	public const SLUG = 'openevents-feeds';
+	public const SLUG = 'feriae-feeds';
 
 	public function register(): void {
 		add_action( 'admin_menu', array( $this, 'menu' ), 23 );
@@ -24,9 +24,9 @@ final class Admin {
 
 	public function menu(): void {
 		add_submenu_page(
-			PostTypes::menu_parent( openevents()->settings() ),
-			__( 'Calendar import', 'openevents' ),
-			__( 'Calendar import', 'openevents' ),
+			PostTypes::menu_parent( feriae()->settings() ),
+			__( 'Calendar import', 'feriae' ),
+			__( 'Calendar import', 'feriae' ),
 			'manage_options',
 			self::SLUG,
 			array( $this, 'render' )
@@ -36,7 +36,7 @@ final class Admin {
 	public function enqueue(): void {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		if ( self::SLUG === sanitize_key( wp_unslash( $_GET['page'] ?? '' ) ) ) {
-			\OpenEvents\Modules\Rsvp\Admin::enqueue_bundle();
+			\Feriae\Modules\Rsvp\Admin::enqueue_bundle();
 		}
 	}
 
@@ -48,7 +48,7 @@ final class Admin {
 			)
 		);
 		$types      = array();
-		foreach ( openevents_event_post_types() as $type ) {
+		foreach ( feriae_event_post_types() as $type ) {
 			$object  = get_post_type_object( $type );
 			$types[] = array(
 				'value' => $type,
@@ -56,7 +56,7 @@ final class Admin {
 			);
 		}
 		printf(
-			'<div id="openevents-attendance" class="openevents-admin" data-screen="feeds" data-categories="%s" data-post-types="%s" data-default-type="%s" data-max-file="%d"><noscript>%s</noscript></div>',
+			'<div id="feriae-attendance" class="feriae-admin" data-screen="feeds" data-categories="%s" data-post-types="%s" data-default-type="%s" data-max-file="%d"><noscript>%s</noscript></div>',
 			esc_attr(
 				(string) wp_json_encode(
 					is_array( $categories ) ? array_map(
@@ -71,7 +71,7 @@ final class Admin {
 			esc_attr( (string) wp_json_encode( $types ) ),
 			esc_attr( Feed::default_post_type() ),
 			(int) Rest::MAX_FILE,
-			esc_html__( 'Calendar import needs JavaScript. You can also use WP-CLI: wp openevents import-ics and wp openevents sync-feeds.', 'openevents' )
+			esc_html__( 'Calendar import needs JavaScript. You can also use WP-CLI: wp feriae import-ics and wp feriae sync-feeds.', 'feriae' )
 		);
 	}
 }

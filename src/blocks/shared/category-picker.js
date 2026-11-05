@@ -15,7 +15,7 @@ export default function CategoryPicker( { value, onChange } ) {
 		( select ) =>
 			select( coreStore ).getEntityRecords(
 				'taxonomy',
-				'oe_event_category',
+				'feriae_event_category',
 				{ per_page: 100, _fields: 'id,name' }
 			) ?? [],
 		[]
@@ -27,7 +27,7 @@ export default function CategoryPicker( { value, onChange } ) {
 		<FormTokenField
 			__next40pxDefaultSize
 			__nextHasNoMarginBottom
-			label={ __( 'Event categories', 'openevents' ) }
+			label={ __( 'Event categories', 'feriae' ) }
 			value={ value.map( ( id ) => byId.get( id ) ).filter( Boolean ) }
 			suggestions={ terms.map( ( t ) => t.name ) }
 			__experimentalExpandOnFocus

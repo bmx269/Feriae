@@ -2,15 +2,15 @@
 /**
  * Public APIs: settings, REST, abilities, block bindings, modules.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Tests\Integration;
+namespace Feriae\Tests\Integration;
 
-use OpenEvents\Content\Meta;
-use OpenEvents\Modules\AbstractModule;
-use OpenEvents\Settings;
-use OpenEvents\Tests\TestCase;
+use Feriae\Content\Meta;
+use Feriae\Modules\AbstractModule;
+use Feriae\Settings;
+use Feriae\Tests\TestCase;
 
 final class ApiTest extends TestCase {
 
@@ -33,7 +33,7 @@ final class ApiTest extends TestCase {
 	}
 
 	public function test_event_post_types_combine_dedicated_and_existing(): void {
-		$this->assertSame( array( 'oe_event' ), openevents_event_post_types() );
+		$this->assertSame( array( 'feriae_event' ), feriae_event_post_types() );
 
 		$this->settings(
 			array(
@@ -41,7 +41,7 @@ final class ApiTest extends TestCase {
 				'event_post_types'    => array( 'post', 'page' ),
 			)
 		);
-		$this->assertSame( array( 'post', 'page' ), openevents_event_post_types() );
+		$this->assertSame( array( 'post', 'page' ), feriae_event_post_types() );
 	}
 
 	/**
@@ -66,14 +66,14 @@ final class ApiTest extends TestCase {
 		$day = current_datetime()->modify( '+3 days' )->format( 'Y-m-d' );
 		$this->event(
 			array(
-				'_oe_start' => "{$day} 10:00:00",
-				'_oe_end'   => "{$day} 11:00:00",
+				'_feriae_start' => "{$day} 10:00:00",
+				'_feriae_end'   => "{$day} 11:00:00",
 			),
 			array( 'post_title' => 'Visible' )
 		);
-		$this->event( array( '_oe_start' => "{$day} 12:00:00" ), array( 'post_status' => 'draft' ) );
+		$this->event( array( '_feriae_start' => "{$day} 12:00:00" ), array( 'post_status' => 'draft' ) );
 
-		$response = rest_do_request( new \WP_REST_Request( 'GET', '/openevents/v1/occurrences' ) );
+		$response = rest_do_request( new \WP_REST_Request( 'GET', '/feriae/v1/occurrences' ) );
 		$data     = $response->get_data();
 
 		$this->assertSame( 200, $response->get_status() );
@@ -90,8 +90,8 @@ final class ApiTest extends TestCase {
 				'title'  => 'From REST',
 				'status' => 'publish',
 				'meta'   => array(
-					'_oe_start' => '2030-05-05T10:00:00',
-					'_oe_end'   => '2030-05-05 11:00',
+					'_feriae_start' => '2030-05-05T10:00:00',
+					'_feriae_end'   => '2030-05-05 11:00',
 				),
 			)
 		);
@@ -99,28 +99,28 @@ final class ApiTest extends TestCase {
 		$id       = $response->get_data()['id'];
 
 		$this->assertSame( 201, $response->get_status() );
-		$this->assertSame( '2030-05-05 10:00:00', get_post_meta( $id, '_oe_start', true ) );
+		$this->assertSame( '2030-05-05 10:00:00', get_post_meta( $id, '_feriae_start', true ) );
 		$this->assertCount( 1, $this->rows( $id ) );
 	}
 
 	public function test_anonymous_users_cannot_write_event_meta(): void {
-		$id      = $this->event( array( '_oe_start' => '2030-05-05 10:00:00' ) );
+		$id      = $this->event( array( '_feriae_start' => '2030-05-05 10:00:00' ) );
 		$request = new \WP_REST_Request( 'POST', "/wp/v2/events/{$id}" );
-		$request->set_body_params( array( 'meta' => array( '_oe_start' => '2031-01-01 10:00:00' ) ) );
+		$request->set_body_params( array( 'meta' => array( '_feriae_start' => '2031-01-01 10:00:00' ) ) );
 
 		$this->assertGreaterThanOrEqual( 400, rest_do_request( $request )->get_status() );
-		$this->assertSame( '2030-05-05 10:00:00', get_post_meta( $id, '_oe_start', true ) );
+		$this->assertSame( '2030-05-05 10:00:00', get_post_meta( $id, '_feriae_start', true ) );
 	}
 
 	public function test_abilities_are_registered_and_run(): void {
 		$day = current_datetime()->modify( '+2 days' )->format( 'Y-m-d' );
-		$this->event( array( '_oe_start' => "{$day} 10:00:00" ), array( 'post_title' => 'Listed' ) );
+		$this->event( array( '_feriae_start' => "{$day} 10:00:00" ), array( 'post_title' => 'Listed' ) );
 
-		$list = wp_get_ability( 'openevents/list-events' );
+		$list = wp_get_ability( 'feriae/list-events' );
 		$this->assertNotNull( $list );
 		$this->assertSame( array( 'Listed' ), wp_list_pluck( $list->execute( array( 'limit' => 5 ) ), 'title' ) );
 
-		$create = wp_get_ability( 'openevents/create-event' );
+		$create = wp_get_ability( 'feriae/create-event' );
 		$this->assertInstanceOf( \WP_Error::class, $create->execute( array( 'title' => 'Nope', 'start' => '2030-05-05 10:00' ) ), 'Anonymous users cannot create.' );
 
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'author' ) ) );
@@ -139,21 +139,21 @@ final class ApiTest extends TestCase {
 	public function test_block_binding_source_returns_event_fields(): void {
 		$venue = self::factory()->post->create(
 			array(
-				'post_type'  => 'oe_venue',
+				'post_type'  => 'feriae_venue',
 				'post_title' => 'Gym & Hall',
 			)
 		);
 		$id    = $this->event(
 			array(
-				'_oe_start'    => '2030-05-05 10:00:00',
-				'_oe_end'      => '2030-05-05 11:00:00',
-				'_oe_venue_id' => $venue,
-				'_oe_url'      => 'https://example.com/?a=1&b=2',
+				'_feriae_start'    => '2030-05-05 10:00:00',
+				'_feriae_end'      => '2030-05-05 11:00:00',
+				'_feriae_venue_id' => $venue,
+				'_feriae_url'      => 'https://example.com/?a=1&b=2',
 			)
 		);
 		$block          = new \WP_Block( array( 'blockName' => 'core/paragraph' ) );
 		$block->context = array( 'postId' => $id );
-		$value          = static fn( string $key ) => get_block_bindings_source( 'openevents/event' )->get_value( array( 'key' => $key ), $block, 'content' );
+		$value          = static fn( string $key ) => get_block_bindings_source( 'feriae/event' )->get_value( array( 'key' => $key ), $block, 'content' );
 
 		$this->assertSame( 'May 5, 2030, 10:00 am – 11:00 am', $value( 'date' ) );
 		$this->assertSame( 'Gym &amp; Hall', $value( 'venue' ), 'Text is HTML-escaped.' );
@@ -162,7 +162,7 @@ final class ApiTest extends TestCase {
 
 		// End to end: a bound core paragraph renders the value on the event page.
 		$this->go_to( get_permalink( $id ) );
-		$html = do_blocks( '<!-- wp:paragraph {"metadata":{"bindings":{"content":{"source":"openevents/event","args":{"key":"date"}}}}} --><p>placeholder</p><!-- /wp:paragraph -->' );
+		$html = do_blocks( '<!-- wp:paragraph {"metadata":{"bindings":{"content":{"source":"feriae/event","args":{"key":"date"}}}}} --><p>placeholder</p><!-- /wp:paragraph -->' );
 		$this->assertStringContainsString( '>May 5, 2030, 10:00 am – 11:00 am</p>', $html );
 	}
 
@@ -189,9 +189,9 @@ final class ApiTest extends TestCase {
 			$modules[] = $module;
 			return $modules;
 		};
-		add_filter( 'openevents/modules', $add );
+		add_filter( 'feriae/modules', $add );
 
-		$registry = new \OpenEvents\Modules\Registry( new Settings() );
+		$registry = new \Feriae\Modules\Registry( new Settings() );
 		$this->assertSame( array( 'acme-zoom', 'ical' ), $registry->resolve( array( 'acme-zoom', 'missing' ) ) );
 
 		// The bootstrap pins enabled modules with a pre_option filter; override it here.
@@ -202,23 +202,23 @@ final class ApiTest extends TestCase {
 		$this->assertTrue( $module->booted );
 		$this->assertTrue( $registry->is_enabled( 'ical' ), 'Dependencies boot too.' );
 
-		remove_filter( 'openevents/modules', $add );
+		remove_filter( 'feriae/modules', $add );
 	}
 
 	public function test_settings_are_readable_over_rest_with_every_key(): void {
 		// A stored key missing from the REST schema makes core return null for
 		// the whole setting, and the settings screens then save defaults.
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
-		update_option( \OpenEvents\Settings::OPTION, \OpenEvents\Settings::sanitize( array_merge( \OpenEvents\Settings::defaults(), array( 'single_slug' => 'event' ) ) ) );
+		update_option( \Feriae\Settings::OPTION, \Feriae\Settings::sanitize( array_merge( \Feriae\Settings::defaults(), array( 'single_slug' => 'event' ) ) ) );
 		do_action( 'rest_api_init' );
 		$data = rest_get_server()->dispatch( new \WP_REST_Request( 'GET', '/wp/v2/settings' ) )->get_data();
 
-		$this->assertIsArray( $data[ \OpenEvents\Settings::OPTION ] );
-		$expected = array_keys( \OpenEvents\Settings::defaults() );
-		$actual   = array_keys( $data[ \OpenEvents\Settings::OPTION ] );
+		$this->assertIsArray( $data[ \Feriae\Settings::OPTION ] );
+		$expected = array_keys( \Feriae\Settings::defaults() );
+		$actual   = array_keys( $data[ \Feriae\Settings::OPTION ] );
 		sort( $expected );
 		sort( $actual );
 		$this->assertSame( $expected, $actual );
-		$this->assertSame( 'event', $data[ \OpenEvents\Settings::OPTION ]['single_slug'] );
+		$this->assertSame( 'event', $data[ \Feriae\Settings::OPTION ]['single_slug'] );
 	}
 }

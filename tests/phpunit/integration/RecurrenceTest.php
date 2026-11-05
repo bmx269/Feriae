@@ -2,17 +2,17 @@
 /**
  * Recurrence module: expansion into occurrences, stable ids, editing scopes, REST.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Tests\Integration;
+namespace Feriae\Tests\Integration;
 
-use OpenEvents\Content\Event;
-use OpenEvents\Frontend\EventDetails;
-use OpenEvents\Modules\Recurrence\Module;
-use OpenEvents\Modules\Recurrence\Recurrence;
-use OpenEvents\Modules\Recurrence\Series;
-use OpenEvents\Tests\TestCase;
+use Feriae\Content\Event;
+use Feriae\Frontend\EventDetails;
+use Feriae\Modules\Recurrence\Module;
+use Feriae\Modules\Recurrence\Recurrence;
+use Feriae\Modules\Recurrence\Series;
+use Feriae\Tests\TestCase;
 
 final class RecurrenceTest extends TestCase {
 
@@ -20,12 +20,12 @@ final class RecurrenceTest extends TestCase {
 		parent::set_up();
 		update_option( 'date_format', 'F j, Y' );
 		update_option( 'time_format', 'g:i a' );
-		add_filter( 'openevents/calendar/cache', '__return_false' );
+		add_filter( 'feriae/calendar/cache', '__return_false' );
 	}
 
 	public function tear_down(): void {
-		remove_filter( 'openevents/calendar/cache', '__return_false' );
-		unset( $_GET['oe_occurrence'] );
+		remove_filter( 'feriae/calendar/cache', '__return_false' );
+		unset( $_GET['feriae_occurrence'] );
 		parent::tear_down();
 	}
 
@@ -40,8 +40,8 @@ final class RecurrenceTest extends TestCase {
 		return $this->event(
 			array_merge(
 				array(
-					'_oe_start'           => "{$day} 19:00:00",
-					'_oe_end'             => "{$day} 21:00:00",
+					'_feriae_start'           => "{$day} 19:00:00",
+					'_feriae_end'             => "{$day} 21:00:00",
 					Recurrence::META_KEY  => array_merge( Recurrence::empty_meta(), $recurrence ),
 				),
 				$meta
@@ -78,7 +78,7 @@ final class RecurrenceTest extends TestCase {
 		$id   = $this->series( array( 'rrule' => 'FREQ=DAILY;COUNT=3' ) );
 		$rows = $this->rows( $id );
 		$this->assertSame( '0', (string) $rows[0]->sequence );
-		$this->assertSame( get_post_meta( $id, '_oe_start', true ), $rows[0]->start_local );
+		$this->assertSame( get_post_meta( $id, '_feriae_start', true ), $rows[0]->start_local );
 	}
 
 	public function test_skipping_a_date_keeps_the_other_ids(): void {
@@ -97,9 +97,9 @@ final class RecurrenceTest extends TestCase {
 		$id     = $this->series( array( 'rrule' => 'FREQ=DAILY;COUNT=3' ) );
 		$before = array_values( $this->ids( $id ) );
 
-		$day = substr( (string) get_post_meta( $id, '_oe_start', true ), 0, 10 );
-		update_post_meta( $id, '_oe_start', "{$day} 18:00:00" );
-		update_post_meta( $id, '_oe_end', "{$day} 20:00:00" );
+		$day = substr( (string) get_post_meta( $id, '_feriae_start', true ), 0, 10 );
+		update_post_meta( $id, '_feriae_start', "{$day} 18:00:00" );
+		update_post_meta( $id, '_feriae_end', "{$day} 20:00:00" );
 
 		$this->assertSame( $before, array_values( $this->ids( $id ) ) );
 		$this->assertSame( '18:00:00', substr( (string) array_keys( $this->ids( $id ) )[1], 11 ) );
@@ -116,9 +116,9 @@ final class RecurrenceTest extends TestCase {
 		$day = current_datetime()->modify( '+1 day' )->format( 'Y-m-d' );
 		$id  = $this->event(
 			array(
-				'_oe_start'          => "{$day} 00:00:00",
-				'_oe_end'            => current_datetime()->modify( '+2 days' )->format( 'Y-m-d' ) . ' 00:00:00',
-				'_oe_all_day'        => true,
+				'_feriae_start'          => "{$day} 00:00:00",
+				'_feriae_end'            => current_datetime()->modify( '+2 days' )->format( 'Y-m-d' ) . ' 00:00:00',
+				'_feriae_all_day'        => true,
 				Recurrence::META_KEY => array( 'rrule' => 'FREQ=MONTHLY;COUNT=2' ),
 			)
 		);
@@ -131,14 +131,14 @@ final class RecurrenceTest extends TestCase {
 
 	public function test_open_ended_rules_stop_at_the_horizon(): void {
 		$horizon = static fn() => '+3 weeks';
-		add_filter( 'openevents/recurrence/horizon', $horizon );
+		add_filter( 'feriae/recurrence/horizon', $horizon );
 		$id = $this->series( array( 'rrule' => 'FREQ=WEEKLY' ) );
 		// It starts tomorrow, so the horizon runs from then: the start plus 3 weeks.
 		$this->assertCount( 4, $this->rows( $id ) );
 
 		// The daily job extends the series when the horizon moves.
-		remove_filter( 'openevents/recurrence/horizon', $horizon );
-		add_filter( 'openevents/recurrence/horizon', static fn() => '+6 weeks' );
+		remove_filter( 'feriae/recurrence/horizon', $horizon );
+		add_filter( 'feriae/recurrence/horizon', static fn() => '+6 weeks' );
 		Module::extend_all();
 		$this->assertCount( 7, $this->rows( $id ) );
 	}
@@ -151,47 +151,47 @@ final class RecurrenceTest extends TestCase {
 
 	public function test_listings_and_calendar_links_point_at_each_date(): void {
 		$id    = $this->series( array( 'rrule' => 'FREQ=WEEKLY;COUNT=3' ) );
-		$items = openevents_get_upcoming( 10, array( 'event_ids' => array( $id ) ) );
+		$items = feriae_get_upcoming( 10, array( 'event_ids' => array( $id ) ) );
 
 		$this->assertCount( 3, $items );
-		$this->assertSame( get_permalink( $id ), openevents_occurrence_url( $items[0] ) );
-		$this->assertSame( add_query_arg( 'oe_occurrence', $items[1]->start->format( 'Y-m-d' ), get_permalink( $id ) ), openevents_occurrence_url( $items[1] ) );
+		$this->assertSame( get_permalink( $id ), feriae_occurrence_url( $items[0] ) );
+		$this->assertSame( add_query_arg( 'feriae_occurrence', $items[1]->start->format( 'Y-m-d' ), get_permalink( $id ) ), feriae_occurrence_url( $items[1] ) );
 	}
 
 	public function test_event_page_shows_the_requested_date_and_the_rule(): void {
 		$id    = $this->series( array( 'rrule' => 'FREQ=WEEKLY;COUNT=3' ) );
-		$items = openevents_get_upcoming( 10, array( 'event_ids' => array( $id ) ) );
+		$items = feriae_get_upcoming( 10, array( 'event_ids' => array( $id ) ) );
 
-		$_GET['oe_occurrence'] = $items[1]->start->format( 'Y-m-d' );
+		$_GET['feriae_occurrence'] = $items[1]->start->format( 'Y-m-d' );
 		$html            = EventDetails::render( $id );
 
 		$this->assertStringContainsString( 'datetime="' . $items[1]->start->format( 'Y-m-d\TH:i' ), $html );
 		$this->assertStringContainsString( 'Every week on ' . $items[0]->start->format( 'l' ) . ', 3 times', $html );
 		// The other dates are listed, not the one shown.
-		$this->assertStringContainsString( 'oe_occurrence=' . $items[2]->start->format( 'Y-m-d' ), $html );
-		$this->assertStringNotContainsString( 'oe_occurrence=' . $items[1]->start->format( 'Y-m-d' ) . '"', $html );
+		$this->assertStringContainsString( 'feriae_occurrence=' . $items[2]->start->format( 'Y-m-d' ), $html );
+		$this->assertStringNotContainsString( 'feriae_occurrence=' . $items[1]->start->format( 'Y-m-d' ) . '"', $html );
 	}
 
 	public function test_detach_makes_one_date_its_own_event(): void {
-		$id    = $this->series( array( 'rrule' => 'FREQ=DAILY;COUNT=4' ), 1, array( '_oe_cost' => '12' ) );
-		$term  = self::factory()->term->create( array( 'taxonomy' => \OpenEvents\Content\PostTypes::CATEGORY ) );
-		wp_set_object_terms( $id, array( $term ), \OpenEvents\Content\PostTypes::CATEGORY );
-		$items = openevents_get_upcoming( 10, array( 'event_ids' => array( $id ) ) );
+		$id    = $this->series( array( 'rrule' => 'FREQ=DAILY;COUNT=4' ), 1, array( '_feriae_cost' => '12' ) );
+		$term  = self::factory()->term->create( array( 'taxonomy' => \Feriae\Content\PostTypes::CATEGORY ) );
+		wp_set_object_terms( $id, array( $term ), \Feriae\Content\PostTypes::CATEGORY );
+		$items = feriae_get_upcoming( 10, array( 'event_ids' => array( $id ) ) );
 
 		$new = Series::detach( Event::get( $id ), $items[2] );
 
 		$this->assertIsInt( $new );
 		$this->assertCount( 3, $this->rows( $id ) );
 		$this->assertCount( 1, $this->rows( $new ) );
-		$this->assertSame( $items[2]->start->format( 'Y-m-d H:i:s' ), get_post_meta( $new, '_oe_start', true ) );
-		$this->assertSame( '12', get_post_meta( $new, '_oe_cost', true ) );
+		$this->assertSame( $items[2]->start->format( 'Y-m-d H:i:s' ), get_post_meta( $new, '_feriae_start', true ) );
+		$this->assertSame( '12', get_post_meta( $new, '_feriae_cost', true ) );
 		$this->assertSame( $id, (int) get_post_meta( $new, Series::PARENT_KEY, true ) );
-		$this->assertSame( array( $term ), wp_get_object_terms( $new, \OpenEvents\Content\PostTypes::CATEGORY, array( 'fields' => 'ids' ) ) );
+		$this->assertSame( array( $term ), wp_get_object_terms( $new, \Feriae\Content\PostTypes::CATEGORY, array( 'fields' => 'ids' ) ) );
 	}
 
 	public function test_split_ends_the_series_and_continues_it_in_a_new_event(): void {
 		$id    = $this->series( array( 'rrule' => 'FREQ=DAILY;COUNT=5' ) );
-		$items = openevents_get_upcoming( 10, array( 'event_ids' => array( $id ) ) );
+		$items = feriae_get_upcoming( 10, array( 'event_ids' => array( $id ) ) );
 
 		$new = Series::split( Event::get( $id ), $items[2] );
 
@@ -204,13 +204,13 @@ final class RecurrenceTest extends TestCase {
 
 	public function test_split_on_the_first_date_is_refused(): void {
 		$id    = $this->series( array( 'rrule' => 'FREQ=DAILY;COUNT=3' ) );
-		$first = openevents()->occurrences()->for_event( $id );
+		$first = feriae()->occurrences()->for_event( $id );
 		$this->assertWPError( Series::split( Event::get( $id ), $first ) );
 	}
 
 	public function test_rest_preview_returns_dates_and_a_description(): void {
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
-		$request = new \WP_REST_Request( 'POST', '/openevents/v1/recurrence/preview' );
+		$request = new \WP_REST_Request( 'POST', '/feriae/v1/recurrence/preview' );
 		$request->set_body_params(
 			array(
 				'start'    => '2030-01-07 18:00:00',
@@ -235,7 +235,7 @@ final class RecurrenceTest extends TestCase {
 
 	public function test_rest_preview_rejects_a_bad_rule(): void {
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
-		$request = new \WP_REST_Request( 'POST', '/openevents/v1/recurrence/preview' );
+		$request = new \WP_REST_Request( 'POST', '/feriae/v1/recurrence/preview' );
 		$request->set_body_params(
 			array(
 				'start' => '2030-01-07 18:00:00',
@@ -247,8 +247,8 @@ final class RecurrenceTest extends TestCase {
 
 	public function test_rest_skip_and_permissions(): void {
 		$id    = $this->series( array( 'rrule' => 'FREQ=DAILY;COUNT=3' ) );
-		$items = openevents_get_upcoming( 10, array( 'event_ids' => array( $id ) ) );
-		$route = "/openevents/v1/events/{$id}/occurrences/{$items[1]->id}/skip";
+		$items = feriae_get_upcoming( 10, array( 'event_ids' => array( $id ) ) );
+		$route = "/feriae/v1/events/{$id}/occurrences/{$items[1]->id}/skip";
 
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
 		$this->assertSame( 403, rest_get_server()->dispatch( new \WP_REST_Request( 'POST', $route ) )->get_status() );
@@ -267,25 +267,25 @@ final class RecurrenceTest extends TestCase {
 		$response = rest_get_server()->dispatch( $request );
 
 		$this->assertSame( 400, $response->get_status() );
-		$this->assertSame( 'openevents_invalid_rrule', $response->get_data()['code'] );
+		$this->assertSame( 'feriae_invalid_rrule', $response->get_data()['code'] );
 	}
 
 	public function test_pretty_dated_urls_like_tec(): void {
 		$this->set_permalink_structure( '/%postname%/' );
 		// The test framework resets post types; register ours again for pretty permastructs.
-		( new \OpenEvents\Content\PostTypes( openevents()->settings() ) )->register_types();
+		( new \Feriae\Content\PostTypes( feriae()->settings() ) )->register_types();
 		Module::rewrite();
 		flush_rewrite_rules();
 
 		$id    = $this->series( array( 'rrule' => 'FREQ=WEEKLY;COUNT=3' ) );
-		$items = openevents_get_upcoming( 10, array( 'event_ids' => array( $id ) ) );
+		$items = feriae_get_upcoming( 10, array( 'event_ids' => array( $id ) ) );
 		$date  = $items[1]->start->format( 'Y-m-d' );
-		$url   = openevents_occurrence_url( $items[1] );
+		$url   = feriae_occurrence_url( $items[1] );
 
 		$this->assertSame( trailingslashit( get_permalink( $id ) ) . $date . '/', $url );
 		$this->go_to( $url );
-		$this->assertTrue( is_singular( \OpenEvents\Content\PostTypes::EVENT ) );
-		$this->assertSame( $items[1]->id, openevents()->occurrences()->requested( $id )->id );
+		$this->assertTrue( is_singular( \Feriae\Content\PostTypes::EVENT ) );
+		$this->assertSame( $items[1]->id, feriae()->occurrences()->requested( $id )->id );
 		$this->set_permalink_structure( '' );
 	}
 }

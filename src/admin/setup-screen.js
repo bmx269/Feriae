@@ -16,18 +16,18 @@ import { useState } from '@wordpress/element';
 import useSettings from './use-settings';
 import { DisplayFields, EventContentFields, ModuleFields } from './fields';
 
-const config = window.openEventsAdmin || {};
+const config = window.feriaeAdmin || {};
 
 const STEPS = [
-	{ id: 'content', label: __( 'Event content', 'openevents' ) },
-	{ id: 'calendar', label: __( 'Calendar', 'openevents' ) },
-	{ id: 'modules', label: __( 'Features', 'openevents' ) },
-	{ id: 'done', label: __( 'Done', 'openevents' ) },
+	{ id: 'content', label: __( 'Event content', 'feriae' ) },
+	{ id: 'calendar', label: __( 'Calendar', 'feriae' ) },
+	{ id: 'modules', label: __( 'Features', 'feriae' ) },
+	{ id: 'done', label: __( 'Done', 'feriae' ) },
 ];
 
 function Steps( { current } ) {
 	return (
-		<ol className="openevents-setup__steps">
+		<ol className="feriae-setup__steps">
 			{ STEPS.map( ( step, index ) => (
 				<li
 					key={ step.id }
@@ -84,10 +84,9 @@ export default function SetupScreen() {
 				path: '/wp/v2/pages',
 				method: 'POST',
 				data: {
-					title: __( 'Calendar', 'openevents' ),
+					title: __( 'Calendar', 'feriae' ),
 					status: 'publish',
-					content:
-						'<!-- wp:openevents/calendar {"showLegend":true} /-->',
+					content: '<!-- wp:feriae/calendar {"showLegend":true} /-->',
 				},
 			} );
 			update( { calendar_page: page.id } );
@@ -95,7 +94,7 @@ export default function SetupScreen() {
 			setPageMode( 'existing' );
 			// Settings state updates asynchronously; save with the new id explicitly.
 			await save( {
-				openevents_settings: {
+				feriae_settings: {
 					...settings,
 					calendar_page: page.id,
 				},
@@ -116,11 +115,11 @@ export default function SetupScreen() {
 	const current = STEPS[ step ].id;
 
 	return (
-		<Page title={ __( 'Set up OpenEvents', 'openevents' ) } hasPadding>
+		<Page title={ __( 'Set up Feriae', 'feriae' ) } hasPadding>
 			<Stack
 				direction="column"
 				gap="lg"
-				className="openevents-admin__body openevents-setup"
+				className="feriae-admin__body feriae-setup"
 			>
 				<Steps current={ step } />
 				{ error && (
@@ -134,22 +133,16 @@ export default function SetupScreen() {
 					<Card.Header>
 						<Card.Title>
 							{ current === 'content' &&
-								__(
-									'Where should events live?',
-									'openevents'
-								) }
+								__( 'Where should events live?', 'feriae' ) }
 							{ current === 'calendar' &&
 								__(
 									'Where should the calendar appear?',
-									'openevents'
+									'feriae'
 								) }
 							{ current === 'modules' &&
-								__(
-									'Which features do you want?',
-									'openevents'
-								) }
+								__( 'Which features do you want?', 'feriae' ) }
 							{ current === 'done' &&
-								__( 'You’re all set', 'openevents' ) }
+								__( 'You’re all set', 'feriae' ) }
 						</Card.Title>
 					</Card.Header>
 					<Card.Content>
@@ -158,7 +151,7 @@ export default function SetupScreen() {
 								<Text>
 									{ __(
 										'Create a dedicated Events post type, add event dates to post types you already use, or both.',
-										'openevents'
+										'feriae'
 									) }
 								</Text>
 								<EventContentFields
@@ -174,7 +167,7 @@ export default function SetupScreen() {
 													'We found %d event from The Events Calendar. It is left untouched; an importer is planned for an upcoming release.',
 													'We found %d events from The Events Calendar. They are left untouched; an importer is planned for an upcoming release.',
 													config.tecCount,
-													'openevents'
+													'feriae'
 												),
 												config.tecCount
 											) }
@@ -188,7 +181,7 @@ export default function SetupScreen() {
 								<RadioGroupControl
 									label={ __(
 										'Calendar location',
-										'openevents'
+										'feriae'
 									) }
 									items={ [
 										...( settings.register_event_type
@@ -199,7 +192,7 @@ export default function SetupScreen() {
 															/* translators: %s: URL */
 															__(
 																'The Events archive at %s',
-																'openevents'
+																'feriae'
 															),
 															`${ config.homeUrl }${ settings.events_slug }/`
 														),
@@ -210,14 +203,14 @@ export default function SetupScreen() {
 											value: 'create',
 											label: __(
 												'Create a “Calendar” page with the calendar block',
-												'openevents'
+												'feriae'
 											),
 										},
 										{
 											value: 'existing',
 											label: __(
 												'An existing page',
-												'openevents'
+												'feriae'
 											),
 										},
 									] }
@@ -236,38 +229,26 @@ export default function SetupScreen() {
 									/>
 								) : (
 									<RadioGroupControl
-										label={ __(
-											'Default view',
-											'openevents'
-										) }
+										label={ __( 'Default view', 'feriae' ) }
 										items={ [
 											{
 												value: 'month',
 												label: __(
 													'Month grid',
-													'openevents'
+													'feriae'
 												),
 											},
 											{
 												value: 'week',
-												label: __(
-													'Week',
-													'openevents'
-												),
+												label: __( 'Week', 'feriae' ),
 											},
 											{
 												value: 'day',
-												label: __(
-													'Day',
-													'openevents'
-												),
+												label: __( 'Day', 'feriae' ),
 											},
 											{
 												value: 'list',
-												label: __(
-													'List',
-													'openevents'
-												),
+												label: __( 'List', 'feriae' ),
 											},
 										] }
 										value={
@@ -289,7 +270,7 @@ export default function SetupScreen() {
 								<Text variant="body-sm">
 									{ __(
 										'Turn features on or off at any time in Events → Settings → Modules.',
-										'openevents'
+										'feriae'
 									) }
 								</Text>
 							</Stack>
@@ -298,11 +279,11 @@ export default function SetupScreen() {
 							<Stack direction="column" gap="md">
 								{ settings.register_event_type && (
 									<Link
-										href={ `${ config.adminUrl }post-new.php?post_type=oe_event` }
+										href={ `${ config.adminUrl }post-new.php?post_type=feriae_event` }
 									>
 										{ __(
 											'Add your first event',
-											'openevents'
+											'feriae'
 										) }
 									</Link>
 								) }
@@ -321,19 +302,19 @@ export default function SetupScreen() {
 												/* translators: %s: post type name */
 												__(
 													'Open any item in %s and set a date in the Event panel',
-													'openevents'
+													'feriae'
 												),
 												type.label
 											) }
 										</Link>
 									) ) }
 								<Link
-									href={ `${ config.adminUrl }post-new.php?post_type=oe_venue` }
+									href={ `${ config.adminUrl }post-new.php?post_type=feriae_venue` }
 								>
-									{ __( 'Add a venue', 'openevents' ) }
+									{ __( 'Add a venue', 'feriae' ) }
 								</Link>
 								<Link href={ calendarUrl }>
-									{ __( 'View your calendar', 'openevents' ) }
+									{ __( 'View your calendar', 'feriae' ) }
 								</Link>
 							</Stack>
 						) }
@@ -354,7 +335,7 @@ export default function SetupScreen() {
 							>
 								{ __(
 									'Skip setup and use the defaults',
-									'openevents'
+									'feriae'
 								) }
 							</Button>
 							<Stack direction="row" gap="sm">
@@ -364,7 +345,7 @@ export default function SetupScreen() {
 										onClick={ () => setStep( step - 1 ) }
 										disabled={ saving }
 									>
-										{ __( 'Back', 'openevents' ) }
+										{ __( 'Back', 'feriae' ) }
 									</Button>
 								) }
 								<Button
@@ -372,10 +353,10 @@ export default function SetupScreen() {
 									loading={ saving }
 									loadingAnnouncement={ __(
 										'Saving',
-										'openevents'
+										'feriae'
 									) }
 								>
-									{ __( 'Continue', 'openevents' ) }
+									{ __( 'Continue', 'feriae' ) }
 								</Button>
 							</Stack>
 						</>
@@ -384,7 +365,7 @@ export default function SetupScreen() {
 							href={ config.settingsUrl }
 							variant="outline"
 						>
-							{ __( 'Review all settings', 'openevents' ) }
+							{ __( 'Review all settings', 'feriae' ) }
 						</ButtonLink>
 					) }
 				</Stack>

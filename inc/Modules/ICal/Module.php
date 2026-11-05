@@ -2,16 +2,16 @@
 /**
  * iCal module.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\ICal;
+namespace Feriae\Modules\ICal;
 
-use OpenEvents\Content\Event;
-use OpenEvents\Content\PostTypes;
-use OpenEvents\Modules\AbstractModule;
-use OpenEvents\Occurrences\Occurrence;
-use OpenEvents\Occurrences\Repository;
+use Feriae\Content\Event;
+use Feriae\Content\PostTypes;
+use Feriae\Modules\AbstractModule;
+use Feriae\Occurrences\Occurrence;
+use Feriae\Occurrences\Repository;
 
 /**
  * .ics downloads for single events (?ical=1) and an upcoming-events feed
@@ -26,18 +26,18 @@ final class Module extends AbstractModule {
 	}
 
 	public function label(): string {
-		return __( 'iCal export', 'openevents' );
+		return __( 'iCal export', 'feriae' );
 	}
 
 	public function description(): string {
-		return __( 'Adds .ics downloads for each event, a subscribable feed of upcoming events, and Google Calendar links.', 'openevents' );
+		return __( 'Adds .ics downloads for each event, a subscribable feed of upcoming events, and Google Calendar links.', 'feriae' );
 	}
 
 	public function boot(): void {
 		add_filter( 'query_vars', array( $this, 'query_vars' ) );
 		add_action( 'template_redirect', array( $this, 'maybe_serve' ) );
-		add_filter( 'openevents/event_details/links', array( $this, 'event_links' ), 10, 2 );
-		add_filter( 'openevents/calendar/links', array( $this, 'calendar_links' ) );
+		add_filter( 'feriae/event_details/links', array( $this, 'event_links' ), 10, 2 );
+		add_filter( 'feriae/calendar/links', array( $this, 'calendar_links' ) );
 	}
 
 	/**
@@ -54,11 +54,11 @@ final class Module extends AbstractModule {
 			return;
 		}
 
-		$repository = openevents()->occurrences();
+		$repository = feriae()->occurrences();
 
-		if ( is_singular( openevents()->settings()->event_post_types() ) ) {
+		if ( is_singular( feriae()->settings()->event_post_types() ) ) {
 			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only.
-			$date     = sanitize_text_field( wp_unslash( $_GET['oe_occurrence'] ?? '' ) );
+			$date     = sanitize_text_field( wp_unslash( $_GET['feriae_occurrence'] ?? '' ) );
 			$one      = $date ? $repository->on_date( get_queried_object_id(), $date ) : null;
 			$result   = $one ? array( 'items' => array( $one ) ) : $repository->query(
 				array(
@@ -98,12 +98,12 @@ final class Module extends AbstractModule {
 			return $links;
 		}
 		$links[] = array(
-			'label' => __( 'Google Calendar', 'openevents' ),
+			'label' => __( 'Google Calendar', 'feriae' ),
 			'url'   => self::google_url( $occurrence, $event ),
 		);
 		$links[] = array(
-			'label' => __( 'Download .ics', 'openevents' ),
-			'url'   => add_query_arg( 'ical', '1', openevents_occurrence_url( $occurrence ) ),
+			'label' => __( 'Download .ics', 'feriae' ),
+			'url'   => add_query_arg( 'ical', '1', feriae_occurrence_url( $occurrence ) ),
 		);
 		return $links;
 	}
@@ -114,14 +114,14 @@ final class Module extends AbstractModule {
 	 */
 	public function calendar_links( array $links ): array {
 		$links[] = array(
-			'label' => __( 'Subscribe (iCal)', 'openevents' ),
-			'url'   => add_query_arg( 'ical', '1', openevents_calendar_url() ),
+			'label' => __( 'Subscribe (iCal)', 'feriae' ),
+			'url'   => add_query_arg( 'ical', '1', feriae_calendar_url() ),
 		);
 		return $links;
 	}
 
 	private function is_calendar_page(): bool {
-		$page = (int) openevents()->settings()->get( 'calendar_page' );
+		$page = (int) feriae()->settings()->get( 'calendar_page' );
 		return $page && is_page( $page );
 	}
 

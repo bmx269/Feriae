@@ -2,18 +2,18 @@
 /**
  * Occurrence generation.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Occurrences;
+namespace Feriae\Occurrences;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OpenEvents\Content\Event;
-use OpenEvents\Content\Meta;
+use Feriae\Content\Event;
+use Feriae\Content\Meta;
 
 /**
- * Turns an event's schedule meta into the rows that should exist in oe_occurrences.
+ * Turns an event's schedule meta into the rows that should exist in feriae_occurrences.
  */
 final class Generator {
 
@@ -43,7 +43,7 @@ final class Generator {
 		 * @param array<int, array<string, mixed>> $rows  Rows keyed by sequence. Build them with Generator::row().
 		 * @param Event                            $event Event.
 		 */
-		return apply_filters( 'openevents/occurrences/generate', $rows, $event );
+		return apply_filters( 'feriae/occurrences/generate', $rows, $event );
 	}
 
 	/**
@@ -60,10 +60,10 @@ final class Generator {
 			'end_local'          => $end->format( Meta::DATETIME_FORMAT ),
 			'start_utc'          => $start->setTimezone( $utc )->format( Meta::DATETIME_FORMAT ),
 			'end_utc'            => $end->setTimezone( $utc )->format( Meta::DATETIME_FORMAT ),
-			'timezone'           => (string) $event->meta( '_oe_timezone' ),
+			'timezone'           => (string) $event->meta( '_feriae_timezone' ),
 			'all_day'            => $event->is_all_day() ? 1 : 0,
-			'hide_from_listings' => $event->meta( '_oe_hide_from_listings' ) ? 1 : 0,
-			'event_status'       => \OpenEvents\Content\EventStatus::for_date( $event, $start )['status'],
+			'hide_from_listings' => $event->meta( '_feriae_hide_from_listings' ) ? 1 : 0,
+			'event_status'       => \Feriae\Content\EventStatus::for_date( $event, $start )['status'],
 		);
 	}
 }

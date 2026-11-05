@@ -2,18 +2,18 @@
 /**
  * PayPal Checkout (Orders v2).
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Tickets\Gateways;
+namespace Feriae\Modules\Tickets\Gateways;
 
-use OpenEvents\Attendance\Money;
-use OpenEvents\Attendance\Order;
-use OpenEvents\Attendance\Orders;
-use OpenEvents\Attendance\TicketTypes;
-use OpenEvents\Modules\Tickets\AbstractGateway;
-use OpenEvents\Modules\Tickets\Checkout;
-use OpenEvents\Modules\Tickets\PaymentResult;
+use Feriae\Attendance\Money;
+use Feriae\Attendance\Order;
+use Feriae\Attendance\Orders;
+use Feriae\Attendance\TicketTypes;
+use Feriae\Modules\Tickets\AbstractGateway;
+use Feriae\Modules\Tickets\Checkout;
+use Feriae\Modules\Tickets\PaymentResult;
 
 /**
  * The buyer approves on paypal.com and returns; the site then captures the
@@ -31,11 +31,11 @@ final class PayPal extends AbstractGateway {
 	}
 
 	public function label(): string {
-		return __( 'PayPal', 'openevents' );
+		return __( 'PayPal', 'feriae' );
 	}
 
 	public function description(): string {
-		return __( 'Pay with your PayPal account, Venmo, or a card on PayPal.', 'openevents' );
+		return __( 'Pay with your PayPal account, Venmo, or a card on PayPal.', 'feriae' );
 	}
 
 	public function is_available( string $currency ): bool {
@@ -48,7 +48,7 @@ final class PayPal extends AbstractGateway {
 		foreach ( ( new Orders() )->items( $order->id ) as $item ) {
 			$type    = $types->get( (int) $item->ticket_type_id );
 			$items[] = array(
-				'name'        => mb_substr( $type ? $type->name : __( 'Ticket', 'openevents' ), 0, 127 ),
+				'name'        => mb_substr( $type ? $type->name : __( 'Ticket', 'feriae' ), 0, 127 ),
 				'quantity'    => (string) (int) $item->quantity,
 				'unit_amount' => array(
 					'currency_code' => $order->currency,
@@ -94,7 +94,7 @@ final class PayPal extends AbstractGateway {
 					),
 				),
 			),
-			'oe-' . $order->uuid
+			'feriae-' . $order->uuid
 		);
 		if ( is_wp_error( $paypal ) ) {
 			return PaymentResult::failed( $paypal->get_error_message() );
@@ -104,12 +104,12 @@ final class PayPal extends AbstractGateway {
 				return PaymentResult::redirect( (string) $link['href'], (string) $paypal['id'] );
 			}
 		}
-		return PaymentResult::failed( __( 'PayPal did not return an approval page.', 'openevents' ) );
+		return PaymentResult::failed( __( 'PayPal did not return an approval page.', 'feriae' ) );
 	}
 
 	public function handle_return( Order $order, array $query ): PaymentResult {
-		if ( 'cancel' === ( $query['oe_checkout'] ?? '' ) ) {
-			return PaymentResult::failed( __( 'Payment was cancelled. Your tickets were not reserved.', 'openevents' ) );
+		if ( 'cancel' === ( $query['feriae_checkout'] ?? '' ) ) {
+			return PaymentResult::failed( __( 'Payment was cancelled. Your tickets were not reserved.', 'feriae' ) );
 		}
 		// PayPal appends ?token=<PayPal order id>.
 		if ( ( $query['token'] ?? '' ) !== $order->gateway_ref ) {
@@ -122,7 +122,7 @@ final class PayPal extends AbstractGateway {
 	 * Captures an approved PayPal order and checks it paid what we expect.
 	 */
 	public function capture( Order $order ): PaymentResult {
-		$result = $this->request( 'POST', '/v2/checkout/orders/' . rawurlencode( $order->gateway_ref ) . '/capture', null, 'oe-capture-' . $order->uuid );
+		$result = $this->request( 'POST', '/v2/checkout/orders/' . rawurlencode( $order->gateway_ref ) . '/capture', null, 'feriae-capture-' . $order->uuid );
 		if ( is_wp_error( $result ) && 'ORDER_ALREADY_CAPTURED' === $result->get_error_code() ) {
 			$result = $this->request( 'GET', '/v2/checkout/orders/' . rawurlencode( $order->gateway_ref ) );
 		}
@@ -134,7 +134,7 @@ final class PayPal extends AbstractGateway {
 			return PaymentResult::paid( (string) $capture['id'], $order->gateway_ref );
 		}
 		if ( 'DECLINED' === ( $capture['status'] ?? '' ) ) {
-			return PaymentResult::failed( __( 'PayPal declined the payment.', 'openevents' ) );
+			return PaymentResult::failed( __( 'PayPal declined the payment.', 'feriae' ) );
 		}
 		return PaymentResult::pending();
 	}
@@ -183,36 +183,36 @@ final class PayPal extends AbstractGateway {
 
 	public function refund( Order $order ): true|\WP_Error {
 		if ( '' === $order->gateway_txn ) {
-			return new \WP_Error( 'openevents_refund_missing_payment', __( 'No PayPal capture is recorded for this order.', 'openevents' ) );
+			return new \WP_Error( 'feriae_refund_missing_payment', __( 'No PayPal capture is recorded for this order.', 'feriae' ) );
 		}
-		$refund = $this->request( 'POST', '/v2/payments/captures/' . rawurlencode( $order->gateway_txn ) . '/refund', null, 'oe-refund-' . $order->uuid );
+		$refund = $this->request( 'POST', '/v2/payments/captures/' . rawurlencode( $order->gateway_txn ) . '/refund', null, 'feriae-refund-' . $order->uuid );
 		return is_wp_error( $refund ) ? $refund : true;
 	}
 
 	public function settings_fields(): array {
 		return parent::settings_fields() + array(
 			'mode'          => array(
-				'label'   => __( 'Mode', 'openevents' ),
+				'label'   => __( 'Mode', 'feriae' ),
 				'type'    => 'select',
 				'options' => array(
-					'sandbox' => __( 'Sandbox (testing)', 'openevents' ),
-					'live'    => __( 'Live', 'openevents' ),
+					'sandbox' => __( 'Sandbox (testing)', 'feriae' ),
+					'live'    => __( 'Live', 'feriae' ),
 				),
 			),
 			'client_id'     => array(
-				'label' => __( 'Client ID', 'openevents' ),
+				'label' => __( 'Client ID', 'feriae' ),
 				'type'  => 'text',
-				'help'  => __( 'From developer.paypal.com → Apps & Credentials, for the mode above.', 'openevents' ),
+				'help'  => __( 'From developer.paypal.com → Apps & Credentials, for the mode above.', 'feriae' ),
 			),
 			'client_secret' => array(
-				'label' => __( 'Secret', 'openevents' ),
+				'label' => __( 'Secret', 'feriae' ),
 				'type'  => 'secret',
 			),
 			'webhook_id'    => array(
-				'label' => __( 'Webhook ID', 'openevents' ),
+				'label' => __( 'Webhook ID', 'feriae' ),
 				'type'  => 'text',
 				/* translators: %s: webhook URL */
-				'help'  => sprintf( __( 'Add a webhook at %s for CHECKOUT.ORDER.APPROVED and PAYMENT.CAPTURE.* events, then paste its ID.', 'openevents' ), $this->webhook_url() ),
+				'help'  => sprintf( __( 'Add a webhook at %s for CHECKOUT.ORDER.APPROVED and PAYMENT.CAPTURE.* events, then paste its ID.', 'feriae' ), $this->webhook_url() ),
 			),
 		);
 	}
@@ -263,7 +263,7 @@ final class PayPal extends AbstractGateway {
 		if ( '' === $capture_id ) {
 			return null;
 		}
-		$table = \OpenEvents\Attendance\Schema::orders();
+		$table = \Feriae\Attendance\Schema::orders();
 		$id    = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$table} WHERE gateway = 'paypal' AND gateway_txn = %s", $capture_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		return $id ? ( new Orders() )->get( (int) $id ) : null;
 	}
@@ -272,7 +272,7 @@ final class PayPal extends AbstractGateway {
 	 * OAuth access token, cached until shortly before it expires.
 	 */
 	private function access_token(): string|\WP_Error {
-		$key   = 'openevents_paypal_token_' . md5( $this->base() . $this->setting( 'client_id' ) );
+		$key   = 'feriae_paypal_token_' . md5( $this->base() . $this->setting( 'client_id' ) );
 		$token = get_transient( $key );
 		if ( is_string( $token ) && '' !== $token ) {
 			return $token;
@@ -287,7 +287,7 @@ final class PayPal extends AbstractGateway {
 		);
 		$data = is_wp_error( $response ) ? null : json_decode( wp_remote_retrieve_body( $response ), true );
 		if ( empty( $data['access_token'] ) ) {
-			return new \WP_Error( 'openevents_paypal_auth', __( 'Could not sign in to PayPal. Check the client ID and secret.', 'openevents' ) );
+			return new \WP_Error( 'feriae_paypal_auth', __( 'Could not sign in to PayPal. Check the client ID and secret.', 'feriae' ) );
 		}
 		set_transient( $key, $data['access_token'], max( 60, (int) ( $data['expires_in'] ?? 3600 ) - 300 ) );
 		return $data['access_token'];
@@ -325,8 +325,8 @@ final class PayPal extends AbstractGateway {
 		$data = json_decode( wp_remote_retrieve_body( $response ), true );
 		$code = (int) wp_remote_retrieve_response_code( $response );
 		if ( $code >= 400 || ! is_array( $data ) ) {
-			$issue = (string) ( $data['details'][0]['issue'] ?? 'openevents_paypal' );
-			return new \WP_Error( $issue, (string) ( $data['details'][0]['description'] ?? $data['message'] ?? __( 'PayPal request failed.', 'openevents' ) ), array( 'status' => $code ) );
+			$issue = (string) ( $data['details'][0]['issue'] ?? 'feriae_paypal' );
+			return new \WP_Error( $issue, (string) ( $data['details'][0]['description'] ?? $data['message'] ?? __( 'PayPal request failed.', 'feriae' ) ), array( 'status' => $code ) );
 		}
 		return $data;
 	}

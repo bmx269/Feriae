@@ -2,17 +2,17 @@
 /**
  * Stripe Checkout.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Tickets\Gateways;
+namespace Feriae\Modules\Tickets\Gateways;
 
-use OpenEvents\Attendance\Order;
-use OpenEvents\Attendance\Orders;
-use OpenEvents\Attendance\TicketTypes;
-use OpenEvents\Modules\Tickets\AbstractGateway;
-use OpenEvents\Modules\Tickets\Checkout;
-use OpenEvents\Modules\Tickets\PaymentResult;
+use Feriae\Attendance\Order;
+use Feriae\Attendance\Orders;
+use Feriae\Attendance\TicketTypes;
+use Feriae\Modules\Tickets\AbstractGateway;
+use Feriae\Modules\Tickets\Checkout;
+use Feriae\Modules\Tickets\PaymentResult;
 
 /**
  * Hosted Stripe Checkout: the buyer pays on stripe.com, so card data never
@@ -29,11 +29,11 @@ final class Stripe extends AbstractGateway {
 	}
 
 	public function label(): string {
-		return __( 'Card (Stripe)', 'openevents' );
+		return __( 'Card (Stripe)', 'feriae' );
 	}
 
 	public function description(): string {
-		return __( 'Pay securely by card, Apple Pay, or Google Pay on Stripe.', 'openevents' );
+		return __( 'Pay securely by card, Apple Pay, or Google Pay on Stripe.', 'feriae' );
 	}
 
 	public function is_available( string $currency ): bool {
@@ -61,22 +61,22 @@ final class Stripe extends AbstractGateway {
 					'currency'     => strtolower( $order->currency ),
 					'unit_amount'  => (int) $item->unit_price_minor,
 					'product_data' => array(
-						'name' => wp_strip_all_tags( get_the_title( $order->event_id ) ) . ' — ' . ( $type ? $type->name : __( 'Ticket', 'openevents' ) ),
+						'name' => wp_strip_all_tags( get_the_title( $order->event_id ) ) . ' — ' . ( $type ? $type->name : __( 'Ticket', 'feriae' ) ),
 					),
 				),
 			);
 		}
 
-		$session = $this->request( 'POST', 'checkout/sessions', $body, 'oe-' . $order->uuid );
+		$session = $this->request( 'POST', 'checkout/sessions', $body, 'feriae-' . $order->uuid );
 		if ( is_wp_error( $session ) || empty( $session['url'] ) ) {
-			return PaymentResult::failed( is_wp_error( $session ) ? $session->get_error_message() : __( 'Stripe did not return a checkout page.', 'openevents' ) );
+			return PaymentResult::failed( is_wp_error( $session ) ? $session->get_error_message() : __( 'Stripe did not return a checkout page.', 'feriae' ) );
 		}
 		return PaymentResult::redirect( $session['url'], (string) $session['id'] );
 	}
 
 	public function handle_return( Order $order, array $query ): PaymentResult {
-		if ( 'cancel' === ( $query['oe_checkout'] ?? '' ) ) {
-			return PaymentResult::failed( __( 'Payment was cancelled. Your tickets were not reserved.', 'openevents' ) );
+		if ( 'cancel' === ( $query['feriae_checkout'] ?? '' ) ) {
+			return PaymentResult::failed( __( 'Payment was cancelled. Your tickets were not reserved.', 'feriae' ) );
 		}
 		$session_id = (string) ( $query['session_id'] ?? '' );
 		if ( '' === $session_id || $session_id !== $order->gateway_ref ) {
@@ -127,24 +127,24 @@ final class Stripe extends AbstractGateway {
 
 	public function refund( Order $order ): true|\WP_Error {
 		if ( '' === $order->gateway_txn ) {
-			return new \WP_Error( 'openevents_refund_missing_payment', __( 'No Stripe payment is recorded for this order.', 'openevents' ) );
+			return new \WP_Error( 'feriae_refund_missing_payment', __( 'No Stripe payment is recorded for this order.', 'feriae' ) );
 		}
-		$refund = $this->request( 'POST', 'refunds', array( 'payment_intent' => $order->gateway_txn ), 'oe-refund-' . $order->uuid );
+		$refund = $this->request( 'POST', 'refunds', array( 'payment_intent' => $order->gateway_txn ), 'feriae-refund-' . $order->uuid );
 		return is_wp_error( $refund ) ? $refund : true;
 	}
 
 	public function settings_fields(): array {
 		return parent::settings_fields() + array(
 			'secret_key'     => array(
-				'label' => __( 'Secret key', 'openevents' ),
+				'label' => __( 'Secret key', 'feriae' ),
 				'type'  => 'secret',
-				'help'  => __( 'From Stripe → Developers → API keys. Starts with sk_test_ or sk_live_. A restricted key needs Checkout Sessions and Refunds write access.', 'openevents' ),
+				'help'  => __( 'From Stripe → Developers → API keys. Starts with sk_test_ or sk_live_. A restricted key needs Checkout Sessions and Refunds write access.', 'feriae' ),
 			),
 			'webhook_secret' => array(
-				'label' => __( 'Webhook signing secret', 'openevents' ),
+				'label' => __( 'Webhook signing secret', 'feriae' ),
 				'type'  => 'secret',
 				/* translators: %s: webhook URL */
-				'help'  => sprintf( __( 'Add a webhook endpoint at %s for checkout.session.* and charge.refunded events, then paste its whsec_ secret.', 'openevents' ), $this->webhook_url() ),
+				'help'  => sprintf( __( 'Add a webhook endpoint at %s for checkout.session.* and charge.refunded events, then paste its whsec_ secret.', 'feriae' ), $this->webhook_url() ),
 			),
 		);
 	}
@@ -199,7 +199,7 @@ final class Stripe extends AbstractGateway {
 		if ( '' === $intent ) {
 			return null;
 		}
-		$table = \OpenEvents\Attendance\Schema::orders();
+		$table = \Feriae\Attendance\Schema::orders();
 		$id    = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$table} WHERE gateway = 'stripe' AND gateway_txn = %s", $intent ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		return $id ? ( new Orders() )->get( (int) $id ) : null;
 	}
@@ -228,7 +228,7 @@ final class Stripe extends AbstractGateway {
 		$data = json_decode( wp_remote_retrieve_body( $response ), true );
 		$code = (int) wp_remote_retrieve_response_code( $response );
 		if ( $code >= 400 || ! is_array( $data ) ) {
-			return new \WP_Error( 'openevents_stripe', (string) ( $data['error']['message'] ?? __( 'Stripe request failed.', 'openevents' ) ), array( 'status' => $code ) );
+			return new \WP_Error( 'feriae_stripe', (string) ( $data['error']['message'] ?? __( 'Stripe request failed.', 'feriae' ) ), array( 'status' => $code ) );
 		}
 		return $data;
 	}

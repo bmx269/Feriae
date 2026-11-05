@@ -2,10 +2,10 @@
 /**
  * Recurrence rule (RFC 5545 RRULE subset).
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Recurrence;
+namespace Feriae\Modules\Recurrence;
 
 use DateTimeImmutable;
 use DateTimeZone;

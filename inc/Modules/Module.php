@@ -2,15 +2,15 @@
 /**
  * Module contract.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules;
+namespace Feriae\Modules;
 
 /**
  * A feature that site owners can switch on and off under Events → Settings → Modules.
  *
- * Add-on plugins register modules with the openevents/modules filter.
+ * Add-on plugins register modules with the feriae/modules filter.
  * Extend AbstractModule rather than implementing this directly so new optional
  * methods do not break you.
  */

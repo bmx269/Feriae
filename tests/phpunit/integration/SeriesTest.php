@@ -2,20 +2,20 @@
 /**
  * Series module: membership, series pages, and series passes.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Tests\Integration;
+namespace Feriae\Tests\Integration;
 
-use OpenEvents\Attendance\Guard;
-use OpenEvents\Attendance\Schema;
-use OpenEvents\Content\Event;
-use OpenEvents\Frontend\EventDetails;
-use OpenEvents\Modules\Recurrence\Recurrence;
-use OpenEvents\Modules\Series\Module as Series;
-use OpenEvents\Modules\Tickets\Checkout;
-use OpenEvents\Modules\Tickets\Module as Tickets;
-use OpenEvents\Tests\TestCase;
+use Feriae\Attendance\Guard;
+use Feriae\Attendance\Schema;
+use Feriae\Content\Event;
+use Feriae\Frontend\EventDetails;
+use Feriae\Modules\Recurrence\Recurrence;
+use Feriae\Modules\Series\Module as Series;
+use Feriae\Modules\Tickets\Checkout;
+use Feriae\Modules\Tickets\Module as Tickets;
+use Feriae\Tests\TestCase;
 
 final class SeriesTest extends TestCase {
 
@@ -33,11 +33,11 @@ final class SeriesTest extends TestCase {
 				'post_title'  => 'Film season',
 			)
 		);
-		add_filter( 'openevents/calendar/cache', '__return_false' );
+		add_filter( 'feriae/calendar/cache', '__return_false' );
 	}
 
 	public function tear_down(): void {
-		remove_filter( 'openevents/calendar/cache', '__return_false' );
+		remove_filter( 'feriae/calendar/cache', '__return_false' );
 		parent::tear_down();
 	}
 
@@ -49,8 +49,8 @@ final class SeriesTest extends TestCase {
 		$id  = $this->event(
 			array_merge(
 				array(
-					'_oe_start'      => "{$day} 19:00:00",
-					'_oe_end'        => "{$day} 21:00:00",
+					'_feriae_start'      => "{$day} 19:00:00",
+					'_feriae_end'        => "{$day} 21:00:00",
 					Series::META_KEY => $this->series,
 				),
 				$meta
@@ -69,10 +69,10 @@ final class SeriesTest extends TestCase {
 
 	public function test_listings_can_be_limited_to_a_series(): void {
 		$in  = $this->film( 3 );
-		$out = $this->event( array( '_oe_start' => current_datetime()->modify( '+3 days' )->format( 'Y-m-d' ) . ' 10:00:00' ) );
+		$out = $this->event( array( '_feriae_start' => current_datetime()->modify( '+3 days' )->format( 'Y-m-d' ) . ' 10:00:00' ) );
 		$this->rows( $out );
 
-		$items = openevents_get_upcoming( 10, array( 'series' => $this->series ) );
+		$items = feriae_get_upcoming( 10, array( 'series' => $this->series ) );
 		$this->assertSame( array( $in ), array_map( static fn( $o ) => $o->event_id, $items ) );
 	}
 
@@ -86,17 +86,17 @@ final class SeriesTest extends TestCase {
 		$html = apply_filters( 'the_content', 'About the season.' );
 
 		$this->assertStringContainsString( 'About the season.', $html );
-		$this->assertSame( 3, substr_count( $html, '<article class="oe-event-card' ) );
+		$this->assertSame( 3, substr_count( $html, '<article class="feriae-event-card' ) );
 		$this->assertStringContainsString( '<summary>1 past date</summary>', $html );
 	}
 
 	public function test_dates_split_off_a_repeating_event_stay_in_the_series(): void {
 		$id    = $this->film( 2, array( Recurrence::META_KEY => array( 'rrule' => 'FREQ=WEEKLY;COUNT=3' ) ) );
-		$items = openevents_get_upcoming( 10, array( 'event_ids' => array( $id ) ) );
-		$new   = \OpenEvents\Modules\Recurrence\Series::split( Event::get( $id ), $items[1] );
+		$items = feriae_get_upcoming( 10, array( 'event_ids' => array( $id ) ) );
+		$new   = \Feriae\Modules\Recurrence\Series::split( Event::get( $id ), $items[1] );
 
 		$this->assertSame( $this->series, (int) get_post_meta( $new, Series::META_KEY, true ) );
-		$this->assertCount( 3, openevents_get_upcoming( 10, array( 'series' => $this->series ) ) );
+		$this->assertCount( 3, feriae_get_upcoming( 10, array( 'series' => $this->series ) ) );
 	}
 
 	public function test_series_passes_sell_until_the_last_date_starts(): void {
@@ -133,8 +133,8 @@ final class SeriesTest extends TestCase {
 
 		// Once the last date has started, passes stop selling.
 		foreach ( array( $first => '-2 days', $last => '-1 hour' ) as $id => $start ) {
-			update_post_meta( $id, '_oe_start', current_datetime()->modify( $start )->format( 'Y-m-d H:i:s' ) );
-			update_post_meta( $id, '_oe_end', current_datetime()->modify( $start . ' +2 hours' )->format( 'Y-m-d H:i:s' ) );
+			update_post_meta( $id, '_feriae_start', current_datetime()->modify( $start )->format( 'Y-m-d H:i:s' ) );
+			update_post_meta( $id, '_feriae_end', current_datetime()->modify( $start . ' +2 hours' )->format( 'Y-m-d H:i:s' ) );
 			$this->rows( $id );
 		}
 		$this->assertSame( 'event_started', $checkout->sale_state( $pass ) );
@@ -157,7 +157,7 @@ final class SeriesTest extends TestCase {
 		the_post();
 		$html = apply_filters( 'the_content', '' );
 
-		$this->assertStringContainsString( 'class="oe-tickets"', $html );
+		$this->assertStringContainsString( 'class="feriae-tickets"', $html );
 		$this->assertStringContainsString( 'Season pass', $html );
 		$this->assertStringContainsString( 'name="event_id" value="' . $this->series . '"', $html );
 	}

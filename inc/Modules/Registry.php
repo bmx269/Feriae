@@ -2,19 +2,19 @@
 /**
  * Module registry.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules;
+namespace Feriae\Modules;
 
-use OpenEvents\Settings;
+use Feriae\Settings;
 
 /**
  * Discovers modules, resolves dependencies, runs installs, and boots enabled ones.
  */
 final class Registry {
 
-	private const VERSIONS_OPTION = 'openevents_module_versions';
+	private const VERSIONS_OPTION = 'feriae_module_versions';
 
 	/** @var array<string, Module>|null */
 	private ?array $modules = null;
@@ -37,7 +37,7 @@ final class Registry {
 			 *
 			 * @param Module[] $modules Modules.
 			 */
-			$modules = apply_filters( 'openevents/modules', $bundled );
+			$modules = apply_filters( 'feriae/modules', $bundled );
 
 			$this->modules = array();
 			foreach ( $modules as $module ) {
@@ -114,6 +114,6 @@ final class Registry {
 		 *
 		 * @param string[] $booted Booted module ids.
 		 */
-		do_action( 'openevents/modules_booted', $this->booted );
+		do_action( 'feriae/modules_booted', $this->booted );
 	}
 }

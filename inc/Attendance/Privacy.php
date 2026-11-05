@@ -2,10 +2,10 @@
 /**
  * WordPress privacy tools for attendance data.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Attendance;
+namespace Feriae\Attendance;
 
 /**
  * Hooks attendees, orders, and waitlist entries into Tools → Export Personal
@@ -34,8 +34,8 @@ final class Privacy {
 	 * @return array<string, array<string, mixed>>
 	 */
 	public static function exporters( array $exporters ): array {
-		$exporters['openevents-attendance'] = array(
-			'exporter_friendly_name' => __( 'Event attendance (OpenEvents)', 'openevents' ),
+		$exporters['feriae-attendance'] = array(
+			'exporter_friendly_name' => __( 'Event attendance (Feriae)', 'feriae' ),
 			'callback'               => array( self::class, 'export' ),
 		);
 		return $exporters;
@@ -46,8 +46,8 @@ final class Privacy {
 	 * @return array<string, array<string, mixed>>
 	 */
 	public static function erasers( array $erasers ): array {
-		$erasers['openevents-attendance'] = array(
-			'eraser_friendly_name' => __( 'Event attendance (OpenEvents)', 'openevents' ),
+		$erasers['feriae-attendance'] = array(
+			'eraser_friendly_name' => __( 'Event attendance (Feriae)', 'feriae' ),
 			'callback'             => array( self::class, 'erase' ),
 		);
 		return $erasers;
@@ -75,14 +75,14 @@ final class Privacy {
 				$attendee = Attendee::from_row( $row );
 				$type     = ( new TicketTypes() )->get( $attendee->ticket_type_id );
 				$fields   = array(
-					array( 'name' => __( 'Event', 'openevents' ), 'value' => $title ),
-					array( 'name' => __( 'Ticket', 'openevents' ), 'value' => $type ? $type->name : '' ),
-					array( 'name' => __( 'Name', 'openevents' ), 'value' => $attendee->name ),
-					array( 'name' => __( 'Email', 'openevents' ), 'value' => $attendee->email ),
-					array( 'name' => __( 'Status', 'openevents' ), 'value' => $attendee->status ),
-					array( 'name' => __( 'Check-in code', 'openevents' ), 'value' => $attendee->security_code ),
-					array( 'name' => __( 'Checked in (UTC)', 'openevents' ), 'value' => (string) $attendee->checked_in_utc ),
-					array( 'name' => __( 'Created (UTC)', 'openevents' ), 'value' => $attendee->created_utc ),
+					array( 'name' => __( 'Event', 'feriae' ), 'value' => $title ),
+					array( 'name' => __( 'Ticket', 'feriae' ), 'value' => $type ? $type->name : '' ),
+					array( 'name' => __( 'Name', 'feriae' ), 'value' => $attendee->name ),
+					array( 'name' => __( 'Email', 'feriae' ), 'value' => $attendee->email ),
+					array( 'name' => __( 'Status', 'feriae' ), 'value' => $attendee->status ),
+					array( 'name' => __( 'Check-in code', 'feriae' ), 'value' => $attendee->security_code ),
+					array( 'name' => __( 'Checked in (UTC)', 'feriae' ), 'value' => (string) $attendee->checked_in_utc ),
+					array( 'name' => __( 'Created (UTC)', 'feriae' ), 'value' => $attendee->created_utc ),
 				);
 				foreach ( Fields::answers( $attendee, $types ) as $answer ) {
 					$fields[] = array(
@@ -91,35 +91,35 @@ final class Privacy {
 					);
 				}
 				$data[] = array(
-					'group_id'    => 'openevents-attendees',
-					'group_label' => __( 'Event attendees', 'openevents' ),
-					'item_id'     => 'openevents-attendee-' . $attendee->id,
+					'group_id'    => 'feriae-attendees',
+					'group_label' => __( 'Event attendees', 'feriae' ),
+					'item_id'     => 'feriae-attendee-' . $attendee->id,
 					'data'        => $fields,
 				);
 			} elseif ( 'order' === $row->kind ) {
 				$data[] = array(
-					'group_id'    => 'openevents-orders',
-					'group_label' => __( 'Event orders', 'openevents' ),
-					'item_id'     => 'openevents-order-' . (int) $row->id,
+					'group_id'    => 'feriae-orders',
+					'group_label' => __( 'Event orders', 'feriae' ),
+					'item_id'     => 'feriae-order-' . (int) $row->id,
 					'data'        => array(
-						array( 'name' => __( 'Event', 'openevents' ), 'value' => $title ),
-						array( 'name' => __( 'Name', 'openevents' ), 'value' => (string) $row->name ),
-						array( 'name' => __( 'Email', 'openevents' ), 'value' => (string) $row->email ),
-						array( 'name' => __( 'Status', 'openevents' ), 'value' => (string) $row->status ),
-						array( 'name' => __( 'Total', 'openevents' ), 'value' => Money::format( (int) $row->total_minor, (string) $row->currency ) ),
-						array( 'name' => __( 'Payment method', 'openevents' ), 'value' => (string) $row->gateway ),
-						array( 'name' => __( 'Created (UTC)', 'openevents' ), 'value' => (string) $row->created_utc ),
+						array( 'name' => __( 'Event', 'feriae' ), 'value' => $title ),
+						array( 'name' => __( 'Name', 'feriae' ), 'value' => (string) $row->name ),
+						array( 'name' => __( 'Email', 'feriae' ), 'value' => (string) $row->email ),
+						array( 'name' => __( 'Status', 'feriae' ), 'value' => (string) $row->status ),
+						array( 'name' => __( 'Total', 'feriae' ), 'value' => Money::format( (int) $row->total_minor, (string) $row->currency ) ),
+						array( 'name' => __( 'Payment method', 'feriae' ), 'value' => (string) $row->gateway ),
+						array( 'name' => __( 'Created (UTC)', 'feriae' ), 'value' => (string) $row->created_utc ),
 					),
 				);
 			} elseif ( 'waitlist' === $row->kind ) {
 				$entry  = WaitlistEntry::from_row( $row );
 				$fields = array(
-					array( 'name' => __( 'Event', 'openevents' ), 'value' => $title ),
-					array( 'name' => __( 'Name', 'openevents' ), 'value' => $entry->name ),
-					array( 'name' => __( 'Email', 'openevents' ), 'value' => $entry->email ),
-					array( 'name' => __( 'Status', 'openevents' ), 'value' => $entry->status ),
-					array( 'name' => __( 'People', 'openevents' ), 'value' => (string) $entry->quantity ),
-					array( 'name' => __( 'Joined (UTC)', 'openevents' ), 'value' => $entry->created_utc ),
+					array( 'name' => __( 'Event', 'feriae' ), 'value' => $title ),
+					array( 'name' => __( 'Name', 'feriae' ), 'value' => $entry->name ),
+					array( 'name' => __( 'Email', 'feriae' ), 'value' => $entry->email ),
+					array( 'name' => __( 'Status', 'feriae' ), 'value' => $entry->status ),
+					array( 'name' => __( 'People', 'feriae' ), 'value' => (string) $entry->quantity ),
+					array( 'name' => __( 'Joined (UTC)', 'feriae' ), 'value' => $entry->created_utc ),
 				);
 				if ( $entry->people ) {
 					if ( ! array_key_exists( $entry->ticket_type_id, $types ) ) {
@@ -128,23 +128,23 @@ final class Privacy {
 					foreach ( $entry->people as $i => $person ) {
 						$who = Fields::person_label( (int) $i, true );
 						if ( $i > 0 ) {
-							foreach ( array( 'name' => __( 'Name', 'openevents' ), 'email' => __( 'Email', 'openevents' ) ) as $key => $label ) {
+							foreach ( array( 'name' => __( 'Name', 'feriae' ), 'email' => __( 'Email', 'feriae' ) ) as $key => $label ) {
 								if ( '' !== (string) ( $person[ $key ] ?? '' ) ) {
 									/* translators: 1: who, e.g. "Guest 2", 2: what, e.g. "Name" */
-									$fields[] = array( 'name' => sprintf( __( '%1$s: %2$s', 'openevents' ), $who, $label ), 'value' => (string) $person[ $key ] );
+									$fields[] = array( 'name' => sprintf( __( '%1$s: %2$s', 'feriae' ), $who, $label ), 'value' => (string) $person[ $key ] );
 								}
 							}
 						}
 						foreach ( Fields::labelled( (array) ( $person['fields'] ?? array() ), $types[ $entry->ticket_type_id ] ) as $answer ) {
 							/* translators: 1: who, e.g. "You" or "Guest 2", 2: question */
-							$fields[] = array( 'name' => sprintf( __( '%1$s: %2$s', 'openevents' ), $who, $answer['label'] ), 'value' => $answer['value'] );
+							$fields[] = array( 'name' => sprintf( __( '%1$s: %2$s', 'feriae' ), $who, $answer['label'] ), 'value' => $answer['value'] );
 						}
 					}
 				}
 				$data[] = array(
-					'group_id'    => 'openevents-waitlist',
-					'group_label' => __( 'Event waitlists', 'openevents' ),
-					'item_id'     => 'openevents-waitlist-' . $entry->id,
+					'group_id'    => 'feriae-waitlist',
+					'group_label' => __( 'Event waitlists', 'feriae' ),
+					'item_id'     => 'feriae-waitlist-' . $entry->id,
 					'data'        => $fields,
 				);
 			} else {
@@ -152,11 +152,11 @@ final class Privacy {
 				$entry  = WaitlistEntry::from_row( $row );
 				$person = $entry->people[ $row->guest ];
 				$fields = array(
-					array( 'name' => __( 'Event', 'openevents' ), 'value' => $title ),
-					array( 'name' => __( 'Name', 'openevents' ), 'value' => (string) ( $person['name'] ?? '' ) ),
-					array( 'name' => __( 'Email', 'openevents' ), 'value' => (string) ( $person['email'] ?? '' ) ),
-					array( 'name' => __( 'Status', 'openevents' ), 'value' => $entry->status ),
-					array( 'name' => __( 'Joined (UTC)', 'openevents' ), 'value' => $entry->created_utc ),
+					array( 'name' => __( 'Event', 'feriae' ), 'value' => $title ),
+					array( 'name' => __( 'Name', 'feriae' ), 'value' => (string) ( $person['name'] ?? '' ) ),
+					array( 'name' => __( 'Email', 'feriae' ), 'value' => (string) ( $person['email'] ?? '' ) ),
+					array( 'name' => __( 'Status', 'feriae' ), 'value' => $entry->status ),
+					array( 'name' => __( 'Joined (UTC)', 'feriae' ), 'value' => $entry->created_utc ),
 				);
 				if ( ! array_key_exists( $entry->ticket_type_id, $types ) ) {
 					$types[ $entry->ticket_type_id ] = ( new TicketTypes() )->get( $entry->ticket_type_id );
@@ -168,9 +168,9 @@ final class Privacy {
 					);
 				}
 				$data[] = array(
-					'group_id'    => 'openevents-waitlist',
-					'group_label' => __( 'Event waitlists', 'openevents' ),
-					'item_id'     => 'openevents-waitlist-' . $entry->id . '-guest-' . (int) $row->guest,
+					'group_id'    => 'feriae-waitlist',
+					'group_label' => __( 'Event waitlists', 'feriae' ),
+					'item_id'     => 'feriae-waitlist-' . $entry->id . '-guest-' . (int) $row->guest,
 					'data'        => $fields,
 				);
 			}
@@ -225,7 +225,7 @@ final class Privacy {
 		if ( $attendees || $orders || $waitlist ) {
 			$result['items_removed'] = true;
 			if ( $attendees || $orders ) {
-				$result['messages'][] = __( 'Event attendance and orders were anonymised rather than deleted, so seat counts and order totals stay correct.', 'openevents' );
+				$result['messages'][] = __( 'Event attendance and orders were anonymised rather than deleted, so seat counts and order totals stay correct.', 'feriae' );
 			}
 		}
 		return $result;
@@ -236,9 +236,9 @@ final class Privacy {
 			return;
 		}
 		wp_add_privacy_policy_content(
-			'OpenEvents',
-			'<p>' . esc_html__( 'When you RSVP, buy tickets, or join a waitlist for an event, we collect your name and email address, and the answers to any questions the event asks (for example a phone number or a consent). We use them to manage your place at the event and to email you about it. Payments are handled by the payment provider you choose; we don’t receive card details.', 'openevents' ) . '</p>'
-			. '<p>' . esc_html__( 'We keep this information with the event. When an event is deleted, its attendee information is deleted too. You can ask us for a copy of your information or to erase it.', 'openevents' ) . '</p>'
+			'Feriae',
+			'<p>' . esc_html__( 'When you RSVP, buy tickets, or join a waitlist for an event, we collect your name and email address, and the answers to any questions the event asks (for example a phone number or a consent). We use them to manage your place at the event and to email you about it. Payments are handled by the payment provider you choose; we don’t receive card details.', 'feriae' ) . '</p>'
+			. '<p>' . esc_html__( 'We keep this information with the event. When an event is deleted, its attendee information is deleted too. You can ask us for a copy of your information or to erase it.', 'feriae' ) . '</p>'
 		);
 	}
 

@@ -2,10 +2,10 @@
 /**
  * Waitlist rules for RSVPs and tickets.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Attendance;
+namespace Feriae\Attendance;
 
 /**
  * Joins, leaves, and fills from the queue whenever seats are released.
@@ -22,7 +22,7 @@ namespace OpenEvents\Attendance;
  */
 final class WaitlistService {
 
-	public const CRON_HOOK = 'openevents_waitlist_sweep';
+	public const CRON_HOOK = 'feriae_waitlist_sweep';
 	public const RATE      = 10;  // Joins per IP per window, as for RSVPs.
 	public const RATE_SPAN = 600; // Window, seconds.
 
@@ -48,13 +48,13 @@ final class WaitlistService {
 		}
 		self::$registered = true;
 		WaitlistController::register();
-		add_action( 'openevents/seats_released', array( self::class, 'on_seats_released' ) );
+		add_action( 'feriae/seats_released', array( self::class, 'on_seats_released' ) );
 		add_filter( 'cron_schedules', array( self::class, 'cron_schedule' ) ); // phpcs:ignore WordPress.WP.CronInterval.CronSchedulesInterval
 		add_action( self::CRON_HOOK, static fn() => ( new self() )->expire_offers() );
 		if ( ! wp_next_scheduled( self::CRON_HOOK ) ) {
-			wp_schedule_event( time() + 300, 'openevents_five_minutes', self::CRON_HOOK );
+			wp_schedule_event( time() + 300, 'feriae_five_minutes', self::CRON_HOOK );
 		}
-		add_action( 'openevents/uninstall', static fn() => wp_clear_scheduled_hook( self::CRON_HOOK ) );
+		add_action( 'feriae/uninstall', static fn() => wp_clear_scheduled_hook( self::CRON_HOOK ) );
 	}
 
 	/**
@@ -62,9 +62,9 @@ final class WaitlistService {
 	 * @return array<string, array<string, int|string>>
 	 */
 	public static function cron_schedule( array $schedules ): array {
-		$schedules['openevents_five_minutes'] ??= array(
+		$schedules['feriae_five_minutes'] ??= array(
 			'interval' => 300,
-			'display'  => __( 'Every five minutes', 'openevents' ),
+			'display'  => __( 'Every five minutes', 'feriae' ),
 		);
 		return $schedules;
 	}
@@ -78,7 +78,7 @@ final class WaitlistService {
 	}
 
 	public static function offer_hours(): int {
-		return max( 1, min( 168, (int) ( openevents()->settings()->get( 'waitlist_offer_hours' ) ?: 24 ) ) );
+		return max( 1, min( 168, (int) ( feriae()->settings()->get( 'waitlist_offer_hours' ) ?: 24 ) ) );
 	}
 
 	/**
@@ -92,7 +92,7 @@ final class WaitlistService {
 	 */
 	public function join( TicketType $type, array $input ): WaitlistResult {
 		if ( ! self::enabled( $type ) ) {
-			return WaitlistResult::error( 'disabled', __( 'There’s no waitlist for this.', 'openevents' ) );
+			return WaitlistResult::error( 'disabled', __( 'There’s no waitlist for this.', 'feriae' ) );
 		}
 		$name     = sanitize_text_field( (string) ( $input['name'] ?? '' ) );
 		$email    = sanitize_email( (string) ( $input['email'] ?? '' ) );
@@ -100,17 +100,17 @@ final class WaitlistService {
 		$max      = (int) ( 'rsvp' === $type->kind ? $type->setting( 'max_per_response', 1 ) : $type->setting( 'max_per_order', 10 ) );
 
 		if ( '' === $name || mb_strlen( $name ) > 200 ) {
-			return WaitlistResult::error( 'invalid', __( 'Please enter your name.', 'openevents' ) );
+			return WaitlistResult::error( 'invalid', __( 'Please enter your name.', 'feriae' ) );
 		}
 		if ( ! is_email( $email ) ) {
-			return WaitlistResult::error( 'invalid', __( 'Please enter a valid email address.', 'openevents' ) );
+			return WaitlistResult::error( 'invalid', __( 'Please enter a valid email address.', 'feriae' ) );
 		}
 		if ( $quantity > $max ) {
 			/* translators: %d: maximum people */
-			return WaitlistResult::error( 'invalid', sprintf( _n( 'You can join for up to %d person.', 'You can join for up to %d people.', $max, 'openevents' ), $max ) );
+			return WaitlistResult::error( 'invalid', sprintf( _n( 'You can join for up to %d person.', 'You can join for up to %d people.', $max, 'feriae' ), $max ) );
 		}
 		if ( null === $type->remaining() || $type->remaining() >= $quantity ) {
-			return WaitlistResult::error( 'available', __( 'There’s room now, so you can book directly.', 'openevents' ) );
+			return WaitlistResult::error( 'available', __( 'There’s room now, so you can book directly.', 'feriae' ) );
 		}
 		$people = array();
 		if ( 'rsvp' === $type->kind && Fields::asks( $type ) ) {
@@ -132,7 +132,7 @@ final class WaitlistService {
 
 		$ip_hash = Guard::hash_ip( (string) ( $input['ip'] ?? '' ) );
 		if ( $this->waitlist->count_recent_by_ip( $ip_hash, self::RATE_SPAN ) >= self::RATE ) {
-			return WaitlistResult::error( 'rate_limited', __( 'Too many requests from your connection. Please try again later.', 'openevents' ) );
+			return WaitlistResult::error( 'rate_limited', __( 'Too many requests from your connection. Please try again later.', 'feriae' ) );
 		}
 
 		// Same privacy rule as RSVP: never let someone else change an existing entry.
@@ -141,7 +141,7 @@ final class WaitlistService {
 			$token = Guard::new_token();
 			$this->set_token( $existing->id, $token );
 			$this->mailer->manage( $existing, $token );
-			return WaitlistResult::ok( 'exists', __( 'You’re already on the waitlist. We’ve emailed you a link to manage your place.', 'openevents' ) );
+			return WaitlistResult::ok( 'exists', __( 'You’re already on the waitlist. We’ve emailed you a link to manage your place.', 'feriae' ) );
 		}
 
 		$token = Guard::new_token();
@@ -165,12 +165,12 @@ final class WaitlistService {
 		 *
 		 * @param WaitlistEntry $entry Entry.
 		 */
-		do_action( 'openevents/waitlist/joined', $entry );
+		do_action( 'feriae/waitlist/joined', $entry );
 
 		return WaitlistResult::ok(
 			'waitlisted',
 			/* translators: %d: place in line */
-			sprintf( __( 'You’re on the waitlist (#%d). We’ll email you if a spot opens up.', 'openevents' ), $position ),
+			sprintf( __( 'You’re on the waitlist (#%d). We’ll email you if a spot opens up.', 'feriae' ), $position ),
 			$entry,
 			$token,
 			$position
@@ -183,12 +183,12 @@ final class WaitlistService {
 	public function leave( string $token ): WaitlistResult {
 		$entry = $this->waitlist->by_token( $token );
 		if ( ! $entry || ! $this->waitlist->transition( $entry->id, array( WaitlistEntry::WAITING, WaitlistEntry::OFFERED ), WaitlistEntry::LEFT ) ) {
-			return WaitlistResult::error( 'invalid', __( 'That link is no longer valid.', 'openevents' ) );
+			return WaitlistResult::error( 'invalid', __( 'That link is no longer valid.', 'feriae' ) );
 		}
 		if ( WaitlistEntry::OFFERED === $entry->status ) {
 			$this->types->release( $entry->ticket_type_id, $entry->quantity );
 		}
-		return WaitlistResult::ok( 'left', __( 'You’ve left the waitlist.', 'openevents' ) );
+		return WaitlistResult::ok( 'left', __( 'You’ve left the waitlist.', 'feriae' ) );
 	}
 
 	/**
@@ -271,7 +271,7 @@ final class WaitlistService {
 		 *
 		 * @param WaitlistEntry $entry Entry.
 		 */
-		do_action( 'openevents/waitlist/promoted', $entry );
+		do_action( 'feriae/waitlist/promoted', $entry );
 		return true;
 	}
 
@@ -296,7 +296,7 @@ final class WaitlistService {
 		 *
 		 * @param WaitlistEntry $entry Entry.
 		 */
-		do_action( 'openevents/waitlist/offered', $this->waitlist->get( $entry->id ) );
+		do_action( 'feriae/waitlist/offered', $this->waitlist->get( $entry->id ) );
 		return true;
 	}
 

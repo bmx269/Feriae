@@ -2,18 +2,18 @@
 /**
  * RSVP business rules.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Rsvp;
+namespace Feriae\Modules\Rsvp;
 
-use OpenEvents\Attendance\Attendee;
-use OpenEvents\Attendance\Attendees;
-use OpenEvents\Attendance\Fields;
-use OpenEvents\Attendance\TicketType;
-use OpenEvents\Attendance\TicketTypes;
-use OpenEvents\Content\Event;
-use OpenEvents\Content\Meta;
+use Feriae\Attendance\Attendee;
+use Feriae\Attendance\Attendees;
+use Feriae\Attendance\Fields;
+use Feriae\Attendance\TicketType;
+use Feriae\Attendance\TicketTypes;
+use Feriae\Content\Event;
+use Feriae\Content\Meta;
 
 /**
  * Turns event RSVP settings into a ticket type, and handles responses.
@@ -24,7 +24,7 @@ use OpenEvents\Content\Meta;
  */
 final class Service {
 
-	public const META_KEY  = '_oe_rsvp';
+	public const META_KEY  = '_feriae_rsvp';
 	public const TYPE_KEY  = 'rsvp';
 	public const RATE      = 10;  // Responses per IP per window.
 	public const RATE_SPAN = 600; // Window, seconds.
@@ -38,7 +38,7 @@ final class Service {
 	}
 
 	/**
-	 * Defaults for the _oe_rsvp meta object.
+	 * Defaults for the _feriae_rsvp meta object.
 	 *
 	 * @return array<string, mixed>
 	 */
@@ -94,7 +94,7 @@ final class Service {
 			self::TYPE_KEY,
 			array(
 				'kind'         => 'rsvp',
-				'name'         => __( 'RSVP', 'openevents' ),
+				'name'         => __( 'RSVP', 'feriae' ),
 				'capacity'     => (int) $config['capacity'] > 0 ? (int) $config['capacity'] : null,
 				'sale_end_utc' => $deadline,
 				'status'       => 'active',
@@ -103,8 +103,8 @@ final class Service {
 					'allow_not_going'  => (bool) $config['allow_not_going'],
 					'show_count'       => (bool) $config['show_count'],
 					'waitlist'         => (bool) $config['waitlist'],
-					'attendee_details' => \OpenEvents\Attendance\Fields::sanitize_details( $config['attendee_details'] ),
-					'fields'           => \OpenEvents\Attendance\Fields::sanitize( $config['fields'] ),
+					'attendee_details' => \Feriae\Attendance\Fields::sanitize_details( $config['attendee_details'] ),
+					'fields'           => \Feriae\Attendance\Fields::sanitize( $config['fields'] ),
 				),
 			)
 		);
@@ -124,7 +124,7 @@ final class Service {
 		if ( 0 === $sequence ) {
 			return $type;
 		}
-		return openevents()->occurrences()->by_sequence( $event_id, $sequence ) ? $this->types->for_date( $type, $sequence ) : null;
+		return feriae()->occurrences()->by_sequence( $event_id, $sequence ) ? $this->types->for_date( $type, $sequence ) : null;
 	}
 
 	/**
@@ -165,16 +165,16 @@ final class Service {
 		$type   = $group ? $this->response_type( $event_id, $people ) : $this->ticket_type( $event_id, absint( $input['sequence'] ?? 0 ) );
 		if ( ! $type ) {
 			return $group
-				? Result::error( 'invalid', __( 'That link is no longer valid.', 'openevents' ) )
-				: Result::error( 'disabled', __( 'This event is not taking RSVPs.', 'openevents' ) );
+				? Result::error( 'invalid', __( 'That link is no longer valid.', 'feriae' ) )
+				: Result::error( 'disabled', __( 'This event is not taking RSVPs.', 'feriae' ) );
 		}
 
 		// Bots fill hidden fields; humans can't. Pretend it worked.
 		if ( '' !== trim( (string) ( $input['website'] ?? '' ) ) ) {
-			return Result::ok( 'going', __( 'Thanks! Your RSVP is confirmed.', 'openevents' ) );
+			return Result::ok( 'going', __( 'Thanks! Your RSVP is confirmed.', 'feriae' ) );
 		}
 		if ( ! self::verify_timestamp( (string) ( $input['ts'] ?? '' ) ) ) {
-			return Result::error( 'invalid', __( 'Please wait a moment and submit the form again.', 'openevents' ) );
+			return Result::error( 'invalid', __( 'Please wait a moment and submit the form again.', 'feriae' ) );
 		}
 
 		// Full event with a waitlist: queue instead of booking.
@@ -183,7 +183,7 @@ final class Service {
 			if ( $closed ) {
 				return Result::error( 'closed', Form::closed_text( $closed ) );
 			}
-			$joined = ( new \OpenEvents\Attendance\WaitlistService() )->join( $type, $input );
+			$joined = ( new \Feriae\Attendance\WaitlistService() )->join( $type, $input );
 			return $joined->ok ? Result::ok( $joined->code, $joined->message ) : Result::error( 'available' === $joined->code ? 'invalid' : $joined->code, $joined->message );
 		}
 
@@ -194,17 +194,17 @@ final class Service {
 		$qty    = Attendee::GOING === $status ? max( 1, (int) ( $input['quantity'] ?? 1 ) ) : 1;
 
 		if ( '' === $name || mb_strlen( $name ) > 200 ) {
-			return Result::error( 'invalid', __( 'Please enter your name.', 'openevents' ) );
+			return Result::error( 'invalid', __( 'Please enter your name.', 'feriae' ) );
 		}
 		if ( ! is_email( $email ) ) {
-			return Result::error( 'invalid', __( 'Please enter a valid email address.', 'openevents' ) );
+			return Result::error( 'invalid', __( 'Please enter a valid email address.', 'feriae' ) );
 		}
 		if ( Attendee::NOT_GOING === $status && ! $type->setting( 'allow_not_going', true ) ) {
-			return Result::error( 'invalid', __( 'This event only accepts “going” responses.', 'openevents' ) );
+			return Result::error( 'invalid', __( 'This event only accepts “going” responses.', 'feriae' ) );
 		}
 		if ( $qty > $max ) {
 			/* translators: %d: maximum number of people per response */
-			return Result::error( 'invalid', sprintf( _n( 'You can RSVP for up to %d person.', 'You can RSVP for up to %d people.', $max, 'openevents' ), $max ) );
+			return Result::error( 'invalid', sprintf( _n( 'You can RSVP for up to %d person.', 'You can RSVP for up to %d people.', $max, 'feriae' ), $max ) );
 		}
 		$closed = $this->closed_reason( $event_id, $type );
 		if ( $closed ) {
@@ -231,7 +231,7 @@ final class Service {
 
 		$ip_hash = self::hash_ip( (string) ( $input['ip'] ?? '' ) );
 		if ( ! $group && $this->attendees->count_recent_by_ip( $ip_hash, self::RATE_SPAN ) >= self::RATE ) {
-			return Result::error( 'rate_limited', __( 'Too many responses from your connection. Please try again later.', 'openevents' ) );
+			return Result::error( 'rate_limited', __( 'Too many responses from your connection. Please try again later.', 'feriae' ) );
 		}
 
 		// A new response for an email that already responded: don't let whoever
@@ -242,7 +242,7 @@ final class Service {
 				$token = self::new_token();
 				$this->rotate_token( $existing, $token );
 				$this->mailer->manage_link( $event_id, $this->attendees->group( $existing ), $token );
-				return Result::ok( 'exists', __( 'You’ve already responded. We’ve emailed you a link to change your RSVP.', 'openevents' ) );
+				return Result::ok( 'exists', __( 'You’ve already responded. We’ve emailed you a link to change your RSVP.', 'feriae' ) );
 			}
 		}
 
@@ -256,8 +256,8 @@ final class Service {
 				'full',
 				$remaining > 0
 					/* translators: %d: seats left */
-					? sprintf( _n( 'Only %d spot is left.', 'Only %d spots are left.', $remaining, 'openevents' ), $remaining )
-					: __( 'Sorry, this event is full.', 'openevents' )
+					? sprintf( _n( 'Only %d spot is left.', 'Only %d spots are left.', $remaining, 'feriae' ), $remaining )
+					: __( 'Sorry, this event is full.', 'feriae' )
 			);
 		}
 		if ( $delta < 0 ) {
@@ -297,14 +297,14 @@ final class Service {
 		 * @param Attendee[] $people   The response's attendee rows.
 		 * @param int        $event_id Event id.
 		 */
-		do_action( 'openevents/rsvp/responded', $people, $event_id );
+		do_action( 'feriae/rsvp/responded', $people, $event_id );
 
 		$message = Attendee::GOING === $status
 			? ( 1 === $qty
-				? __( 'You’re going! We’ve emailed you a confirmation.', 'openevents' )
+				? __( 'You’re going! We’ve emailed you a confirmation.', 'feriae' )
 				/* translators: %d: number of people */
-				: sprintf( __( 'You’re going, party of %d! We’ve emailed you a confirmation.', 'openevents' ), $qty ) )
-			: __( 'Thanks for letting us know you can’t make it.', 'openevents' );
+				: sprintf( __( 'You’re going, party of %d! We’ve emailed you a confirmation.', 'feriae' ), $qty ) )
+			: __( 'Thanks for letting us know you can’t make it.', 'feriae' );
 
 		return Result::ok( $status, $message, $group );
 	}
@@ -315,15 +315,15 @@ final class Service {
 	public function cancel( string $token ): Result {
 		$group = $this->attendees->find_group_by_token( $token );
 		if ( ! $group ) {
-			return Result::error( 'invalid', __( 'That link is no longer valid.', 'openevents' ) );
+			return Result::error( 'invalid', __( 'That link is no longer valid.', 'feriae' ) );
 		}
 		$people = $this->attendees->group( $group );
 		$seats  = count( array_filter( $people, static fn( Attendee $a ) => Attendee::GOING === $a->status ) );
 		$this->types->release( $people[0]->ticket_type_id, $seats );
 		$this->attendees->set_group_status( $group, Attendee::CANCELLED );
 
-		do_action( 'openevents/rsvp/cancelled', $people, $people[0]->event_id );
-		return Result::ok( 'cancelled', __( 'Your RSVP has been cancelled.', 'openevents' ), $group );
+		do_action( 'feriae/rsvp/cancelled', $people, $people[0]->event_id );
+		return Result::ok( 'cancelled', __( 'Your RSVP has been cancelled.', 'feriae' ), $group );
 	}
 
 	/**
@@ -350,31 +350,31 @@ final class Service {
 
 	private function rotate_token( string $group, string $token ): void {
 		global $wpdb;
-		$wpdb->update( \OpenEvents\Attendance\Schema::attendees(), array( 'token_hash' => Attendees::hash_token( $token ) ), array( 'group_uuid' => $group ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->update( \Feriae\Attendance\Schema::attendees(), array( 'token_hash' => Attendees::hash_token( $token ) ), array( 'group_uuid' => $group ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 	}
 
 	private function current_token_hash( string $group ): string {
 		global $wpdb;
-		$table = \OpenEvents\Attendance\Schema::attendees();
+		$table = \Feriae\Attendance\Schema::attendees();
 		return (string) $wpdb->get_var( $wpdb->prepare( "SELECT token_hash FROM {$table} WHERE group_uuid = %s LIMIT 1", $group ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 	}
 
 	public static function new_token(): string {
-		return \OpenEvents\Attendance\Guard::new_token();
+		return \Feriae\Attendance\Guard::new_token();
 	}
 
 	/**
 	 * Signed form timestamp (see Attendance\Guard).
 	 */
 	public static function sign_timestamp( ?int $time = null ): string {
-		return \OpenEvents\Attendance\Guard::sign_timestamp( $time );
+		return \Feriae\Attendance\Guard::sign_timestamp( $time );
 	}
 
 	public static function verify_timestamp( string $value ): bool {
-		return \OpenEvents\Attendance\Guard::verify_timestamp( $value );
+		return \Feriae\Attendance\Guard::verify_timestamp( $value );
 	}
 
 	private static function hash_ip( string $ip ): string {
-		return \OpenEvents\Attendance\Guard::hash_ip( $ip );
+		return \Feriae\Attendance\Guard::hash_ip( $ip );
 	}
 }

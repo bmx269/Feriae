@@ -2,21 +2,21 @@
 /**
  * Ticket checkout and order lifecycle.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Tests\Integration;
+namespace Feriae\Tests\Integration;
 
-use OpenEvents\Attendance\Attendees;
-use OpenEvents\Attendance\Guard;
-use OpenEvents\Attendance\Money;
-use OpenEvents\Attendance\Order;
-use OpenEvents\Attendance\Orders;
-use OpenEvents\Attendance\TicketTypes;
-use OpenEvents\Modules\Tickets\AbstractGateway;
-use OpenEvents\Modules\Tickets\Checkout;
-use OpenEvents\Modules\Tickets\Gateways;
-use OpenEvents\Tests\TestCase;
+use Feriae\Attendance\Attendees;
+use Feriae\Attendance\Guard;
+use Feriae\Attendance\Money;
+use Feriae\Attendance\Order;
+use Feriae\Attendance\Orders;
+use Feriae\Attendance\TicketTypes;
+use Feriae\Modules\Tickets\AbstractGateway;
+use Feriae\Modules\Tickets\Checkout;
+use Feriae\Modules\Tickets\Gateways;
+use Feriae\Tests\TestCase;
 
 final class TicketsTest extends TestCase {
 
@@ -39,7 +39,7 @@ final class TicketsTest extends TestCase {
 	 */
 	private function ticketed_event( array $types ): array {
 		$day = current_datetime()->modify( '+10 days' )->format( 'Y-m-d' );
-		$id  = $this->event( array( '_oe_start' => "{$day} 19:00:00", '_oe_end' => "{$day} 21:00:00" ) );
+		$id  = $this->event( array( '_feriae_start' => "{$day} 19:00:00", '_feriae_end' => "{$day} 21:00:00" ) );
 		$this->rows( $id );
 		$ids = array();
 		foreach ( $types as $key => list( $price, $capacity ) ) {
@@ -101,7 +101,7 @@ final class TicketsTest extends TestCase {
 		$this->assertSame( 2, ( new Attendees() )->counts( $event )['going'] );
 		$body = tests_retrieve_phpmailer_instance()->get_sent()->body;
 		$this->assertStringContainsString( 'Passes (show one per person at the door', $body );
-		$this->assertSame( 2, substr_count( $body, '?oe_pass=' ), 'A pass link per person.' );
+		$this->assertSame( 2, substr_count( $body, '?feriae_pass=' ), 'A pass link per person.' );
 	}
 
 	public function test_manual_gateway_reserves_tickets_as_unpaid_until_marked_paid(): void {

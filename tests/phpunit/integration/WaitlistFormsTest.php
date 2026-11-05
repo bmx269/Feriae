@@ -2,25 +2,25 @@
 /**
  * Waitlist forms, endpoints, and admin routes.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Tests\Integration;
+namespace Feriae\Tests\Integration;
 
-use OpenEvents\Attendance\Guard;
-use OpenEvents\Attendance\Order;
-use OpenEvents\Attendance\Orders;
-use OpenEvents\Attendance\TicketTypes;
-use OpenEvents\Attendance\Waitlist;
-use OpenEvents\Attendance\WaitlistService;
-use OpenEvents\Modules\Rsvp\Form as RsvpForm;
-use OpenEvents\Modules\Rsvp\Service as Rsvp;
-use OpenEvents\Modules\Tickets\AbstractGateway;
-use OpenEvents\Modules\Tickets\Checkout;
-use OpenEvents\Modules\Tickets\Gateways;
-use OpenEvents\Modules\Tickets\Module as Tickets;
-use OpenEvents\Modules\Tickets\TicketForm;
-use OpenEvents\Tests\TestCase;
+use Feriae\Attendance\Guard;
+use Feriae\Attendance\Order;
+use Feriae\Attendance\Orders;
+use Feriae\Attendance\TicketTypes;
+use Feriae\Attendance\Waitlist;
+use Feriae\Attendance\WaitlistService;
+use Feriae\Modules\Rsvp\Form as RsvpForm;
+use Feriae\Modules\Rsvp\Service as Rsvp;
+use Feriae\Modules\Tickets\AbstractGateway;
+use Feriae\Modules\Tickets\Checkout;
+use Feriae\Modules\Tickets\Gateways;
+use Feriae\Modules\Tickets\Module as Tickets;
+use Feriae\Modules\Tickets\TicketForm;
+use Feriae\Tests\TestCase;
 
 final class WaitlistFormsTest extends TestCase {
 
@@ -32,13 +32,13 @@ final class WaitlistFormsTest extends TestCase {
 	}
 
 	public function tear_down(): void {
-		unset( $_GET['oe_waitlist'] );
+		unset( $_GET['feriae_waitlist'] );
 		parent::tear_down();
 	}
 
 	private function upcoming(): int {
 		$day = current_datetime()->modify( '+10 days' )->format( 'Y-m-d' );
-		$id  = $this->event( array( '_oe_start' => "{$day} 19:00:00" ) );
+		$id  = $this->event( array( '_feriae_start' => "{$day} 19:00:00" ) );
 		$this->rows( $id );
 		return $id;
 	}
@@ -55,17 +55,17 @@ final class WaitlistFormsTest extends TestCase {
 		$rsvp = new Rsvp();
 		$rsvp->respond( $event, array( 'name' => 'A', 'email' => 'a@example.com', 'ts' => Guard::sign_timestamp( time() - 10 ) ) );
 
-		$request = new \WP_REST_Request( 'POST', "/openevents/v1/events/{$event}/rsvp" );
+		$request = new \WP_REST_Request( 'POST', "/feriae/v1/events/{$event}/rsvp" );
 		$request->set_body_params( array( 'name' => 'B', 'email' => 'b@example.com', 'status' => 'waitlist', 'quantity' => 2, 'ts' => Guard::sign_timestamp( time() - 10 ) ) );
 		$response = rest_do_request( $request );
 		$this->assertSame( 200, $response->get_status() );
 		$this->assertSame( 'waitlisted', $response->get_data()['code'] );
 
-		$html = RsvpForm::render( openevents_get_event( $event ), $rsvp->ticket_type( $event ), $rsvp );
+		$html = RsvpForm::render( feriae_get_event( $event ), $rsvp->ticket_type( $event ), $rsvp );
 		$this->assertStringContainsString( 'This event is full.', $html );
 		$this->assertStringContainsString( '1 going · Full · 2 waiting', $html );
 		$this->assertStringContainsString( '<input type="hidden" name="status" value="waitlist">', $html );
-		$this->assertMatchesRegularExpression( '/<label for="(oe-rsvp-wl-\d+-name)">Name<\/label><input id="\1"/', $html );
+		$this->assertMatchesRegularExpression( '/<label for="(feriae-rsvp-wl-\d+-name)">Name<\/label><input id="\1"/', $html );
 		$this->assertStringContainsString( '>Join the waitlist</button>', $html );
 	}
 
@@ -75,14 +75,14 @@ final class WaitlistFormsTest extends TestCase {
 		$rsvp = new Rsvp();
 		$rsvp->respond( $event, array( 'name' => 'A', 'email' => 'a@example.com', 'ts' => Guard::sign_timestamp( time() - 10 ) ) );
 		$rsvp->respond( $event, array( 'name' => 'B', 'email' => 'b@example.com', 'status' => 'waitlist', 'ts' => Guard::sign_timestamp( time() - 10 ) ) );
-		$token = $this->last_token( 'oe_waitlist' );
+		$token = $this->last_token( 'feriae_waitlist' );
 
-		$_GET['oe_waitlist'] = $token;
-		$html                = RsvpForm::render( openevents_get_event( $event ), $rsvp->ticket_type( $event ), $rsvp );
+		$_GET['feriae_waitlist'] = $token;
+		$html                = RsvpForm::render( feriae_get_event( $event ), $rsvp->ticket_type( $event ), $rsvp );
 		$this->assertStringContainsString( 'You’re on the waitlist for 1 person (#1 in line).', $html );
 		$this->assertStringContainsString( '>Leave the waitlist</button>', $html );
 
-		$leave = new \WP_REST_Request( 'POST', '/openevents/v1/waitlist/leave' );
+		$leave = new \WP_REST_Request( 'POST', '/feriae/v1/waitlist/leave' );
 		$leave->set_body_params( array( 'token' => $token ) );
 		$this->assertSame( 200, rest_do_request( $leave )->get_status() );
 		$this->assertSame( 404, rest_do_request( $leave )->get_status(), 'Tokens work once.' );
@@ -95,12 +95,12 @@ final class WaitlistFormsTest extends TestCase {
 		( new Checkout() )->place( $event, array( 'name' => 'A', 'email' => 'a@example.com', 'tickets' => array( $type->id => 1 ), 'gateway' => 'manual', 'ts' => Guard::sign_timestamp( time() - 10 ) ) );
 
 		$checkout = new Checkout();
-		$html     = TicketForm::render( openevents_get_event( $event ), $checkout->ticket_types( $event ), $checkout );
-		$this->assertStringContainsString( '<h4 id="oe-tickets-wl-' . $event . '-title">Join the waitlist</h4>', $html );
-		$this->assertStringContainsString( 'aria-labelledby="oe-tickets-wl-' . $event . '-title"', $html );
+		$html     = TicketForm::render( feriae_get_event( $event ), $checkout->ticket_types( $event ), $checkout );
+		$this->assertStringContainsString( '<h4 id="feriae-tickets-wl-' . $event . '-title">Join the waitlist</h4>', $html );
+		$this->assertStringContainsString( 'aria-labelledby="feriae-tickets-wl-' . $event . '-title"', $html );
 		$this->assertStringContainsString( 'You’ll have 24 hours to buy them.', $html );
 
-		$join = new \WP_REST_Request( 'POST', "/openevents/v1/events/{$event}/waitlist" );
+		$join = new \WP_REST_Request( 'POST', "/feriae/v1/events/{$event}/waitlist" );
 		$join->set_body_params( array( 'ticket_type_id' => $type->id, 'name' => 'W', 'email' => 'w@example.com', 'quantity' => 1, 'ts' => Guard::sign_timestamp( time() - 10 ) ) );
 		$this->assertSame( 'waitlisted', rest_do_request( $join )->get_data()['code'] );
 	}
@@ -112,11 +112,11 @@ final class WaitlistFormsTest extends TestCase {
 		$first = ( new Checkout() )->place( $event, array( 'name' => 'A', 'email' => 'a@example.com', 'tickets' => array( $type->id => 2 ), 'gateway' => 'manual', 'ts' => Guard::sign_timestamp( time() - 10 ) ) );
 		( new WaitlistService() )->join( ( new TicketTypes() )->get( $type->id ), array( 'name' => 'Wanda', 'email' => 'wanda@example.com', 'quantity' => 2 ) );
 		( new Checkout() )->release( ( new Orders() )->get( $first->order->id ), Order::CANCELLED );
-		$token = $this->last_token( 'oe_waitlist' );
+		$token = $this->last_token( 'feriae_waitlist' );
 
-		$_GET['oe_waitlist'] = $token;
+		$_GET['feriae_waitlist'] = $token;
 		$checkout            = new Checkout();
-		$html                = TicketForm::render( openevents_get_event( $event ), $checkout->ticket_types( $event ), $checkout );
+		$html                = TicketForm::render( feriae_get_event( $event ), $checkout->ticket_types( $event ), $checkout );
 		$this->assertStringContainsString( 'Your tickets are being held', $html );
 		$this->assertStringContainsString( '2 × General', $html );
 		$this->assertStringContainsString( 'name="waitlist_token" value="' . $token . '"', $html );
@@ -135,7 +135,7 @@ final class WaitlistFormsTest extends TestCase {
 		$svc->join( ( new TicketTypes() )->get( $type->id ), array( 'name' => 'Two', 'email' => 'two@example.com' ) );
 		( new Checkout() )->release( ( new Orders() )->get( $first->order->id ), Order::CANCELLED );
 
-		$list = new \WP_REST_Request( 'GET', '/openevents/v1/waitlist' );
+		$list = new \WP_REST_Request( 'GET', '/feriae/v1/waitlist' );
 		$list->set_param( 'event', $event );
 		$this->assertGreaterThanOrEqual( 401, rest_do_request( $list )->get_status() );
 
@@ -144,7 +144,7 @@ final class WaitlistFormsTest extends TestCase {
 		$this->assertSame( array( 'offered', 'waiting' ), wp_list_pluck( $items, 'status' ) );
 		$this->assertSame( 'General', $items[0]['type_name'] );
 
-		$remove = new \WP_REST_Request( 'POST', '/openevents/v1/waitlist/' . $items[0]['id'] );
+		$remove = new \WP_REST_Request( 'POST', '/feriae/v1/waitlist/' . $items[0]['id'] );
 		$remove->set_body_params( array( 'action' => 'remove' ) );
 		$this->assertSame( 'left', rest_do_request( $remove )->get_data()['status'] );
 		$this->assertSame( array( 'left', 'offered' ), wp_list_pluck( rest_do_request( $list )->get_data(), 'status' ), 'The hold passed to the next person.' );

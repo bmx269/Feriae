@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name:       OpenEvents
+ * Plugin Name:       Feriae
  * Description:       Open-source events for WordPress: Calendar, with RSVP, Tickets, and more as modules. Add events to a dedicated post type or the ones you already use.
  * Requires at least: 7.1
  * Requires PHP:      8.2
@@ -8,12 +8,12 @@
  * Author:            Affinity Bridge
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       openevents
+ * Text Domain:       feriae
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents;
+namespace Feriae;
 
 defined( 'ABSPATH' ) || exit;
 

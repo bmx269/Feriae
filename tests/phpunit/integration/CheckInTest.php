@@ -2,18 +2,18 @@
 /**
  * Passes, QR codes, and door check-in.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Tests\Integration;
+namespace Feriae\Tests\Integration;
 
-use OpenEvents\Attendance\Attendee;
-use OpenEvents\Attendance\Attendees;
-use OpenEvents\Attendance\Guard;
-use OpenEvents\Attendance\Pass;
-use OpenEvents\Attendance\QrCode;
-use OpenEvents\Modules\Rsvp\Service as Rsvp;
-use OpenEvents\Tests\TestCase;
+use Feriae\Attendance\Attendee;
+use Feriae\Attendance\Attendees;
+use Feriae\Attendance\Guard;
+use Feriae\Attendance\Pass;
+use Feriae\Attendance\QrCode;
+use Feriae\Modules\Rsvp\Service as Rsvp;
+use Feriae\Tests\TestCase;
 
 final class CheckInTest extends TestCase {
 
@@ -25,8 +25,8 @@ final class CheckInTest extends TestCase {
 		$day         = current_datetime()->format( 'Y-m-d' );
 		$this->event = $this->event(
 			array(
-				'_oe_start' => "{$day} 23:00:00",
-				'_oe_end'   => "{$day} 23:59:00",
+				'_feriae_start' => "{$day} 23:00:00",
+				'_feriae_end'   => "{$day} 23:59:00",
 			),
 			array( 'post_title' => 'Tonight' )
 		);
@@ -61,7 +61,7 @@ final class CheckInTest extends TestCase {
 	}
 
 	private function request( string $method, array $params ) {
-		$request = new \WP_REST_Request( $method, '/openevents/v1/check-in' );
+		$request = new \WP_REST_Request( $method, '/feriae/v1/check-in' );
 		foreach ( $params as $key => $value ) {
 			$request->set_param( $key, $value );
 		}
@@ -81,7 +81,7 @@ final class CheckInTest extends TestCase {
 		$this->assertNull( QrCode::matrix( str_repeat( 'x', 214 ) ) );
 
 		$svg = QrCode::svg( 'HELLO', 'Code "X"' );
-		$this->assertStringStartsWith( '<svg class="oe-qr"', $svg );
+		$this->assertStringStartsWith( '<svg class="feriae-qr"', $svg );
 		$this->assertStringContainsString( 'role="img" aria-label="Code &quot;X&quot;"', $svg );
 		$this->assertStringContainsString( 'viewBox="0 0 29 29"', $svg, 'Four-module quiet zone.' );
 	}
@@ -91,15 +91,15 @@ final class CheckInTest extends TestCase {
 		$url      = Pass::url( $attendee );
 		parse_str( (string) wp_parse_url( $url, PHP_URL_QUERY ), $query );
 
-		$this->assertSame( $attendee->id, Pass::attendee( $query['oe_pass'] )->id );
+		$this->assertSame( $attendee->id, Pass::attendee( $query['feriae_pass'] )->id );
 		$this->assertNull( Pass::attendee( $attendee->uuid . '.' . str_repeat( '0', 32 ) ), 'A made-up signature.' );
 		$this->assertNull( Pass::attendee( 'nonsense' ) );
 
 		$page = Pass::page( $attendee );
 		$this->assertStringContainsString( '<h1>Tonight</h1>', $page );
-		$this->assertStringContainsString( '<svg class="oe-qr"', $page );
+		$this->assertStringContainsString( '<svg class="feriae-qr"', $page );
 		$this->assertStringContainsString( 'aria-label="QR code for check-in code ' . $attendee->security_code . '"', $page );
-		$this->assertStringContainsString( '<code class="oe-pass__code">' . $attendee->security_code . '</code>', $page );
+		$this->assertStringContainsString( '<code class="feriae-pass__code">' . $attendee->security_code . '</code>', $page );
 		$this->assertStringContainsString( '<meta name="robots" content="noindex, nofollow">', $page );
 
 		( new Attendees() )->set_status( $attendee->id, Attendee::CANCELLED );
@@ -171,11 +171,11 @@ final class CheckInTest extends TestCase {
 	}
 
 	public function test_warns_when_payment_is_due_at_the_door(): void {
-		update_option( \OpenEvents\Modules\Tickets\AbstractGateway::OPTION, array( 'manual' => array( 'enabled' => true ) ) );
-		\OpenEvents\Modules\Tickets\Gateways::reset();
+		update_option( \Feriae\Modules\Tickets\AbstractGateway::OPTION, array( 'manual' => array( 'enabled' => true ) ) );
+		\Feriae\Modules\Tickets\Gateways::reset();
 		update_post_meta(
 			$this->event,
-			\OpenEvents\Modules\Tickets\Module::META_KEY,
+			\Feriae\Modules\Tickets\Module::META_KEY,
 			array(
 				array(
 					'key'   => 'adult',
@@ -184,8 +184,8 @@ final class CheckInTest extends TestCase {
 				),
 			)
 		);
-		$type   = current( ( new \OpenEvents\Modules\Tickets\Checkout() )->ticket_types( $this->event ) );
-		$result = ( new \OpenEvents\Modules\Tickets\Checkout() )->place(
+		$type   = current( ( new \Feriae\Modules\Tickets\Checkout() )->ticket_types( $this->event ) );
+		$result = ( new \Feriae\Modules\Tickets\Checkout() )->place(
 			$this->event,
 			array(
 				'name'    => 'Grace Hopper',
@@ -215,7 +215,7 @@ final class CheckInTest extends TestCase {
 		$this->assertSame( 409, $refused->get_status() );
 		$this->assertStringContainsString( 'cancelled', $refused->get_data()['message'] );
 
-		$later = $this->event( array( '_oe_start' => current_datetime()->modify( '+3 days' )->format( 'Y-m-d' ) . ' 19:00:00' ) );
+		$later = $this->event( array( '_feriae_start' => current_datetime()->modify( '+3 days' )->format( 'Y-m-d' ) . ' 19:00:00' ) );
 		update_post_meta( $later, Rsvp::META_KEY, array( 'enabled' => true ) );
 		$result = ( new Rsvp() )->respond(
 			$later,

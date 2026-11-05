@@ -1,16 +1,16 @@
 @use "../shared/base";
 
-.oe-details {
+.feriae-details {
 	margin-block-end: var(--wp--preset--spacing--40, 1.5rem);
-	padding: var(--oe-gap);
-	border: 1px solid var(--oe-border);
-	border-radius: var(--oe-radius);
+	padding: var(--feriae-gap);
+	border: 1px solid var(--feriae-border);
+	border-radius: var(--feriae-radius);
 
 	// Rows use subgrid so every label shares one column width.
 	&__list {
 		display: grid;
 		grid-template-columns: max-content 1fr;
-		gap: 0.75em var(--oe-gap);
+		gap: 0.75em var(--feriae-gap);
 		margin: 0;
 	}
 
@@ -40,15 +40,15 @@
 	}
 
 	&__address {
-		color: var(--oe-muted);
+		color: var(--feriae-muted);
 	}
 
 	&__badge {
 		display: inline-block;
 		margin-inline-start: 0.5em;
 		padding: 0 0.5em;
-		border-radius: var(--oe-radius);
-		background: var(--oe-surface);
+		border-radius: var(--feriae-radius);
+		background: var(--feriae-surface);
 		font-size: 0.85em;
 	}
 
@@ -73,10 +73,10 @@
 }
 
 // RSVP section (added to event details by the RSVP module).
-.oe-rsvp {
-	margin-block-start: var(--oe-gap);
-	padding-block-start: var(--oe-gap);
-	border-top: 1px solid var(--oe-border);
+.feriae-rsvp {
+	margin-block-start: var(--feriae-gap);
+	padding-block-start: var(--feriae-gap);
+	border-top: 1px solid var(--feriae-border);
 
 	&__title {
 		margin: 0 0 0.25em;
@@ -85,14 +85,14 @@
 
 	&__count {
 		margin: 0 0 0.75em;
-		color: var(--oe-muted);
+		color: var(--feriae-muted);
 	}
 
 	&__notice {
 		margin: 0 0 1em;
 		padding: 0.6em 0.8em;
-		border-inline-start: 4px solid var(--oe-accent);
-		background: var(--oe-surface);
+		border-inline-start: 4px solid var(--feriae-accent);
+		background: var(--feriae-surface);
 
 		&.is-error {
 			// 5.9:1 on white; still readable on dark themes via the surface tint.
@@ -100,7 +100,7 @@
 		}
 
 		&:focus-visible {
-			outline: 2px solid var(--oe-accent);
+			outline: 2px solid var(--feriae-accent);
 			outline-offset: 2px;
 		}
 	}
@@ -108,7 +108,7 @@
 	&__fields {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-		gap: 0.75em var(--oe-gap);
+		gap: 0.75em var(--feriae-gap);
 	}
 
 	&__field {
@@ -126,7 +126,7 @@
 			min-height: 2.75em; // 44px-ish touch target.
 			padding: 0.4em 0.6em;
 			border: 1px solid currentColor;
-			border-radius: var(--oe-radius);
+			border-radius: var(--feriae-radius);
 			font: inherit;
 			color: inherit;
 			background: transparent;
@@ -163,7 +163,7 @@
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		gap: var(--oe-gap);
+		gap: var(--feriae-gap);
 		margin-block-start: 1em;
 	}
 
@@ -180,7 +180,7 @@
 	button:focus-visible,
 	input:focus-visible,
 	select:focus-visible {
-		outline: 2px solid var(--oe-accent);
+		outline: 2px solid var(--feriae-accent);
 		outline-offset: 2px;
 	}
 
@@ -200,13 +200,13 @@
 }
 
 // Category badge: colour from the category, text colour chosen for contrast.
-.oe-badge {
+.feriae-badge {
 	display: inline-block;
 	padding: 0.15em 0.6em;
-	border: 1px solid var(--oe-event-bg, var(--oe-border));
+	border: 1px solid var(--feriae-event-bg, var(--feriae-border));
 	border-radius: 999px;
-	background: var(--oe-event-bg, transparent);
-	color: var(--oe-event-fg, inherit);
+	background: var(--feriae-event-bg, transparent);
+	color: var(--feriae-event-fg, inherit);
 	font-size: 0.875em;
 	line-height: 1.5;
 	text-decoration: none;
@@ -216,16 +216,16 @@
 	}
 
 	&:focus-visible {
-		outline: 2px solid var(--oe-accent);
+		outline: 2px solid var(--feriae-accent);
 		outline-offset: 2px;
 	}
 }
 
 // Tickets section (added by the Tickets module).
-.oe-tickets {
-	margin-block-start: var(--oe-gap);
-	padding-block-start: var(--oe-gap);
-	border-top: 1px solid var(--oe-border);
+.feriae-tickets {
+	margin-block-start: var(--feriae-gap);
+	padding-block-start: var(--feriae-gap);
+	border-top: 1px solid var(--feriae-border);
 
 	&__title {
 		margin: 0 0 0.5em;
@@ -240,7 +240,7 @@
 		th,
 		td {
 			padding: 0.6em 0.5em;
-			border-bottom: 1px solid var(--oe-border);
+			border-bottom: 1px solid var(--feriae-border);
 			text-align: start;
 			vertical-align: middle;
 		}
@@ -258,7 +258,7 @@
 			min-height: 2.75em;
 			padding: 0.3em 0.5em;
 			border: 1px solid currentColor;
-			border-radius: var(--oe-radius);
+			border-radius: var(--feriae-radius);
 			font: inherit;
 			color: inherit;
 			background: transparent;
@@ -274,7 +274,7 @@
 				grid-template-columns: 1fr auto;
 				gap: 0.25em 1em;
 				padding: 0.6em 0;
-				border-bottom: 1px solid var(--oe-border);
+				border-bottom: 1px solid var(--feriae-border);
 			}
 
 			th,
@@ -293,7 +293,7 @@
 		display: block;
 		font-weight: 400;
 		font-size: 0.875em;
-		color: var(--oe-muted);
+		color: var(--feriae-muted);
 	}
 
 	&__total {
@@ -304,7 +304,7 @@
 	&__fields {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-		gap: 0.75em var(--oe-gap);
+		gap: 0.75em var(--feriae-gap);
 	}
 
 	&__field {
@@ -321,7 +321,7 @@
 			min-height: 2.75em;
 			padding: 0.4em 0.6em;
 			border: 1px solid currentColor;
-			border-radius: var(--oe-radius);
+			border-radius: var(--feriae-radius);
 			font: inherit;
 			color: inherit;
 			background: transparent;
@@ -352,7 +352,7 @@
 	&__gateway-desc {
 		grid-column: 2;
 		font-size: 0.875em;
-		color: var(--oe-muted);
+		color: var(--feriae-muted);
 	}
 
 	&__actions {
@@ -362,8 +362,8 @@
 	&__notice {
 		margin: 0 0 1em;
 		padding: 0.6em 0.8em;
-		border-inline-start: 4px solid var(--oe-accent);
-		background: var(--oe-surface);
+		border-inline-start: 4px solid var(--feriae-accent);
+		background: var(--feriae-surface);
 
 		&.is-error {
 			border-color: #b32d2e;
@@ -373,8 +373,8 @@
 	&__order {
 		margin: 0 0 1em;
 		padding: 0.8em 1em;
-		border: 1px solid var(--oe-border);
-		border-radius: var(--oe-radius);
+		border: 1px solid var(--feriae-border);
+		border-radius: var(--feriae-radius);
 
 		h4 {
 			margin: 0 0 0.25em;
@@ -391,7 +391,7 @@
 	select:focus-visible,
 	&__notice:focus-visible,
 	&__order:focus-visible {
-		outline: 2px solid var(--oe-accent);
+		outline: 2px solid var(--feriae-accent);
 		outline-offset: 2px;
 	}
 
@@ -410,8 +410,8 @@
 }
 
 // Waitlist (RSVP and tickets).
-.oe-waitlist {
-	margin-block-start: var(--oe-gap);
+.feriae-waitlist {
+	margin-block-start: var(--feriae-gap);
 
 	h4 {
 		margin: 0 0 0.25em;
@@ -419,27 +419,27 @@
 
 	&__intro {
 		margin: 0 0 0.75em;
-		color: var(--oe-muted);
+		color: var(--feriae-muted);
 	}
 }
 
-.oe-waitlist__entry {
+.feriae-waitlist__entry {
 	margin: 0 0 1em;
 	padding: 0.6em 0.8em;
-	border-inline-start: 4px solid var(--oe-accent);
-	background: var(--oe-surface);
+	border-inline-start: 4px solid var(--feriae-accent);
+	background: var(--feriae-surface);
 
 	p {
 		margin: 0 0 0.5em;
 	}
 
 	&:focus-visible {
-		outline: 2px solid var(--oe-accent);
+		outline: 2px solid var(--feriae-accent);
 		outline-offset: 2px;
 	}
 }
 
-.oe-waitlist__leave {
+.feriae-waitlist__leave {
 	min-height: 2.75em;
 	padding: 0.5em 0;
 	border: 0;
@@ -450,20 +450,20 @@
 	cursor: pointer;
 
 	&:focus-visible {
-		outline: 2px solid var(--oe-accent);
+		outline: 2px solid var(--feriae-accent);
 		outline-offset: 2px;
 	}
 }
 
 // Attendee questions (RSVP guests, ticket holders): one fieldset per person.
-.oe-person {
+.feriae-person {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-	gap: 0.75em var(--oe-gap);
+	gap: 0.75em var(--feriae-gap);
 	margin: 1em 0 0;
-	padding: 0.75em var(--oe-gap) var(--oe-gap);
-	border: 1px solid var(--oe-border);
-	border-radius: var(--oe-radius);
+	padding: 0.75em var(--feriae-gap) var(--feriae-gap);
+	border: 1px solid var(--feriae-border);
+	border-radius: var(--feriae-radius);
 
 	> legend {
 		padding: 0 0.35em;
@@ -476,13 +476,13 @@
 	}
 }
 
-.oe-tickets__holders > h4 {
+.feriae-tickets__holders > h4 {
 	margin: 1.25em 0 0;
 	font-size: 1em;
 	font-weight: 600;
 }
 
-.oe-field {
+.feriae-field {
 	display: flex;
 	flex-direction: column;
 	gap: 0.25em;
@@ -499,30 +499,30 @@
 		min-height: 2.75em; // 44px-ish touch target.
 		padding: 0.4em 0.6em;
 		border: 1px solid currentcolor;
-		border-radius: var(--oe-radius);
+		border-radius: var(--feriae-radius);
 		font: inherit;
 		color: inherit;
 		background: transparent;
 	}
 
 	:is(input, select, textarea):focus-visible {
-		outline: 2px solid var(--oe-accent);
+		outline: 2px solid var(--feriae-accent);
 		outline-offset: 2px;
 	}
 }
 
-.oe-field__help {
-	color: var(--oe-muted);
+.feriae-field__help {
+	color: var(--feriae-muted);
 	font-size: 0.875em;
 }
 
 // Choices and consent span the whole row: their labels can be long.
-.oe-field--choices,
-.oe-field--consent {
+.feriae-field--choices,
+.feriae-field--consent {
 	grid-column: 1 / -1;
 }
 
-.oe-field--choices {
+.feriae-field--choices {
 	padding: 0;
 	border: 0;
 
@@ -532,7 +532,7 @@
 	}
 }
 
-.oe-field--consent {
+.feriae-field--consent {
 	display: grid;
 	grid-template-columns: auto 1fr;
 	align-items: start;
@@ -542,26 +542,26 @@
 		font-weight: 400;
 	}
 
-	.oe-field__help {
+	.feriae-field__help {
 		grid-column: 2;
 	}
 }
 
-.oe-field__choice {
+.feriae-field__choice {
 	display: flex;
 	align-items: center;
 	gap: 0.4em;
 	min-height: 2.75em;
 }
 
-.oe-field input[type="checkbox"],
-.oe-field input[type="radio"] {
+.feriae-field input[type="checkbox"],
+.feriae-field input[type="radio"] {
 	width: 1.25em;
 	height: 1.25em;
 	margin: 0.25em 0 0;
 }
 
-.oe-field__optional {
-	color: var(--oe-muted);
+.feriae-field__optional {
+	color: var(--feriae-muted);
 	font-weight: 400;
 }

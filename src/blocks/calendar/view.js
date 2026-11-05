@@ -20,13 +20,13 @@ const isModifiedClick = ( event ) =>
 const focusTitle = ( regionId ) =>
 	document
 		.getElementById( regionId )
-		?.querySelector( '.oe-calendar__title' )
+		?.querySelector( '.feriae-calendar__title' )
 		?.focus();
 
 // The element that opened the popup, so focus can return to it on close.
 let opener = null;
 
-store( 'openevents/calendar', {
+store( 'feriae/calendar', {
 	callbacks: {
 		/** Opens or closes the native modal dialog to match context. */
 		syncDialog() {

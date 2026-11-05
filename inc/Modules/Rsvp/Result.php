@@ -2,10 +2,10 @@
 /**
  * RSVP outcome.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Rsvp;
+namespace Feriae\Modules\Rsvp;
 
 /**
  * Outcome of respond()/cancel(). `code` is machine-readable: going, not_going,

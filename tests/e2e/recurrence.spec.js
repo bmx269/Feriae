@@ -6,7 +6,7 @@ test.describe( 'Recurring events', () => {
 	test( 'editor: repeat weekly, preview the dates, and publish', async ( {
 		page,
 	} ) => {
-		await newPost( page, 'oe_event' );
+		await newPost( page, 'feriae_event' );
 
 		const canvas = page.frameLocator( 'iframe[name="editor-canvas"]' );
 		await canvas
@@ -23,7 +23,7 @@ test.describe( 'Recurring events', () => {
 		}
 		// The 15th of this month in 2031, 7:30 am.
 		await page.getByRole( 'button', { name: /^Starts:/ } ).click();
-		const picker = page.locator( '.oe-editor-panel__picker' );
+		const picker = page.locator( '.feriae-editor-panel__picker' );
 		for ( const [ name, value ] of [
 			[ 'Year', '2031' ],
 			[ 'Day', '15' ],
@@ -48,7 +48,7 @@ test.describe( 'Recurring events', () => {
 		await page.getByLabel( 'Repeats' ).selectOption( 'WEEKLY' );
 		// The start's weekday is preselected.
 		await expect(
-			page.locator( '.oe-editor-panel__days [aria-pressed="true"]' )
+			page.locator( '.feriae-editor-panel__days [aria-pressed="true"]' )
 		).toHaveCount( 1 );
 		await page
 			.getByRole( 'radio', { name: 'After a number of dates' } )
@@ -57,7 +57,7 @@ test.describe( 'Recurring events', () => {
 			.getByRole( 'spinbutton', { name: 'Number of dates' } )
 			.fill( '3' );
 
-		const preview = page.locator( '.oe-editor-panel__preview' );
+		const preview = page.locator( '.feriae-editor-panel__preview' );
 		await expect( preview ).toContainText(
 			/Every week on \w+day, 3 times/
 		);
@@ -80,7 +80,7 @@ test.describe( 'Recurring events', () => {
 			window.wp.data.select( 'core/editor' ).getCurrentPostId()
 		);
 		const occurrences = (
-			await rest( page, `/openevents/v1/occurrences?event=${ id }` )
+			await rest( page, `/feriae/v1/occurrences?event=${ id }` )
 		).body;
 		expect( occurrences ).toHaveLength( 3 );
 		const starts = occurrences.map( ( o ) => new Date( o.start_utc ) );
@@ -92,12 +92,12 @@ test.describe( 'Recurring events', () => {
 
 		// Each date's link opens the page for that date.
 		await page.goto( occurrences[ 1 ].link );
-		const details = page.locator( '.oe-details' );
+		const details = page.locator( '.feriae-details' );
 		await expect(
-			details.locator( '.oe-details__row--date time' )
+			details.locator( '.feriae-details__row--date time' )
 		).toHaveAttribute( 'datetime', new RegExp( `^${ secondDate }T07:30` ) );
 		await expect(
-			details.locator( '.oe-details__row--repeats' )
+			details.locator( '.feriae-details__row--repeats' )
 		).toContainText( /Every week on \w+day, 3 times/ );
 		await expect(
 			details.getByRole( 'list', { name: 'Other dates' } ).locator( 'li' )
@@ -109,19 +109,19 @@ test.describe( 'Recurring events', () => {
 	} ) => {
 		await page.goto( '/events/' );
 		const storytime = page
-			.locator( '.oe-month' )
+			.locator( '.feriae-month' )
 			.getByText( 'Weekly Storytime' );
 		expect( await storytime.count() ).toBeGreaterThanOrEqual( 4 );
 
 		await page
-			.locator( '.oe-month a', { hasText: 'Weekly Storytime' } )
+			.locator( '.feriae-month a', { hasText: 'Weekly Storytime' } )
 			.nth( 1 )
 			.click();
 		// Dated URLs, as TEC links them: /events/{slug}/{Y-m-d}/.
 		await expect( page ).toHaveURL( /\/\d{4}-\d{2}-\d{2}\/$/ );
-		const details = page.locator( '.oe-details' );
+		const details = page.locator( '.feriae-details' );
 		await expect(
-			details.locator( '.oe-details__row--repeats' )
+			details.locator( '.feriae-details__row--repeats' )
 		).toContainText( 'Every week on' );
 
 		const { violations } = await new AxeBuilder( { page } )
@@ -132,7 +132,7 @@ test.describe( 'Recurring events', () => {
 				'wcag21aa',
 				'wcag22aa',
 			] )
-			.include( '.oe-details' )
+			.include( '.feriae-details' )
 			.analyze();
 		expect( violations.map( ( v ) => v.id ) ).toEqual( [] );
 	} );

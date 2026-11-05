@@ -2,15 +2,15 @@
 /**
  * RRULE parsing and expansion, mostly against the examples in RFC 5545 §3.8.5.3.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Tests\Unit;
+namespace Feriae\Tests\Unit;
 
 use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
-use OpenEvents\Modules\Recurrence\Rule;
+use Feriae\Modules\Recurrence\Rule;
 use PHPUnit\Framework\TestCase;
 
 final class RuleTest extends TestCase {

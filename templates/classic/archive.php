@@ -1,28 +1,28 @@
 <?php
 /**
  * Events archive for classic themes. Copy to
- * your-theme/openevents/archive.php to customise.
+ * your-theme/feriae/archive.php to customise.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
 get_header();
 
-$openevents_attrs = array(
+$feriae_attrs = array(
 	'showLegend' => true,
 	'views'      => array( 'month', 'week', 'day', 'list' ),
 );
-if ( is_tax( OpenEvents\Content\PostTypes::CATEGORY ) ) {
-	$openevents_attrs['categories'] = array( get_queried_object_id() );
+if ( is_tax( Feriae\Content\PostTypes::CATEGORY ) ) {
+	$feriae_attrs['categories'] = array( get_queried_object_id() );
 }
 ?>
-<main id="primary" class="site-main oe-classic-archive">
+<main id="primary" class="site-main feriae-classic-archive">
 	<header class="page-header">
-		<h1 class="page-title"><?php echo is_tax() ? esc_html( single_term_title( '', false ) ) : esc_html__( 'Events', 'openevents' ); ?></h1>
+		<h1 class="page-title"><?php echo is_tax() ? esc_html( single_term_title( '', false ) ) : esc_html__( 'Events', 'feriae' ); ?></h1>
 		<?php the_archive_description( '<div class="archive-description">', '</div>' ); ?>
 	</header>
 	<?php
-	echo do_blocks( '<!-- wp:openevents/calendar ' . wp_json_encode( $openevents_attrs ) . ' /-->' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	echo do_blocks( '<!-- wp:feriae/calendar ' . wp_json_encode( $feriae_attrs ) . ' /-->' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	?>
 </main>
 <?php

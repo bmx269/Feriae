@@ -2,12 +2,12 @@
 /**
  * Checkout outcome.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Tickets;
+namespace Feriae\Modules\Tickets;
 
-use OpenEvents\Attendance\Order;
+use Feriae\Attendance\Order;
 
 /**
  * confirmed: done, show tickets. redirect: send the buyer to the provider.

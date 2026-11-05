@@ -2,18 +2,18 @@
 /**
  * RSVP module.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Rsvp;
+namespace Feriae\Modules\Rsvp;
 
-use OpenEvents\Attendance\Schema;
-use OpenEvents\Content\Event;
-use OpenEvents\Modules\AbstractModule;
-use OpenEvents\Occurrences\Occurrence;
+use Feriae\Attendance\Schema;
+use Feriae\Content\Event;
+use Feriae\Modules\AbstractModule;
+use Feriae\Occurrences\Occurrence;
 
-use const OpenEvents\PLUGIN_DIR;
-use const OpenEvents\PLUGIN_FILE;
+use const Feriae\PLUGIN_DIR;
+use const Feriae\PLUGIN_FILE;
 
 /**
  * Free RSVPs: settings in the editor, a form in event details, confirmation
@@ -32,11 +32,11 @@ final class Module extends AbstractModule {
 	}
 
 	public function label(): string {
-		return __( 'RSVP', 'openevents' );
+		return __( 'RSVP', 'feriae' );
 	}
 
 	public function description(): string {
-		return __( 'Free RSVPs with capacity limits, guests, confirmation emails, an attendee list with CSV export, and check-in.', 'openevents' );
+		return __( 'Free RSVPs with capacity limits, guests, confirmation emails, an attendee list with CSV export, and check-in.', 'feriae' );
 	}
 
 	public function install(): void {
@@ -45,19 +45,19 @@ final class Module extends AbstractModule {
 
 	public function boot(): void {
 		Schema::maybe_install();
-		\OpenEvents\Attendance\WaitlistService::register();
-		\OpenEvents\Attendance\FieldSets::register();
+		\Feriae\Attendance\WaitlistService::register();
+		\Feriae\Attendance\FieldSets::register();
 
-		add_filter( 'openevents/meta_fields', array( $this, 'meta_fields' ), 10, 2 );
+		add_filter( 'feriae/meta_fields', array( $this, 'meta_fields' ), 10, 2 );
 		add_action( 'added_post_meta', array( $this, 'on_meta_change' ), 10, 3 );
 		add_action( 'updated_post_meta', array( $this, 'on_meta_change' ), 10, 3 );
 		add_action( 'deleted_post_meta', array( $this, 'on_meta_change' ), 10, 3 );
 
-		add_filter( 'openevents/event_details/sections', array( $this, 'section' ), 10, 3 );
+		add_filter( 'feriae/event_details/sections', array( $this, 'section' ), 10, 3 );
 		add_action( 'init', array( $this, 'register_assets' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_on_event_pages' ) );
-		add_action( 'admin_post_openevents_rsvp', array( $this, 'handle_form' ) );
-		add_action( 'admin_post_nopriv_openevents_rsvp', array( $this, 'handle_form' ) );
+		add_action( 'admin_post_feriae_rsvp', array( $this, 'handle_form' ) );
+		add_action( 'admin_post_nopriv_feriae_rsvp', array( $this, 'handle_form' ) );
 		add_filter( 'wp_robots', array( $this, 'robots' ) );
 		add_action( 'template_redirect', array( $this, 'no_cache_private_links' ) );
 
@@ -65,18 +65,18 @@ final class Module extends AbstractModule {
 		if ( is_admin() ) {
 			( new Admin( $this->service ) )->register();
 		}
-		add_action( 'openevents/uninstall', array( Schema::class, 'uninstall' ) );
+		add_action( 'feriae/uninstall', array( Schema::class, 'uninstall' ) );
 	}
 
 	/**
-	 * Registers the _oe_rsvp settings object on every event post type.
+	 * Registers the _feriae_rsvp settings object on every event post type.
 	 *
 	 * @param array<string, array<string, mixed>> $fields    Meta fields.
 	 * @param string                              $post_type Post type.
 	 * @return array<string, array<string, mixed>>
 	 */
 	public function meta_fields( array $fields, string $post_type ): array {
-		if ( ! in_array( $post_type, openevents_event_post_types(), true ) ) {
+		if ( ! in_array( $post_type, feriae_event_post_types(), true ) ) {
 			return $fields;
 		}
 		$fields[ Service::META_KEY ] = array(
@@ -103,9 +103,9 @@ final class Module extends AbstractModule {
 						'waitlist'         => array( 'type' => 'boolean' ),
 						'attendee_details' => array(
 							'type' => 'string',
-							'enum' => \OpenEvents\Attendance\Fields::DETAILS,
+							'enum' => \Feriae\Attendance\Fields::DETAILS,
 						),
-						'fields'           => \OpenEvents\Attendance\Fields::schema(),
+						'fields'           => \Feriae\Attendance\Fields::schema(),
 					),
 					'additionalProperties' => false,
 				),
@@ -125,12 +125,12 @@ final class Module extends AbstractModule {
 			'enabled'          => ! empty( $value['enabled'] ),
 			'capacity'         => max( 0, (int) ( $value['capacity'] ?? 0 ) ),
 			'max_per_response' => max( 1, min( 20, (int) ( $value['max_per_response'] ?? $defaults['max_per_response'] ) ) ),
-			'deadline'         => \OpenEvents\Content\Meta::sanitize_datetime( $value['deadline'] ?? '' ),
+			'deadline'         => \Feriae\Content\Meta::sanitize_datetime( $value['deadline'] ?? '' ),
 			'allow_not_going'  => (bool) ( $value['allow_not_going'] ?? $defaults['allow_not_going'] ),
 			'show_count'       => (bool) ( $value['show_count'] ?? $defaults['show_count'] ),
 			'waitlist'         => ! empty( $value['waitlist'] ),
-			'attendee_details' => \OpenEvents\Attendance\Fields::sanitize_details( $value['attendee_details'] ?? 'none' ),
-			'fields'           => \OpenEvents\Attendance\Fields::sanitize( $value['fields'] ?? array() ),
+			'attendee_details' => \Feriae\Attendance\Fields::sanitize_details( $value['attendee_details'] ?? 'none' ),
+			'fields'           => \Feriae\Attendance\Fields::sanitize( $value['fields'] ?? array() ),
 		);
 	}
 
@@ -139,7 +139,7 @@ final class Module extends AbstractModule {
 	 */
 	public function on_meta_change( int|array $meta_ids, int $post_id, string $meta_key ): void {
 		// The deadline is stored in event-local time, so a timezone change moves it too.
-		if ( in_array( $meta_key, array( Service::META_KEY, '_oe_timezone' ), true ) && Event::is_event_type( (string) get_post_type( $post_id ) ) ) {
+		if ( in_array( $meta_key, array( Service::META_KEY, '_feriae_timezone' ), true ) && Event::is_event_type( (string) get_post_type( $post_id ) ) ) {
 			$this->service->sync( $post_id );
 		}
 	}
@@ -148,7 +148,7 @@ final class Module extends AbstractModule {
 		$asset_file = PLUGIN_DIR . '/build/modules/rsvp/view.asset.php';
 		if ( is_readable( $asset_file ) ) {
 			$asset = require $asset_file;
-			wp_register_script_module( 'openevents-rsvp', plugins_url( 'build/modules/rsvp/view.js', PLUGIN_FILE ), $asset['dependencies'], $asset['version'] );
+			wp_register_script_module( 'feriae-rsvp', plugins_url( 'build/modules/rsvp/view.js', PLUGIN_FILE ), $asset['dependencies'], $asset['version'] );
 		}
 	}
 
@@ -157,8 +157,8 @@ final class Module extends AbstractModule {
 	 * itself as a fallback when rendered elsewhere.
 	 */
 	public function enqueue_on_event_pages(): void {
-		if ( is_singular( openevents_event_post_types() ) && $this->service->ticket_type( get_queried_object_id() ) ) {
-			wp_enqueue_script_module( 'openevents-rsvp' );
+		if ( is_singular( feriae_event_post_types() ) && $this->service->ticket_type( get_queried_object_id() ) ) {
+			wp_enqueue_script_module( 'feriae-rsvp' );
 		}
 	}
 
@@ -170,10 +170,10 @@ final class Module extends AbstractModule {
 	 */
 	public function section( array $sections, Event $event, Occurrence $occurrence ): array {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only display state.
-		$token = sanitize_text_field( wp_unslash( $_GET['oe_rsvp_token'] ?? '' ) );
+		$token = sanitize_text_field( wp_unslash( $_GET['feriae_rsvp_token'] ?? '' ) );
 		$type  = $this->type_for_page( $event->id(), $occurrence, $token );
 		if ( $type ) {
-			wp_enqueue_script_module( 'openevents-rsvp' );
+			wp_enqueue_script_module( 'feriae-rsvp' );
 			$sections['rsvp'] = Form::render( $event, $type, $this->service, $token );
 		}
 		return $sections;
@@ -183,7 +183,7 @@ final class Module extends AbstractModule {
 	 * The date the form is for: a private link's response or waitlist place
 	 * keeps its own date wherever the link opens; otherwise the date shown.
 	 */
-	private function type_for_page( int $event_id, Occurrence $occurrence, string $token ): ?\OpenEvents\Attendance\TicketType {
+	private function type_for_page( int $event_id, Occurrence $occurrence, string $token ): ?\Feriae\Attendance\TicketType {
 		if ( '' !== $token ) {
 			$type = $this->service->response_type( $event_id, $this->service->response_for_token( $token ) );
 			if ( $type ) {
@@ -191,10 +191,10 @@ final class Module extends AbstractModule {
 			}
 		}
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only display state.
-		$wl_token = sanitize_text_field( wp_unslash( $_GET['oe_waitlist'] ?? '' ) );
-		$entry    = '' !== $wl_token ? ( new \OpenEvents\Attendance\Waitlist() )->by_token( $wl_token ) : null;
+		$wl_token = sanitize_text_field( wp_unslash( $_GET['feriae_waitlist'] ?? '' ) );
+		$entry    = '' !== $wl_token ? ( new \Feriae\Attendance\Waitlist() )->by_token( $wl_token ) : null;
 		if ( $entry && $entry->event_id === $event_id ) {
-			$type = ( new \OpenEvents\Attendance\TicketTypes() )->get( $entry->ticket_type_id );
+			$type = ( new \Feriae\Attendance\TicketTypes() )->get( $entry->ticket_type_id );
 			if ( $type && Service::TYPE_KEY === $type->type_key && 'active' === $type->status ) {
 				return $type;
 			}
@@ -225,11 +225,11 @@ final class Module extends AbstractModule {
 
 		$result = $cancel ? $this->service->cancel( $input['token'] ) : $this->service->respond( $event_id, $input );
 		// Back to the date the form was for.
-		$occurrence = openevents()->occurrences()->by_sequence( $event_id, $input['sequence'] );
-		$url        = ( $occurrence ? openevents_occurrence_url( $occurrence ) : get_permalink( $event_id ) ) ?: home_url( '/' );
-		$args   = array( 'oe_rsvp' => $result->code );
+		$occurrence = feriae()->occurrences()->by_sequence( $event_id, $input['sequence'] );
+		$url        = ( $occurrence ? feriae_occurrence_url( $occurrence ) : get_permalink( $event_id ) ) ?: home_url( '/' );
+		$args   = array( 'feriae_rsvp' => $result->code );
 		if ( ! $result->ok && $input['token'] ) {
-			$args['oe_rsvp_token'] = rawurlencode( $input['token'] );
+			$args['feriae_rsvp_token'] = rawurlencode( $input['token'] );
 		}
 		wp_safe_redirect( add_query_arg( $args, $url ) . '#rsvp', 303 );
 		exit;
@@ -244,7 +244,7 @@ final class Module extends AbstractModule {
 	 */
 	public function robots( array $robots ): array {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		if ( isset( $_GET['oe_rsvp'] ) || isset( $_GET['oe_rsvp_token'] ) ) {
+		if ( isset( $_GET['feriae_rsvp'] ) || isset( $_GET['feriae_rsvp_token'] ) ) {
 			$robots['noindex'] = true;
 		}
 		return $robots;
@@ -252,12 +252,12 @@ final class Module extends AbstractModule {
 
 	public function no_cache_private_links(): void {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		if ( isset( $_GET['oe_rsvp_token'] ) || isset( $_GET['oe_rsvp'] ) ) {
+		if ( isset( $_GET['feriae_rsvp_token'] ) || isset( $_GET['feriae_rsvp'] ) ) {
 			nocache_headers();
 		}
 	}
 
 	public static function client_ip(): string {
-		return \OpenEvents\Attendance\Guard::client_ip();
+		return \Feriae\Attendance\Guard::client_ip();
 	}
 }

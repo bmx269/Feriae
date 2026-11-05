@@ -1,16 +1,16 @@
 <?php
 /**
- * Plugin Name: OpenEvents benchmark timing
- * Description: Dev only. For local requests (127.0.0.1) with the header "X-OE-Bench: 1", adds a Server-Timing header with total PHP time, database query count and time, and peak memory. Copy into wp-content/mu-plugins on a local site to benchmark; never deploy.
+ * Plugin Name: Feriae benchmark timing
+ * Description: Dev only. For local requests (127.0.0.1) with the header "X-Feriae-Bench: 1", adds a Server-Timing header with total PHP time, database query count and time, and peak memory. Copy into wp-content/mu-plugins on a local site to benchmark; never deploy.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
 // phpcs:disable WordPress.Security.ValidatedSanitizedInput, WordPress.PHP.DevelopmentFunctions
 
 // Only for requests from the machine itself (the runner calls 127.0.0.1 inside
 // the web container), so the header can't be used from outside.
-if ( empty( $_SERVER['HTTP_X_OE_BENCH'] ) || ! in_array( $_SERVER['REMOTE_ADDR'] ?? '', array( '127.0.0.1', '::1' ), true ) ) {
+if ( empty( $_SERVER['HTTP_X_FERIAE_BENCH'] ) || ! in_array( $_SERVER['REMOTE_ADDR'] ?? '', array( '127.0.0.1', '::1' ), true ) ) {
 	return;
 }
 

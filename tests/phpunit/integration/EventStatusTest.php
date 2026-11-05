@@ -2,21 +2,21 @@
 /**
  * Event status: cancelled and postponed events and dates.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Tests\Integration;
+namespace Feriae\Tests\Integration;
 
-use OpenEvents\Attendance\Guard;
-use OpenEvents\Content\EventStatus;
-use OpenEvents\Frontend\CalendarView;
-use OpenEvents\Frontend\EventDetails;
-use OpenEvents\Import\Tec;
-use OpenEvents\Modules\ICal\Writer;
-use OpenEvents\Modules\Recurrence\Recurrence;
-use OpenEvents\Modules\Rsvp\Service as Rsvp;
-use OpenEvents\Modules\Tickets\Checkout;
-use OpenEvents\Tests\TestCase;
+use Feriae\Attendance\Guard;
+use Feriae\Content\EventStatus;
+use Feriae\Frontend\CalendarView;
+use Feriae\Frontend\EventDetails;
+use Feriae\Import\Tec;
+use Feriae\Modules\ICal\Writer;
+use Feriae\Modules\Recurrence\Recurrence;
+use Feriae\Modules\Rsvp\Service as Rsvp;
+use Feriae\Modules\Tickets\Checkout;
+use Feriae\Tests\TestCase;
 
 final class EventStatusTest extends TestCase {
 
@@ -28,7 +28,7 @@ final class EventStatusTest extends TestCase {
 	}
 
 	public function tear_down(): void {
-		unset( $_GET['oe_occurrence'] );
+		unset( $_GET['feriae_occurrence'] );
 		parent::tear_down();
 	}
 
@@ -38,8 +38,8 @@ final class EventStatusTest extends TestCase {
 	private function upcoming( bool $repeats = false ): int {
 		$day  = current_datetime()->modify( '+5 days' )->format( 'Y-m-d' );
 		$meta = array(
-			'_oe_start' => "{$day} 19:00:00",
-			'_oe_end'   => "{$day} 21:00:00",
+			'_feriae_start' => "{$day} 19:00:00",
+			'_feriae_end'   => "{$day} 21:00:00",
 		);
 		if ( $repeats ) {
 			$meta[ Recurrence::META_KEY ] = array_merge( Recurrence::empty_meta(), array( 'rrule' => 'FREQ=WEEKLY;COUNT=3' ) );
@@ -119,7 +119,7 @@ final class EventStatusTest extends TestCase {
 
 		update_post_meta(
 			$id,
-			\OpenEvents\Modules\Tickets\Module::META_KEY,
+			\Feriae\Modules\Tickets\Module::META_KEY,
 			array(
 				array(
 					'key'   => 'seat',
@@ -133,19 +133,19 @@ final class EventStatusTest extends TestCase {
 		$this->assertSame( 'cancelled', $checkout->sale_state( $type ) );
 
 		$html = EventDetails::render( $id );
-		$this->assertStringContainsString( '<dt>Status</dt><dd><span class="oe-status is-cancelled">Cancelled</span> The library is closed for repairs.</dd>', $html );
+		$this->assertStringContainsString( '<dt>Status</dt><dd><span class="feriae-status is-cancelled">Cancelled</span> The library is closed for repairs.</dd>', $html );
 		$this->assertStringContainsString( 'This event has been cancelled.', $html );
 
-		$occurrence = openevents()->occurrences()->for_event( $id );
+		$occurrence = feriae()->occurrences()->for_event( $id );
 		$card       = CalendarView::list_item( $occurrence );
-		$this->assertStringContainsString( 'oe-event-card is-called-off', $card );
-		$this->assertStringContainsString( '<span class="oe-status is-cancelled">Cancelled</span>', $card );
+		$this->assertStringContainsString( 'feriae-event-card is-called-off', $card );
+		$this->assertStringContainsString( '<span class="feriae-status is-cancelled">Cancelled</span>', $card );
 
 		$ics = Writer::calendar( array( $occurrence ) );
 		$this->assertStringContainsString( "STATUS:CANCELLED\r\n", $ics );
 		$this->assertStringContainsString( 'SUMMARY:Cancelled: Storytime', $ics );
 
-		$request = new \WP_REST_Request( 'GET', '/openevents/v1/occurrences' );
+		$request = new \WP_REST_Request( 'GET', '/feriae/v1/occurrences' );
 		$request->set_param( 'event', $id );
 		$item = rest_do_request( $request )->get_data()[0];
 		$this->assertSame( 'cancelled', $item['status'] );
@@ -153,7 +153,7 @@ final class EventStatusTest extends TestCase {
 
 		$this->assertTrue( EventStatus::set( $id, EventStatus::SCHEDULED ) );
 		$this->assertSame( array( 'scheduled' ), array_values( array_unique( $this->statuses( $id ) ) ), 'Back on.' );
-		$this->assertSame( '', get_post_meta( $id, '_oe_status_reason', true ) );
+		$this->assertSame( '', get_post_meta( $id, '_feriae_status_reason', true ) );
 	}
 
 	public function test_one_date_can_be_called_off_on_its_own(): void {
@@ -164,24 +164,24 @@ final class EventStatusTest extends TestCase {
 		$this->assertTrue( EventStatus::set( $id, EventStatus::POSTPONED, 'Moved because of the storm.', $day ) );
 		$this->assertSame( array( 'scheduled', 'postponed', 'scheduled' ), array_values( $this->statuses( $id ) ) );
 
-		$second = openevents()->occurrences()->on_date( $id, $day );
+		$second = feriae()->occurrences()->on_date( $id, $day );
 		$this->assertSame( 'Moved because of the storm.', EventStatus::reason( $second ) );
 		$service = new Rsvp();
 		$this->assertSame( 'postponed', $service->closed_reason( $id, $service->ticket_type( $id, $second->sequence ) ) );
 		$this->assertNull( $service->closed_reason( $id, $service->ticket_type( $id ) ), 'Other dates stay open.' );
 
-		$_GET['oe_occurrence'] = $day;
+		$_GET['feriae_occurrence'] = $day;
 		$this->assertStringContainsString( 'is-postponed">Postponed</span> Moved because of the storm.', EventDetails::render( $id ) );
 
 		$this->assertInstanceOf( \WP_Error::class, EventStatus::set( $id, EventStatus::CANCELLED, '', '2001-01-01' ), 'Only the event’s own dates.' );
 		$this->assertTrue( EventStatus::set( $id, EventStatus::SCHEDULED, '', $day ) );
-		$this->assertSame( array(), get_post_meta( $id, '_oe_date_status', true ) );
+		$this->assertSame( array(), get_post_meta( $id, '_feriae_date_status', true ) );
 		$this->assertSame( array( 'scheduled' ), array_values( array_unique( $this->statuses( $id ) ) ) );
 	}
 
 	public function test_ability_needs_edit_rights(): void {
 		$id      = $this->upcoming();
-		$ability = wp_get_ability( 'openevents/set-event-status' );
+		$ability = wp_get_ability( 'feriae/set-event-status' );
 		$this->assertNotNull( $ability );
 
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );

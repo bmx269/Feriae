@@ -2,13 +2,13 @@
 /**
  * Template hierarchy for events.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Tests\Integration;
+namespace Feriae\Tests\Integration;
 
-use OpenEvents\Content\PostTypes;
-use OpenEvents\Tests\TestCase;
+use Feriae\Content\PostTypes;
+use Feriae\Tests\TestCase;
 
 final class TemplateTest extends TestCase {
 
@@ -21,15 +21,15 @@ final class TemplateTest extends TestCase {
 	public function test_events_get_category_and_base_templates(): void {
 		$parent = self::factory()->term->create( array( 'taxonomy' => PostTypes::CATEGORY, 'slug' => 'learning' ) );
 		$child  = self::factory()->term->create( array( 'taxonomy' => PostTypes::CATEGORY, 'slug' => 'workshops', 'parent' => $parent ) );
-		$id     = $this->event( array( '_oe_start' => '2030-05-05 10:00:00' ), array( 'post_name' => 'pottery' ) );
+		$id     = $this->event( array( '_feriae_start' => '2030-05-05 10:00:00' ), array( 'post_name' => 'pottery' ) );
 		wp_set_object_terms( $id, array( $child ), PostTypes::CATEGORY );
 
 		$this->assertSame(
 			array(
-				'single-oe_event-pottery.php',
+				'single-feriae_event-pottery.php',
 				'single-event-category-workshops.php',
 				'single-event-category-learning.php',
-				'single-oe_event.php',
+				'single-feriae_event.php',
 				'single-event.php',
 				'single.php',
 			),
@@ -39,7 +39,7 @@ final class TemplateTest extends TestCase {
 
 	public function test_existing_post_types_keep_their_templates_unless_opted_in(): void {
 		$this->settings( array( 'event_post_types' => array( 'post' ) ) );
-		$id = $this->event( array( '_oe_start' => '2030-05-05 10:00:00' ), array( 'post_type' => 'post', 'post_name' => 'launch' ) );
+		$id = $this->event( array( '_feriae_start' => '2030-05-05 10:00:00' ), array( 'post_type' => 'post', 'post_name' => 'launch' ) );
 
 		$this->assertNotContains( 'single-event.php', $this->hierarchy_for( $id ), 'Off by default.' );
 
@@ -66,48 +66,48 @@ final class TemplateTest extends TestCase {
 	public function test_classic_themes_dont_get_plugin_block_templates(): void {
 		$registry = \WP_Block_Templates_Registry::get_instance();
 		$this->assertFalse( wp_is_block_theme() );
-		$this->assertFalse( $registry->is_registered( 'openevents//single-event' ), 'Classic themes have no header or footer parts for them.' );
+		$this->assertFalse( $registry->is_registered( 'feriae//single-event' ), 'Classic themes have no header or footer parts for them.' );
 
 		switch_theme( 'twentytwentyfive' );
-		( new \OpenEvents\Frontend\Templates() )->register_block_templates();
-		$this->assertTrue( $registry->is_registered( 'openevents//single-event' ) );
-		foreach ( array( 'single-event', 'single-oe_event', 'archive-oe_event', 'taxonomy-oe_event_category' ) as $slug ) {
-			if ( $registry->is_registered( 'openevents//' . $slug ) ) {
-				unregister_block_template( 'openevents//' . $slug );
+		( new \Feriae\Frontend\Templates() )->register_block_templates();
+		$this->assertTrue( $registry->is_registered( 'feriae//single-event' ) );
+		foreach ( array( 'single-event', 'single-feriae_event', 'archive-feriae_event', 'taxonomy-feriae_event_category' ) as $slug ) {
+			if ( $registry->is_registered( 'feriae//' . $slug ) ) {
+				unregister_block_template( 'feriae//' . $slug );
 			}
 		}
 		switch_theme( 'default' );
 	}
 
 	public function test_classic_archive_can_be_turned_off(): void {
-		$templates = new \OpenEvents\Frontend\Templates();
-		$this->go_to( get_post_type_archive_link( \OpenEvents\Content\PostTypes::EVENT ) );
+		$templates = new \Feriae\Frontend\Templates();
+		$this->go_to( get_post_type_archive_link( \Feriae\Content\PostTypes::EVENT ) );
 		$this->assertStringEndsWith( 'templates/classic/archive.php', $templates->classic_archive( 'theme-archive.php' ) );
 
-		add_filter( 'openevents/classic_archive', '__return_false' );
+		add_filter( 'feriae/classic_archive', '__return_false' );
 		$this->assertSame( 'theme-archive.php', $templates->classic_archive( 'theme-archive.php' ) );
-		remove_filter( 'openevents/classic_archive', '__return_false' );
+		remove_filter( 'feriae/classic_archive', '__return_false' );
 	}
 
 	public function test_calendar_shortcode(): void {
-		add_filter( 'openevents/calendar/cache', '__return_false' );
+		add_filter( 'feriae/calendar/cache', '__return_false' );
 		$term  = self::factory()->term->create(
 			array(
-				'taxonomy' => \OpenEvents\Content\PostTypes::CATEGORY,
+				'taxonomy' => \Feriae\Content\PostTypes::CATEGORY,
 				'slug'     => 'music',
 			)
 		);
 		$day   = current_datetime()->modify( '+3 days' )->format( 'Y-m-d' );
-		$music = $this->event( array( '_oe_start' => "{$day} 19:00:00" ), array( 'post_title' => 'Choir night' ) );
-		$other = $this->event( array( '_oe_start' => "{$day} 10:00:00" ), array( 'post_title' => 'Book sale' ) );
-		wp_set_object_terms( $music, array( $term ), \OpenEvents\Content\PostTypes::CATEGORY );
+		$music = $this->event( array( '_feriae_start' => "{$day} 19:00:00" ), array( 'post_title' => 'Choir night' ) );
+		$other = $this->event( array( '_feriae_start' => "{$day} 10:00:00" ), array( 'post_title' => 'Book sale' ) );
+		wp_set_object_terms( $music, array( $term ), \Feriae\Content\PostTypes::CATEGORY );
 		$this->rows( $music );
 		$this->rows( $other );
 
-		$html = do_shortcode( '[openevents_calendar view="list" categories="music,not-a-category" legend="no"]' );
-		remove_filter( 'openevents/calendar/cache', '__return_false' );
+		$html = do_shortcode( '[feriae_calendar view="list" categories="music,not-a-category" legend="no"]' );
+		remove_filter( 'feriae/calendar/cache', '__return_false' );
 
-		$this->assertStringContainsString( 'oe-calendar--list', $html );
+		$this->assertStringContainsString( 'feriae-calendar--list', $html );
 		$this->assertStringContainsString( 'Choir night', $html, 'Category slugs limit the calendar.' );
 		$this->assertStringNotContainsString( 'Book sale', $html );
 	}

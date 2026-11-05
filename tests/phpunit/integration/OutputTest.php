@@ -2,18 +2,18 @@
 /**
  * Rendered output: formatter, calendar views, event details, iCal, colours.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Tests\Integration;
+namespace Feriae\Tests\Integration;
 
-use OpenEvents\Content\PostTypes;
-use OpenEvents\Frontend\CalendarView;
-use OpenEvents\Frontend\CategoryColors;
-use OpenEvents\Frontend\EventDetails;
-use OpenEvents\Frontend\Formatter;
-use OpenEvents\Modules\ICal\Writer;
-use OpenEvents\Tests\TestCase;
+use Feriae\Content\PostTypes;
+use Feriae\Frontend\CalendarView;
+use Feriae\Frontend\CategoryColors;
+use Feriae\Frontend\EventDetails;
+use Feriae\Frontend\Formatter;
+use Feriae\Modules\ICal\Writer;
+use Feriae\Tests\TestCase;
 
 final class OutputTest extends TestCase {
 
@@ -21,18 +21,18 @@ final class OutputTest extends TestCase {
 		parent::set_up();
 		update_option( 'date_format', 'F j, Y' );
 		update_option( 'time_format', 'g:i a' );
-		add_filter( 'openevents/calendar/cache', '__return_false' );
+		add_filter( 'feriae/calendar/cache', '__return_false' );
 	}
 
 	public function tear_down(): void {
-		remove_filter( 'openevents/calendar/cache', '__return_false' );
-		unset( $_GET['oe_month'], $_GET['oe_view'] );
+		remove_filter( 'feriae/calendar/cache', '__return_false' );
+		unset( $_GET['feriae_month'], $_GET['feriae_view'] );
 		parent::tear_down();
 	}
 
 	private function occurrence( array $meta ) {
 		$id = $this->event( $meta );
-		return openevents()->occurrences()->for_event( $id );
+		return feriae()->occurrences()->for_event( $id );
 	}
 
 	/**
@@ -46,38 +46,38 @@ final class OutputTest extends TestCase {
 		return array(
 			'same day'         => array(
 				array(
-					'_oe_start' => '2030-11-03 19:00:00',
-					'_oe_end'   => '2030-11-03 21:30:00',
+					'_feriae_start' => '2030-11-03 19:00:00',
+					'_feriae_end'   => '2030-11-03 21:30:00',
 				),
 				'November 3, 2030, 7:00 pm – 9:30 pm',
 			),
 			'multi-day'        => array(
 				array(
-					'_oe_start' => '2030-11-03 19:00:00',
-					'_oe_end'   => '2030-11-04 01:00:00',
+					'_feriae_start' => '2030-11-03 19:00:00',
+					'_feriae_end'   => '2030-11-04 01:00:00',
 				),
 				'November 3, 2030, 7:00 pm – November 4, 2030, 1:00 am',
 			),
 			'all day'          => array(
 				array(
-					'_oe_start'   => '2030-11-03 00:00:00',
-					'_oe_all_day' => true,
+					'_feriae_start'   => '2030-11-03 00:00:00',
+					'_feriae_all_day' => true,
 				),
 				'November 3, 2030',
 			),
 			'all day, 3 days'  => array(
 				array(
-					'_oe_start'   => '2030-11-03 00:00:00',
-					'_oe_end'     => '2030-11-05 00:00:00',
-					'_oe_all_day' => true,
+					'_feriae_start'   => '2030-11-03 00:00:00',
+					'_feriae_end'     => '2030-11-05 00:00:00',
+					'_feriae_all_day' => true,
 				),
 				'November 3, 2030 – November 5, 2030',
 			),
 			'other timezone'   => array(
 				array(
-					'_oe_start'    => '2030-11-03 19:00:00',
-					'_oe_end'      => '2030-11-03 20:00:00',
-					'_oe_timezone' => 'America/Toronto',
+					'_feriae_start'    => '2030-11-03 19:00:00',
+					'_feriae_end'      => '2030-11-03 20:00:00',
+					'_feriae_timezone' => 'America/Toronto',
 				),
 				'November 3, 2030, 7:00 pm – 8:00 pm EST',
 			),
@@ -87,13 +87,13 @@ final class OutputTest extends TestCase {
 	public function test_month_grid_places_multi_day_events_on_each_day(): void {
 		$this->event(
 			array(
-				'_oe_start'   => '2030-05-12 00:00:00',
-				'_oe_end'     => '2030-05-14 00:00:00',
-				'_oe_all_day' => true,
+				'_feriae_start'   => '2030-05-12 00:00:00',
+				'_feriae_end'     => '2030-05-14 00:00:00',
+				'_feriae_all_day' => true,
 			),
 			array( 'post_title' => 'Festival' )
 		);
-		$_GET['oe_month'] = '2030-05';
+		$_GET['feriae_month'] = '2030-05';
 
 		$html = ( new CalendarView( array( 'views' => array( 'month' ) ) ) )->render();
 
@@ -103,20 +103,20 @@ final class OutputTest extends TestCase {
 	}
 
 	public function test_month_navigation_is_clamped_and_nofollow(): void {
-		$_GET['oe_month'] = '2999-01';
+		$_GET['feriae_month'] = '2999-01';
 		$html             = ( new CalendarView( array( 'views' => array( 'month' ) ) ) )->render();
 
 		$limit = current_datetime()->modify( 'first day of this month' )->modify( '+5 years' );
 		$this->assertStringContainsString( wp_date( 'F Y', $limit->getTimestamp() ), $html, 'Out-of-range months clamp.' );
 		$this->assertStringNotContainsString( 'aria-label="Next month"', $html, 'No link past the range.' );
 		$this->assertStringContainsString( 'aria-label="Previous month"', $html );
-		preg_match_all( '/<a class="oe-calendar__nav-link[^"]*" href="[^"]*" rel="([^"]*)"/', $html, $rels );
+		preg_match_all( '/<a class="feriae-calendar__nav-link[^"]*" href="[^"]*" rel="([^"]*)"/', $html, $rels );
 		$this->assertNotEmpty( $rels[1] );
 		$this->assertSame( array( 'nofollow' ), array_values( array_unique( $rels[1] ) ) );
 	}
 
 	public function test_navigation_urls_are_noindexed(): void {
-		$_GET['oe_month'] = '2030-05';
+		$_GET['feriae_month'] = '2030-05';
 		$robots           = apply_filters( 'wp_robots', array() );
 
 		$this->assertTrue( $robots['noindex'] ?? false );
@@ -128,8 +128,8 @@ final class OutputTest extends TestCase {
 			$day = current_datetime()->modify( "+{$i} days" )->format( 'Y-m-d' );
 			$this->event(
 				array(
-					'_oe_start' => "{$day} 10:00:00",
-					'_oe_end'   => "{$day} 11:00:00",
+					'_feriae_start' => "{$day} 10:00:00",
+					'_feriae_end'   => "{$day} 11:00:00",
 				)
 			);
 		}
@@ -140,9 +140,9 @@ final class OutputTest extends TestCase {
 			)
 		) )->render();
 
-		$this->assertSame( 2, substr_count( $html, '<article class="oe-event-card' ) );
+		$this->assertSame( 2, substr_count( $html, '<article class="feriae-event-card' ) );
 		$this->assertStringContainsString( 'Page 1 of 3', $html );
-		$this->assertStringContainsString( 'oe_page=2', $html );
+		$this->assertStringContainsString( 'feriae_page=2', $html );
 	}
 
 	public function test_event_details_rows_and_extension_filters(): void {
@@ -151,27 +151,27 @@ final class OutputTest extends TestCase {
 				'post_type'  => PostTypes::VENUE,
 				'post_title' => 'Main Branch',
 				'meta_input' => array(
-					'_oe_address' => '100 Example St',
-					'_oe_city'    => 'Vancouver',
+					'_feriae_address' => '100 Example St',
+					'_feriae_city'    => 'Vancouver',
 				),
 			)
 		);
 		$id    = $this->event(
 			array(
-				'_oe_start'    => '2030-05-05 10:00:00',
-				'_oe_end'      => '2030-05-05 11:00:00',
-				'_oe_venue_id' => $venue,
-				'_oe_cost'     => '0',
+				'_feriae_start'    => '2030-05-05 10:00:00',
+				'_feriae_end'      => '2030-05-05 11:00:00',
+				'_feriae_venue_id' => $venue,
+				'_feriae_cost'     => '0',
 			)
 		);
 		$add   = static function ( array $sections ): array {
 			$sections['rsvp'] = '<form class="rsvp-test"></form>';
 			return $sections;
 		};
-		add_filter( 'openevents/event_details/sections', $add );
+		add_filter( 'feriae/event_details/sections', $add );
 
 		$html = EventDetails::render( $id );
-		remove_filter( 'openevents/event_details/sections', $add );
+		remove_filter( 'feriae/event_details/sections', $add );
 
 		$this->assertStringContainsString( 'Main Branch', $html );
 		$this->assertStringContainsString( '100 Example St, Vancouver', $html );
@@ -193,24 +193,24 @@ final class OutputTest extends TestCase {
 		the_post();
 
 		$this->assertSame( '', EventDetails::render( $id ) );
-		$this->assertStringNotContainsString( 'oe-details', apply_filters( 'the_content', 'Hello' ) );
+		$this->assertStringNotContainsString( 'feriae-details', apply_filters( 'the_content', 'Hello' ) );
 	}
 
 	public function test_ical_document_is_valid(): void {
 		$id   = $this->event(
 			array(
-				'_oe_start' => '2030-05-05 10:00:00',
-				'_oe_end'   => '2030-05-05 11:00:00',
+				'_feriae_start' => '2030-05-05 10:00:00',
+				'_feriae_end'   => '2030-05-05 11:00:00',
 			),
 			array( 'post_title' => 'Read, Write; Repeat' )
 		);
 		$all  = $this->event(
 			array(
-				'_oe_start'   => '2030-05-06 00:00:00',
-				'_oe_all_day' => true,
+				'_feriae_start'   => '2030-05-06 00:00:00',
+				'_feriae_all_day' => true,
 			)
 		);
-		$body = Writer::calendar( openevents()->occurrences()->query( array( 'per_page' => -1 ) )['items'] );
+		$body = Writer::calendar( feriae()->occurrences()->query( array( 'per_page' => -1 ) )['items'] );
 
 		$this->assertStringStartsWith( "BEGIN:VCALENDAR\r\n", $body );
 		$this->assertStringEndsWith( "END:VCALENDAR\r\n", $body );
@@ -275,22 +275,22 @@ final class OutputTest extends TestCase {
 		$music = self::factory()->term->create( array( 'taxonomy' => PostTypes::CATEGORY, 'name' => 'Music' ) );
 		$plain = self::factory()->term->create( array( 'taxonomy' => PostTypes::CATEGORY, 'name' => 'Talks' ) );
 		update_term_meta( $music, CategoryColors::META_KEY, '#7c3aed' );
-		$id = $this->event( array( '_oe_start' => '2030-05-05 10:00:00' ) );
+		$id = $this->event( array( '_feriae_start' => '2030-05-05 10:00:00' ) );
 		wp_set_object_terms( $id, array( $music, $plain ), PostTypes::CATEGORY );
 
 		$html = EventDetails::render( $id );
 
 		$this->assertStringContainsString( '<dt>Categories</dt>', $html );
-		$this->assertMatchesRegularExpression( '/<a class="oe-badge has-color" href="[^"]+" style="--oe-event-bg:#7c3aed;--oe-event-fg:#ffffff;?">Music<\/a>/', $html );
-		$this->assertMatchesRegularExpression( '/<a class="oe-badge" href="[^"]+">Talks<\/a>/', $html );
+		$this->assertMatchesRegularExpression( '/<a class="feriae-badge has-color" href="[^"]+" style="--feriae-event-bg:#7c3aed;--feriae-event-fg:#ffffff;?">Music<\/a>/', $html );
+		$this->assertMatchesRegularExpression( '/<a class="feriae-badge" href="[^"]+">Talks<\/a>/', $html );
 	}
 
 	public function test_category_colour_style_on_events(): void {
 		$term = self::factory()->term->create( array( 'taxonomy' => PostTypes::CATEGORY ) );
 		update_term_meta( $term, CategoryColors::META_KEY, '#7c3aed' );
-		$id = $this->event( array( '_oe_start' => '2030-05-05 10:00:00' ) );
+		$id = $this->event( array( '_feriae_start' => '2030-05-05 10:00:00' ) );
 		wp_set_object_terms( $id, array( $term ), PostTypes::CATEGORY );
 
-		$this->assertSame( '--oe-event-bg:#7c3aed;--oe-event-fg:#ffffff;', CategoryColors::style_for( $id ) );
+		$this->assertSame( '--feriae-event-bg:#7c3aed;--feriae-event-fg:#ffffff;', CategoryColors::style_for( $id ) );
 	}
 }

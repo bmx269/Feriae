@@ -2,22 +2,22 @@
 /**
  * Typed access to plugin options.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents;
+namespace Feriae;
 
 /**
- * Reads and sanitises the openevents_settings option.
+ * Reads and sanitises the feriae_settings option.
  */
 final class Settings {
 
-	public const OPTION         = 'openevents_settings';
-	public const MODULES_OPTION = 'openevents_modules';
-	public const SETUP_OPTION   = 'openevents_setup_complete';
+	public const OPTION         = 'feriae_settings';
+	public const MODULES_OPTION = 'feriae_modules';
+	public const SETUP_OPTION   = 'feriae_setup_complete';
 
 	/** The dedicated post type the plugin can register. */
-	public const EVENT_TYPE = 'oe_event';
+	public const EVENT_TYPE = 'feriae_event';
 
 	/**
 	 * Defaults for every setting. Keys not listed here are dropped on save.
@@ -93,7 +93,7 @@ final class Settings {
 		 *
 		 * @param string[] $types Post type names.
 		 */
-		$types = apply_filters( 'openevents/event_post_types', $types );
+		$types = apply_filters( 'feriae/event_post_types', $types );
 
 		return array_values( array_unique( array_filter( $types, 'is_string' ) ) );
 	}
@@ -114,7 +114,7 @@ final class Settings {
 		);
 		return array_filter(
 			$types,
-			static fn( \WP_Post_Type $type ): bool => 'attachment' !== $type->name && ! str_starts_with( $type->name, 'oe_' )
+			static fn( \WP_Post_Type $type ): bool => 'attachment' !== $type->name && ! str_starts_with( $type->name, 'feriae_' )
 		);
 	}
 
@@ -166,7 +166,7 @@ final class Settings {
 			'date_format'              => sanitize_text_field( (string) ( $input['date_format'] ?? '' ) ),
 			'time_format'              => sanitize_text_field( (string) ( $input['time_format'] ?? '' ) ),
 			'remove_data_on_uninstall' => ! empty( $input['remove_data_on_uninstall'] ),
-			'attributes'               => \OpenEvents\Content\Attributes::sanitize( $input['attributes'] ?? array() ),
+			'attributes'               => \Feriae\Content\Attributes::sanitize( $input['attributes'] ?? array() ),
 		);
 	}
 

@@ -22,7 +22,7 @@ import {
 	ModuleFields,
 } from './fields';
 
-const config = window.openEventsAdmin || {};
+const config = window.feriaeAdmin || {};
 
 function Section( { title, children } ) {
 	return (
@@ -58,35 +58,31 @@ export default function SettingsScreen() {
 
 	return (
 		<Page
-			title={ __( 'OpenEvents Settings', 'openevents' ) }
+			title={ __( 'Feriae Settings', 'feriae' ) }
 			actions={
 				<Stack direction="row" gap="sm">
 					<ButtonLink
 						variant="outline"
-						href={ `${ config.adminUrl }admin.php?page=openevents-setup` }
+						href={ `${ config.adminUrl }admin.php?page=feriae-setup` }
 					>
-						{ __( 'Run setup wizard', 'openevents' ) }
+						{ __( 'Run setup wizard', 'feriae' ) }
 					</ButtonLink>
 					<Button
 						onClick={ onSave }
 						loading={ saving }
-						loadingAnnouncement={ __( 'Saving', 'openevents' ) }
+						loadingAnnouncement={ __( 'Saving', 'feriae' ) }
 					>
-						{ __( 'Save changes', 'openevents' ) }
+						{ __( 'Save changes', 'feriae' ) }
 					</Button>
 				</Stack>
 			}
 			hasPadding
 		>
-			<Stack
-				direction="column"
-				gap="lg"
-				className="openevents-admin__body"
-			>
+			<Stack direction="column" gap="lg" className="feriae-admin__body">
 				{ saved && (
 					<Notice.Root intent="success">
 						<Notice.Description>
-							{ __( 'Settings saved.', 'openevents' ) }
+							{ __( 'Settings saved.', 'feriae' ) }
 						</Notice.Description>
 					</Notice.Root>
 				) }
@@ -100,30 +96,27 @@ export default function SettingsScreen() {
 				<Tabs.Root defaultValue="content">
 					<Tabs.List>
 						<Tabs.Tab value="content">
-							{ __( 'Event content', 'openevents' ) }
+							{ __( 'Event content', 'feriae' ) }
 						</Tabs.Tab>
 						<Tabs.Tab value="display">
-							{ __( 'Display', 'openevents' ) }
+							{ __( 'Display', 'feriae' ) }
 						</Tabs.Tab>
 						{ modules.includes( 'tickets' ) && (
 							<Tabs.Tab value="tickets">
-								{ __( 'Tickets', 'openevents' ) }
+								{ __( 'Tickets', 'feriae' ) }
 							</Tabs.Tab>
 						) }
 						<Tabs.Tab value="modules">
-							{ __( 'Modules', 'openevents' ) }
+							{ __( 'Modules', 'feriae' ) }
 						</Tabs.Tab>
 						<Tabs.Tab value="advanced">
-							{ __( 'Advanced', 'openevents' ) }
+							{ __( 'Advanced', 'feriae' ) }
 						</Tabs.Tab>
 					</Tabs.List>
 					<Tabs.Panel value="content">
 						<Stack direction="column" gap="lg">
 							<Section
-								title={ __(
-									'Where events live',
-									'openevents'
-								) }
+								title={ __( 'Where events live', 'feriae' ) }
 							>
 								<EventContentFields
 									settings={ settings }
@@ -131,7 +124,7 @@ export default function SettingsScreen() {
 								/>
 							</Section>
 							<Section
-								title={ __( 'Event attributes', 'openevents' ) }
+								title={ __( 'Event attributes', 'feriae' ) }
 							>
 								<AttributeFields
 									settings={ settings }
@@ -142,13 +135,13 @@ export default function SettingsScreen() {
 					</Tabs.Panel>
 					<Tabs.Panel value="display">
 						<Stack direction="column" gap="lg">
-							<Section title={ __( 'Calendar', 'openevents' ) }>
+							<Section title={ __( 'Calendar', 'feriae' ) }>
 								<DisplayFields
 									settings={ settings }
 									update={ update }
 								/>
 							</Section>
-							<Section title={ __( 'Formats', 'openevents' ) }>
+							<Section title={ __( 'Formats', 'feriae' ) }>
 								<FormatFields
 									settings={ settings }
 									update={ update }
@@ -157,7 +150,7 @@ export default function SettingsScreen() {
 						</Stack>
 					</Tabs.Panel>
 					<Tabs.Panel value="tickets">
-						<Section title={ __( 'Tickets', 'openevents' ) }>
+						<Section title={ __( 'Tickets', 'feriae' ) }>
 							<TicketsSettings
 								settings={ settings }
 								update={ update }
@@ -165,12 +158,12 @@ export default function SettingsScreen() {
 						</Section>
 					</Tabs.Panel>
 					<Tabs.Panel value="modules">
-						<Section title={ __( 'Modules', 'openevents' ) }>
+						<Section title={ __( 'Modules', 'feriae' ) }>
 							<Stack direction="column" gap="md">
 								<Text variant="body-sm">
 									{ __(
 										'Turn features on or off. Modules that others depend on are enabled automatically.',
-										'openevents'
+										'feriae'
 									) }
 								</Text>
 								<ModuleFields
@@ -181,15 +174,15 @@ export default function SettingsScreen() {
 						</Section>
 					</Tabs.Panel>
 					<Tabs.Panel value="advanced">
-						<Section title={ __( 'Uninstall', 'openevents' ) }>
+						<Section title={ __( 'Uninstall', 'feriae' ) }>
 							<SwitchControl
 								label={ __(
 									'Delete all event data when the plugin is deleted',
-									'openevents'
+									'feriae'
 								) }
 								description={ __(
 									'Removes events, venues, organizers, categories, and settings. On existing post types only the event fields are removed; the posts are kept.',
-									'openevents'
+									'feriae'
 								) }
 								checked={ !! settings.remove_data_on_uninstall }
 								onCheckedChange={ ( checked ) =>

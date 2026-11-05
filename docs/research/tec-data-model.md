@@ -10,19 +10,19 @@ From a shallow clone of [the-events-calendar](https://github.com/the-events-cale
 ## Event meta
 | Key | Format | Map to |
 | --- | --- | --- |
-| `_EventStartDate` / `_EventEndDate` | `Y-m-d H:i:s`, local | `_oe_start` / `_oe_end` |
+| `_EventStartDate` / `_EventEndDate` | `Y-m-d H:i:s`, local | `_feriae_start` / `_feriae_end` |
 | `_EventStartDateUTC` / `_EventEndDateUTC` | `Y-m-d H:i:s`, UTC, can be missing on old data | derived |
-| `_EventTimezone` | IANA name **or** `UTC+5`-style offset | `_oe_timezone` (convert offsets) |
-| `_EventAllDay` | `yes` / `no` / absent | `_oe_all_day` |
+| `_EventTimezone` | IANA name **or** `UTC+5`-style offset | `_feriae_timezone` (convert offsets) |
+| `_EventAllDay` | `yes` / `no` / absent | `_feriae_all_day` |
 | `_EventDuration` | seconds; stale or missing for all-day events | recompute |
-| `_EventVenueID` | one row | `_oe_venue_id` |
-| `_EventOrganizerID` | **one row per organizer**, ordered by `meta_id` | `_oe_organizer_ids` |
-| `_EventCost` | can be **several rows** | `_oe_cost` |
-| `_EventCurrencySymbol`, `_EventCurrencyPosition` (`prefix`/`postfix`) | | `_oe_currency_symbol` |
-| `_EventURL` | | `_oe_url` |
-| `_EventHideFromUpcoming` | `yes` / absent (only existence matters) | `_oe_hide_from_listings` |
-| `_tribe_featured` | `1` / absent | `_oe_featured` |
-| `_tribe_events_status` (`scheduled`/`canceled`/`postponed`), `_tribe_events_status_reason` | | future `_oe_status` |
+| `_EventVenueID` | one row | `_feriae_venue_id` |
+| `_EventOrganizerID` | **one row per organizer**, ordered by `meta_id` | `_feriae_organizer_ids` |
+| `_EventCost` | can be **several rows** | `_feriae_cost` |
+| `_EventCurrencySymbol`, `_EventCurrencyPosition` (`prefix`/`postfix`) | | `_feriae_currency_symbol` |
+| `_EventURL` | | `_feriae_url` |
+| `_EventHideFromUpcoming` | `yes` / absent (only existence matters) | `_feriae_hide_from_listings` |
+| `_tribe_featured` | `1` / absent | `_feriae_featured` |
+| `_tribe_events_status` (`scheduled`/`canceled`/`postponed`), `_tribe_events_status_reason` | | future `_feriae_status` |
 | `_EventShowMap`, `_EventShowMapLink` | mixed truthy values (`1`, `true`, `'false'`) | display options |
 | sticky in month view | `menu_order = -1` (not meta) | |
 
@@ -49,6 +49,6 @@ From a shallow clone of [the-events-calendar](https://github.com/the-events-cale
 1. Read organizer and cost meta with `get_post_meta( $id, $key, false )`.
 2. Recompute duration and UTC from local time plus timezone. Convert `UTC±N` offsets.
 3. Treat `'false'` and `'no'` as false.
-4. Block-editor events contain `wp:tribe/*` blocks in `post_content`. Strip them or map them to `openevents/event-details`.
+4. Block-editor events contain `wp:tribe/*` blocks in `post_content`. Strip them or map them to `feriae/event-details`.
 5. Events with `_tribe_aggregator_*` meta were imported from a feed. Keep the origin in meta for re-sync.
-6. Store the source id in `_oe_source_tec_id` so reruns update instead of duplicating.
+6. Store the source id in `_feriae_source_tec_id` so reruns update instead of duplicating.

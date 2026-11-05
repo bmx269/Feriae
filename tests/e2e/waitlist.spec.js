@@ -7,7 +7,7 @@ test.describe( 'Waitlist', () => {
 		page,
 	} ) => {
 		await page.goto( '/events/author-talk-full/' );
-		const rsvp = page.locator( '.oe-rsvp' );
+		const rsvp = page.locator( '.feriae-rsvp' );
 		await expect( rsvp.getByText( 'This event is full.' ) ).toBeVisible();
 
 		await rsvp.getByLabel( 'Name' ).fill( 'Waiting Person' );
@@ -25,12 +25,12 @@ test.describe( 'Waitlist', () => {
 		await humanPause( page );
 		await rsvp.getByRole( 'button', { name: 'Join the waitlist' } ).click();
 
-		const message = rsvp.locator( '.oe-rsvp__live' );
+		const message = rsvp.locator( '.feriae-rsvp__live' );
 		await expect( message ).toHaveText( /on the waitlist \(#1\)/ );
 		await expect( message ).toBeFocused();
 
 		await page.goto(
-			'/wp-admin/edit.php?post_type=oe_event&page=openevents-waitlist'
+			'/wp-admin/edit.php?post_type=feriae_event&page=feriae-waitlist'
 		);
 		await expect(
 			page
@@ -40,7 +40,7 @@ test.describe( 'Waitlist', () => {
 
 		// An organiser cancels someone; the waitlisted person is confirmed automatically.
 		await page.goto(
-			'/wp-admin/edit.php?post_type=oe_event&page=openevents-attendees'
+			'/wp-admin/edit.php?post_type=feriae_event&page=feriae-attendees'
 		);
 		const table = page.locator( '.dataviews-view-table' );
 		const mary = table.locator( 'tr' ).filter( {
@@ -67,7 +67,7 @@ test.describe( 'Waitlist', () => {
 		} );
 		const page = await context.newPage();
 		await page.goto( '/events/spring-concert/' );
-		const form = page.locator( 'form.oe-waitlist' );
+		const form = page.locator( 'form.feriae-waitlist' );
 		await expect(
 			form.getByRole( 'heading', { name: 'Join the waitlist' } )
 		).toBeVisible();
@@ -77,16 +77,16 @@ test.describe( 'Waitlist', () => {
 		await humanPause( page );
 		await form.getByRole( 'button', { name: 'Join the waitlist' } ).click();
 
-		await expect( page ).toHaveURL( /oe_waitlist_result=waitlisted/ );
+		await expect( page ).toHaveURL( /feriae_waitlist_result=waitlisted/ );
 		await expect(
-			page.locator( '.oe-tickets' ).getByRole( 'status' ).first()
+			page.locator( '.feriae-tickets' ).getByRole( 'status' ).first()
 		).toContainText( 'on the waitlist' );
 		await context.close();
 	} );
 
 	test( 'the waitlist screen lists people in order', async ( { page } ) => {
 		await page.goto(
-			'/wp-admin/edit.php?post_type=oe_event&page=openevents-waitlist'
+			'/wp-admin/edit.php?post_type=feriae_event&page=feriae-waitlist'
 		);
 		await expect(
 			page.getByRole( 'heading', { name: 'Waitlist' } )

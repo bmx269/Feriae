@@ -1,5 +1,5 @@
 /**
- * Editor side of the "openevents/event" block bindings source:
+ * Editor side of the "feriae/event" block bindings source:
  * previews bound values from the event being edited and lists the fields in
  * the block bindings UI. Values are read-only; edit them in the Event panel.
  */
@@ -9,16 +9,16 @@ import { dateI18n, getSettings } from '@wordpress/date';
 import { __ } from '@wordpress/i18n';
 
 const FIELDS = {
-	date: __( 'Event date and time', 'openevents' ),
-	start_date: __( 'Start date', 'openevents' ),
-	start_time: __( 'Start time', 'openevents' ),
-	end_date: __( 'End date', 'openevents' ),
-	end_time: __( 'End time', 'openevents' ),
-	venue: __( 'Venue name', 'openevents' ),
-	venue_address: __( 'Venue address', 'openevents' ),
-	venue_url: __( 'Venue link', 'openevents' ),
-	cost: __( 'Cost', 'openevents' ),
-	website: __( 'Event website', 'openevents' ),
+	date: __( 'Event date and time', 'feriae' ),
+	start_date: __( 'Start date', 'feriae' ),
+	start_time: __( 'Start time', 'feriae' ),
+	end_date: __( 'End date', 'feriae' ),
+	end_time: __( 'End time', 'feriae' ),
+	venue: __( 'Venue name', 'feriae' ),
+	venue_address: __( 'Venue address', 'feriae' ),
+	venue_url: __( 'Venue link', 'feriae' ),
+	cost: __( 'Cost', 'feriae' ),
+	website: __( 'Event website', 'feriae' ),
 };
 
 // Stored values are wall-clock times; anchor them to UTC and format in UTC so
@@ -28,9 +28,9 @@ const toDate = ( value ) =>
 
 function valueFor( key, meta, venue ) {
 	const { formats } = getSettings();
-	const start = toDate( meta._oe_start );
-	const end = toDate( meta._oe_end ) || start;
-	const allDay = !! meta._oe_all_day;
+	const start = toDate( meta._feriae_start );
+	const end = toDate( meta._feriae_end ) || start;
+	const allDay = !! meta._feriae_all_day;
 	const date = ( d ) => ( d ? dateI18n( formats.date, d, true ) : '' );
 	const time = ( d ) =>
 		d && ! allDay ? dateI18n( formats.time, d, true ) : '';
@@ -65,10 +65,10 @@ function valueFor( key, meta, venue ) {
 		case 'venue_address':
 			return venue
 				? [
-						venue.meta?._oe_address,
-						venue.meta?._oe_city,
-						venue.meta?._oe_region,
-						venue.meta?._oe_country,
+						venue.meta?._feriae_address,
+						venue.meta?._feriae_city,
+						venue.meta?._feriae_region,
+						venue.meta?._feriae_country,
 				  ]
 						.filter( Boolean )
 						.join( ', ' )
@@ -76,16 +76,16 @@ function valueFor( key, meta, venue ) {
 		case 'venue_url':
 			return venue?.link ?? '';
 		case 'cost':
-			return meta._oe_cost ?? '';
+			return meta._feriae_cost ?? '';
 		case 'website':
-			return meta._oe_url ?? '';
+			return meta._feriae_url ?? '';
 	}
 	return '';
 }
 
 registerBlockBindingsSource( {
-	name: 'openevents/event',
-	label: __( 'Event', 'openevents' ),
+	name: 'feriae/event',
+	label: __( 'Event', 'feriae' ),
 	usesContext: [ 'postId', 'postType' ],
 	getValues( { select, context, bindings } ) {
 		const values = {};
@@ -98,11 +98,11 @@ registerBlockBindingsSource( {
 				  )
 				: null;
 		const meta = record?.meta || {};
-		const venue = meta._oe_venue_id
+		const venue = meta._feriae_venue_id
 			? select( coreStore ).getEntityRecord(
 					'postType',
-					'oe_venue',
-					meta._oe_venue_id
+					'feriae_venue',
+					meta._feriae_venue_id
 			  )
 			: null;
 

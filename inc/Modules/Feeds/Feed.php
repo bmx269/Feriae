@@ -2,17 +2,17 @@
 /**
  * A calendar feed to import.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Feeds;
+namespace Feriae\Modules\Feeds;
 
-use OpenEvents\Content\PostTypes;
+use Feriae\Content\PostTypes;
 use WP_Error;
 use WP_Post;
 
 /**
- * Stored as a private `oe_feed` post (title = name) with its settings in meta.
+ * Stored as a private `feriae_feed` post (title = name) with its settings in meta.
  *
  * The iCal address is encrypted at rest and never sent back to the browser in
  * full: a calendar's secret address (Google's "Secret address in iCal format")
@@ -20,7 +20,7 @@ use WP_Post;
  */
 final class Feed {
 
-	public const POST_TYPE = 'oe_feed';
+	public const POST_TYPE = 'feriae_feed';
 
 	/** Sync frequency => seconds between syncs (0 = only when asked). */
 	public const FREQUENCIES = array(
@@ -33,12 +33,12 @@ final class Feed {
 	/** Status of the events a feed creates. */
 	public const STATUSES = array( 'publish', 'draft' );
 
-	private const URL_KEY    = '_oe_feed_url';
-	private const OPTIONS    = '_oe_feed_options';
-	private const LAST       = '_oe_feed_last';
-	private const NEXT       = '_oe_feed_next';
-	private const CACHE      = '_oe_feed_cache';
-	private const LOCK       = 'openevents_feed_lock_';
+	private const URL_KEY    = '_feriae_feed_url';
+	private const OPTIONS    = '_feriae_feed_options';
+	private const LAST       = '_feriae_feed_last';
+	private const NEXT       = '_feriae_feed_next';
+	private const CACHE      = '_feriae_feed_cache';
+	private const LOCK       = 'feriae_feed_lock_';
 	private const LOCK_TTL   = 15 * MINUTE_IN_SECONDS;
 	private const NAME_LIMIT = 200;
 
@@ -48,7 +48,7 @@ final class Feed {
 		register_post_type(
 			self::POST_TYPE,
 			array(
-				'label'        => __( 'Calendar feeds', 'openevents' ),
+				'label'        => __( 'Calendar feeds', 'feriae' ),
 				'public'       => false,
 				'show_ui'      => false,
 				'show_in_rest' => false,
@@ -104,7 +104,7 @@ final class Feed {
 		update_post_meta( $id, self::URL_KEY, self::seal( $url ) );
 		update_post_meta( $id, self::OPTIONS, self::options( $data ) );
 		update_post_meta( $id, self::NEXT, time() ); // Due now, should the first sync not run straight away.
-		return self::get( $id ) ?? new WP_Error( 'openevents_feed', __( 'The calendar couldn’t be saved.', 'openevents' ) );
+		return self::get( $id ) ?? new WP_Error( 'feriae_feed', __( 'The calendar couldn’t be saved.', 'feriae' ) );
 	}
 
 	/**
@@ -216,7 +216,7 @@ final class Feed {
 	 */
 	public function sync( int $budget = 0 ): array {
 		if ( ! $this->lock() ) {
-			return Importer::failure( __( 'This calendar is already being synced. Try again in a few minutes.', 'openevents' ) );
+			return Importer::failure( __( 'This calendar is already being synced. Try again in a few minutes.', 'feriae' ) );
 		}
 		try {
 			$result = $this->fetch_and_import( $budget );
@@ -238,7 +238,7 @@ final class Feed {
 		 * @param Feed                 $feed   Feed.
 		 * @param array<string, mixed> $result Report.
 		 */
-		do_action( 'openevents/feeds/synced', $this, $result );
+		do_action( 'feriae/feeds/synced', $this, $result );
 		return $result;
 	}
 
@@ -248,7 +248,7 @@ final class Feed {
 	private function fetch_and_import( int $budget ): array {
 		$url = $this->url();
 		if ( '' === $url ) {
-			return Importer::failure( __( 'The calendar’s address can’t be read, because the site’s security keys changed. Edit the calendar and enter its address again.', 'openevents' ) );
+			return Importer::failure( __( 'The calendar’s address can’t be read, because the site’s security keys changed. Edit the calendar and enter its address again.', 'feriae' ) );
 		}
 		$cache   = get_post_meta( $this->id(), self::CACHE, true );
 		$cache   = is_array( $cache ) ? $cache : array();
@@ -290,7 +290,7 @@ final class Feed {
 		$url = trim( $url );
 		$url = (string) preg_replace( '#^webcals?://#i', 'https://', $url );
 
-		$invalid = new WP_Error( 'openevents_feed_url', __( 'Enter the calendar’s iCal address: an http or https link, often ending in .ics.', 'openevents' ), array( 'status' => 400 ) );
+		$invalid = new WP_Error( 'feriae_feed_url', __( 'Enter the calendar’s iCal address: an http or https link, often ending in .ics.', 'feriae' ), array( 'status' => 400 ) );
 		$parts   = wp_parse_url( $url );
 		if ( strlen( $url ) > 2000 || ! is_array( $parts ) || ! in_array( strtolower( $parts['scheme'] ?? '' ), array( 'http', 'https' ), true ) || empty( $parts['host'] ) || isset( $parts['user'] ) || isset( $parts['pass'] ) ) {
 			return $invalid;
@@ -299,7 +299,7 @@ final class Feed {
 		$host = strtolower( trim( $parts['host'], '[]' ) );
 		$ip   = filter_var( $host, FILTER_VALIDATE_IP );
 		if ( 'localhost' === $host || str_ends_with( $host, '.localhost' ) || ( $ip && ! filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) ) {
-			return new WP_Error( 'openevents_feed_url', __( 'That address is on a private network. This site fetches the calendar itself, so only public addresses can be used.', 'openevents' ), array( 'status' => 400 ) );
+			return new WP_Error( 'feriae_feed_url', __( 'That address is on a private network. This site fetches the calendar itself, so only public addresses can be used.', 'feriae' ), array( 'status' => 400 ) );
 		}
 
 		$clean = esc_url_raw( $url, array( 'http', 'https' ) );
@@ -327,7 +327,7 @@ final class Feed {
 	 * @return array{category: int, post_status: string, frequency: string, post_type: string}
 	 */
 	public static function options( array $data ): array {
-		$types     = openevents_event_post_types();
+		$types     = feriae_event_post_types();
 		$post_type = (string) ( $data['post_type'] ?? '' );
 		$category  = absint( $data['category'] ?? 0 );
 		$term      = $category ? get_term( $category, PostTypes::CATEGORY ) : null;
@@ -340,7 +340,7 @@ final class Feed {
 	}
 
 	public static function default_post_type(): string {
-		$types = openevents_event_post_types();
+		$types = feriae_event_post_types();
 		return in_array( PostTypes::EVENT, $types, true ) ? PostTypes::EVENT : (string) ( $types[0] ?? PostTypes::EVENT );
 	}
 
@@ -393,7 +393,7 @@ final class Feed {
 	 * Key for the address at rest, derived from the site's auth salt.
 	 */
 	private static function key(): string {
-		return hash_hmac( 'sha256', 'openevents-feed-url', wp_salt( 'auth' ), true );
+		return hash_hmac( 'sha256', 'feriae-feed-url', wp_salt( 'auth' ), true );
 	}
 
 	private static function seal( string $plain ): string {
