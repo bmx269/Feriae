@@ -151,10 +151,7 @@ function FeedForm( { initial, config, editing, submit, onSubmit } ) {
 				/>
 				<InputControl
 					label={ __( 'Name', 'feriae' ) }
-					description={ __(
-						'Shown on this screen only.',
-						'feriae'
-					) }
+					description={ __( 'Shown on this screen only.', 'feriae' ) }
 					value={ values.name }
 					onValueChange={ ( name ) =>
 						setValues( { ...values, name } )
@@ -350,8 +347,7 @@ export default function FeedsScreen( { root } ) {
 				id: 'address',
 				label: __( 'Address', 'feriae' ),
 				render: ( { item } ) =>
-					item.address ||
-					__( 'Needs its address again', 'feriae' ),
+					item.address || __( 'Needs its address again', 'feriae' ),
 				enableSorting: false,
 			},
 			{
@@ -491,10 +487,7 @@ export default function FeedsScreen( { root } ) {
 									variant="outline"
 									onClick={ () => remove( 'keep' ) }
 								>
-									{ __(
-										'Remove, keep events',
-										'feriae'
-									) }
+									{ __( 'Remove, keep events', 'feriae' ) }
 								</Button>
 								<Button
 									tone="neutral"

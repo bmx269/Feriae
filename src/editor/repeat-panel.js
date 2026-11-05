@@ -482,7 +482,10 @@ export default function RepeatPanel( { meta, setMeta, postId, config } ) {
 			next.BYDAY = weekday;
 		}
 		if ( value === 'MONTHLY' ) {
-			Object.assign( next, monthlyOptions( meta._feriae_start )[ 0 ].parts );
+			Object.assign(
+				next,
+				monthlyOptions( meta._feriae_start )[ 0 ].parts
+			);
 		}
 		update( { rrule: build( next ) } );
 	};

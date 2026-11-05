@@ -97,10 +97,7 @@ export function OrganizerPanel( { meta, setMeta } ) {
 				type="url"
 				label={ __( 'Website', 'feriae' ) }
 			/>
-			<Slot
-				name="FeriaeOrganizerPanel"
-				fillProps={ { meta, setMeta } }
-			/>
+			<Slot name="FeriaeOrganizerPanel" fillProps={ { meta, setMeta } } />
 		</Flex>
 	);
 }

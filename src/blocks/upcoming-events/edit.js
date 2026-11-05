@@ -41,10 +41,7 @@ export default function Edit( { attributes, setAttributes } ) {
 						'showImage',
 						__( 'Show featured image', 'feriae' )
 					) }
-					{ toggle(
-						'showExcerpt',
-						__( 'Show excerpt', 'feriae' )
-					) }
+					{ toggle( 'showExcerpt', __( 'Show excerpt', 'feriae' ) ) }
 					{ toggle( 'showVenue', __( 'Show venue', 'feriae' ) ) }
 					{ toggle(
 						'showViewAll',

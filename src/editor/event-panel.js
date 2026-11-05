@@ -233,10 +233,7 @@ function OrganizersField( { value, onChange } ) {
 			onChange={ handleChange }
 			__experimentalExpandOnFocus
 			__experimentalShowHowTo={ false }
-			help={ __(
-				'Type a new name to create an organizer.',
-				'feriae'
-			) }
+			help={ __( 'Type a new name to create an organizer.', 'feriae' ) }
 		/>
 	);
 }
@@ -305,7 +302,9 @@ export default function EventPanel( {
 					const s = nextHour();
 					setMeta( {
 						_feriae_start: format( s ),
-						_feriae_end: format( new Date( s.getTime() + 3600000 ) ),
+						_feriae_end: format(
+							new Date( s.getTime() + 3600000 )
+						),
 					} );
 				} }
 			/>
@@ -319,7 +318,9 @@ export default function EventPanel( {
 					__nextHasNoMarginBottom
 					label={ __( 'This is an event', 'feriae' ) }
 					checked
-					onChange={ () => setMeta( { _feriae_start: '', _feriae_end: '' } ) }
+					onChange={ () =>
+						setMeta( { _feriae_start: '', _feriae_end: '' } )
+					}
 				/>
 			) }
 			<ToggleControl
@@ -392,7 +393,9 @@ export default function EventPanel( {
 			) }
 			<OrganizersField
 				value={ meta._feriae_organizer_ids }
-				onChange={ ( ids ) => setMeta( { _feriae_organizer_ids: ids } ) }
+				onChange={ ( ids ) =>
+					setMeta( { _feriae_organizer_ids: ids } )
+				}
 			/>
 			<Flex align="flex-start">
 				<TextControl

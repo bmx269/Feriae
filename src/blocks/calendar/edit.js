@@ -91,17 +91,11 @@ export default function Edit( { attributes, setAttributes } ) {
 							},
 							{
 								value: 'page',
-								label: __(
-									'Go to the event page',
-									'feriae'
-								),
+								label: __( 'Go to the event page', 'feriae' ),
 							},
 							{
 								value: 'popup',
-								label: __(
-									'Show a summary popup',
-									'feriae'
-								),
+								label: __( 'Show a summary popup', 'feriae' ),
 							},
 						] }
 						onChange={ ( value ) =>
@@ -118,10 +112,7 @@ export default function Edit( { attributes, setAttributes } ) {
 					/>
 					<ToggleControl
 						__nextHasNoMarginBottom
-						label={ __(
-							'Show category colour legend',
-							'feriae'
-						) }
+						label={ __( 'Show category colour legend', 'feriae' ) }
 						checked={ showLegend }
 						onChange={ ( value ) =>
 							setAttributes( { showLegend: value } )
@@ -130,10 +121,7 @@ export default function Edit( { attributes, setAttributes } ) {
 					<RangeControl
 						__next40pxDefaultSize
 						__nextHasNoMarginBottom
-						label={ __(
-							'Events per page (list view)',
-							'feriae'
-						) }
+						label={ __( 'Events per page (list view)', 'feriae' ) }
 						help={ __( '0 uses the site setting.', 'feriae' ) }
 						min={ 0 }
 						max={ 50 }

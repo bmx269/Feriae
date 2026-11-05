@@ -198,17 +198,18 @@ export default function AttendeeFields( {
 	};
 
 	return (
-		<Flex direction="column" gap={ 3 } className="feriae-editor-panel__fields">
+		<Flex
+			direction="column"
+			gap={ 3 }
+			className="feriae-editor-panel__fields"
+		>
 			<SelectControl
 				__next40pxDefaultSize
 				__nextHasNoMarginBottom
 				label={
 					forWhom === 'guest'
 						? __( 'Each guest’s name and email', 'feriae' )
-						: __(
-								'Each ticket holder’s name and email',
-								'feriae'
-						  )
+						: __( 'Each ticket holder’s name and email', 'feriae' )
 				}
 				value={ details }
 				options={ [

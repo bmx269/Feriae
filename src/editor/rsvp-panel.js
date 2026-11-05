@@ -32,7 +32,10 @@ const DEFAULTS = {
  * @return {boolean} Repeats.
  */
 export const repeats = ( meta ) =>
-	!! ( meta._feriae_recurrence?.rrule || meta._feriae_recurrence?.rdates?.length );
+	!! (
+		meta._feriae_recurrence?.rrule ||
+		meta._feriae_recurrence?.rdates?.length
+	);
 
 /**
  * Live "12 going · 8 spots left" summary for published events. A repeating
@@ -86,12 +89,7 @@ function Summary( { postId, config, repeats: perDate } ) {
 				{ summary.going !== null &&
 					sprintf(
 						/* translators: %d: people going */
-						_n(
-							'%d going',
-							'%d going',
-							summary.going,
-							'feriae'
-						),
+						_n( '%d going', '%d going', summary.going, 'feriae' ),
 						summary.going
 					) }
 				{ summary.remaining !== null &&
@@ -171,10 +169,7 @@ export default function RsvpPanel( { meta, setMeta, postId, config } ) {
 					<DateField
 						label={ __( 'RSVP deadline', 'feriae' ) }
 						value={ rsvp.deadline }
-						emptyLabel={ __(
-							'When the event starts',
-							'feriae'
-						) }
+						emptyLabel={ __( 'When the event starts', 'feriae' ) }
 						onChange={ ( deadline ) => update( { deadline } ) }
 						onClear={ () => update( { deadline: '' } ) }
 						is12Hour={ config.timeFormat12h }

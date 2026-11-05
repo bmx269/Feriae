@@ -55,7 +55,10 @@ export default function TicketsPanel( { meta, setMeta, postId, config } ) {
 				</p>
 			) }
 			{ types.map( ( type, index ) => (
-				<fieldset key={ type.key } className="feriae-editor-panel__ticket">
+				<fieldset
+					key={ type.key }
+					className="feriae-editor-panel__ticket"
+				>
 					<legend>
 						{ type.name ||
 							sprintf(
@@ -148,10 +151,7 @@ export default function TicketsPanel( { meta, setMeta, postId, config } ) {
 						/>
 						<ToggleControl
 							__nextHasNoMarginBottom
-							label={ __(
-								'Waitlist when sold out',
-								'feriae'
-							) }
+							label={ __( 'Waitlist when sold out', 'feriae' ) }
 							help={ __(
 								'Freed tickets are held for the next person, who gets a link to buy them.',
 								'feriae'

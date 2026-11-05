@@ -79,10 +79,7 @@ export function EventContentFields( { settings, update } ) {
 			{ config.postTypes?.length > 0 && (
 				<Stack direction="column" gap="sm">
 					<Text variant="heading-sm">
-						{ __(
-							'Add events to existing post types',
-							'feriae'
-						) }
+						{ __( 'Add events to existing post types', 'feriae' ) }
 					</Text>
 					<Text variant="body-sm">
 						{ __(

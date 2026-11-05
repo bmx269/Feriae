@@ -86,8 +86,7 @@ export default function SetupScreen() {
 				data: {
 					title: __( 'Calendar', 'feriae' ),
 					status: 'publish',
-					content:
-						'<!-- wp:feriae/calendar {"showLegend":true} /-->',
+					content: '<!-- wp:feriae/calendar {"showLegend":true} /-->',
 				},
 			} );
 			update( { calendar_page: page.id } );
@@ -134,20 +133,14 @@ export default function SetupScreen() {
 					<Card.Header>
 						<Card.Title>
 							{ current === 'content' &&
-								__(
-									'Where should events live?',
-									'feriae'
-								) }
+								__( 'Where should events live?', 'feriae' ) }
 							{ current === 'calendar' &&
 								__(
 									'Where should the calendar appear?',
 									'feriae'
 								) }
 							{ current === 'modules' &&
-								__(
-									'Which features do you want?',
-									'feriae'
-								) }
+								__( 'Which features do you want?', 'feriae' ) }
 							{ current === 'done' &&
 								__( 'You’re all set', 'feriae' ) }
 						</Card.Title>
@@ -236,10 +229,7 @@ export default function SetupScreen() {
 									/>
 								) : (
 									<RadioGroupControl
-										label={ __(
-											'Default view',
-											'feriae'
-										) }
+										label={ __( 'Default view', 'feriae' ) }
 										items={ [
 											{
 												value: 'month',
@@ -250,24 +240,15 @@ export default function SetupScreen() {
 											},
 											{
 												value: 'week',
-												label: __(
-													'Week',
-													'feriae'
-												),
+												label: __( 'Week', 'feriae' ),
 											},
 											{
 												value: 'day',
-												label: __(
-													'Day',
-													'feriae'
-												),
+												label: __( 'Day', 'feriae' ),
 											},
 											{
 												value: 'list',
-												label: __(
-													'List',
-													'feriae'
-												),
+												label: __( 'List', 'feriae' ),
 											},
 										] }
 										value={

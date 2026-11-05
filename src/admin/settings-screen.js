@@ -78,11 +78,7 @@ export default function SettingsScreen() {
 			}
 			hasPadding
 		>
-			<Stack
-				direction="column"
-				gap="lg"
-				className="feriae-admin__body"
-			>
+			<Stack direction="column" gap="lg" className="feriae-admin__body">
 				{ saved && (
 					<Notice.Root intent="success">
 						<Notice.Description>
@@ -120,10 +116,7 @@ export default function SettingsScreen() {
 					<Tabs.Panel value="content">
 						<Stack direction="column" gap="lg">
 							<Section
-								title={ __(
-									'Where events live',
-									'feriae'
-								) }
+								title={ __( 'Where events live', 'feriae' ) }
 							>
 								<EventContentFields
 									settings={ settings }
