@@ -5,7 +5,7 @@ const { rest, day } = require( './helpers' );
 const scan = ( page ) =>
 	new AxeBuilder( { page } )
 		.withTags( [ 'wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa' ] )
-		.include( '.oe-feeds' )
+		.include( '.feriae-feeds' )
 		.analyze();
 
 const compact = ( offset ) => day( offset ).replaceAll( '-', '' );
@@ -46,7 +46,7 @@ test.describe( 'Calendar import', () => {
 	test( 'imports an .ics file, and again without duplicates', async ( {
 		page,
 	} ) => {
-		await page.goto( '/wp-admin/admin.php?page=openevents-feeds' );
+		await page.goto( '/wp-admin/admin.php?page=feriae-feeds' );
 		await expect(
 			page.getByRole( 'heading', { name: 'Calendar import', level: 1 } )
 		).toBeVisible();
@@ -87,10 +87,10 @@ test.describe( 'Calendar import', () => {
 		const club = body.find(
 			( e ) => e.title.rendered === `Imported chess club ${ run }`
 		);
-		expect( club.meta._oe_recurrence.rrule ).toBe( 'FREQ=WEEKLY;COUNT=4' );
+		expect( club.meta._feriae_recurrence.rrule ).toBe( 'FREQ=WEEKLY;COUNT=4' );
 		const dates = await rest(
 			page,
-			`/openevents/v1/occurrences?event=${ club.id }&per_page=10`
+			`/feriae/v1/occurrences?event=${ club.id }&per_page=10`
 		);
 		expect( dates.body ).toHaveLength( 4 );
 	} );

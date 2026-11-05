@@ -2,43 +2,43 @@
 /**
  * Attendance tables shared by RSVP and Tickets.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Attendance;
+namespace Feriae\Attendance;
 
 /**
- * Creates oe_ticket_types and oe_attendees. An RSVP is a free ticket type, so
+ * Creates feriae_ticket_types and feriae_attendees. An RSVP is a free ticket type, so
  * attendee lists, emails, exports, and check-in are written once for both.
  */
 final class Schema {
 
 	public const VERSION        = '6';
-	public const VERSION_OPTION = 'openevents_attendance_db_version';
+	public const VERSION_OPTION = 'feriae_attendance_db_version';
 
 	public static function ticket_types(): string {
 		global $wpdb;
-		return $wpdb->prefix . 'oe_ticket_types';
+		return $wpdb->prefix . 'feriae_ticket_types';
 	}
 
 	public static function attendees(): string {
 		global $wpdb;
-		return $wpdb->prefix . 'oe_attendees';
+		return $wpdb->prefix . 'feriae_attendees';
 	}
 
 	public static function orders(): string {
 		global $wpdb;
-		return $wpdb->prefix . 'oe_orders';
+		return $wpdb->prefix . 'feriae_orders';
 	}
 
 	public static function waitlist(): string {
 		global $wpdb;
-		return $wpdb->prefix . 'oe_waitlist';
+		return $wpdb->prefix . 'feriae_waitlist';
 	}
 
 	public static function order_items(): string {
 		global $wpdb;
-		return $wpdb->prefix . 'oe_order_items';
+		return $wpdb->prefix . 'feriae_order_items';
 	}
 
 	public static function maybe_install(): void {

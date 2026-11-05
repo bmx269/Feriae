@@ -2,10 +2,10 @@
 /**
  * Plain-language rule descriptions.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Recurrence;
+namespace Feriae\Modules\Recurrence;
 
 use DateTimeImmutable;
 
@@ -19,25 +19,25 @@ final class Describer {
 		$parts = array( self::frequency( $rule ) );
 
 		$on = self::on( $rule, $dtstart );
-		if ( 'WEEKLY' === $rule->freq && 1 === $rule->interval && __( 'weekdays', 'openevents' ) === $on ) {
-			$parts[0] = __( 'Every weekday', 'openevents' );
+		if ( 'WEEKLY' === $rule->freq && 1 === $rule->interval && __( 'weekdays', 'feriae' ) === $on ) {
+			$parts[0] = __( 'Every weekday', 'feriae' );
 		} elseif ( '' !== $on ) {
 			/* translators: %s: days, e.g. "Monday and Wednesday" or "the first Friday" */
-			$parts[0] = sprintf( __( '%1$s on %2$s', 'openevents' ), $parts[0], $on );
+			$parts[0] = sprintf( __( '%1$s on %2$s', 'feriae' ), $parts[0], $on );
 		}
 
 		if ( $rule->bymonth && 'YEARLY' !== $rule->freq ) {
 			/* translators: %s: list of months */
-			$parts[] = sprintf( __( 'in %s', 'openevents' ), self::join( array_map( array( self::class, 'month' ), $rule->bymonth ) ) );
+			$parts[] = sprintf( __( 'in %s', 'feriae' ), self::join( array_map( array( self::class, 'month' ), $rule->bymonth ) ) );
 		}
 
 		if ( null !== $rule->count ) {
 			/* translators: %d: number of times */
-			$parts[] = sprintf( _n( '%d time', '%d times', $rule->count, 'openevents' ), $rule->count );
+			$parts[] = sprintf( _n( '%d time', '%d times', $rule->count, 'feriae' ), $rule->count );
 		} elseif ( null !== $rule->until ) {
 			$until = $rule->until_in( $dtstart->getTimezone() );
 			/* translators: %s: end date */
-			$parts[] = sprintf( __( 'until %s', 'openevents' ), wp_date( (string) get_option( 'date_format' ), $until->getTimestamp(), $until->getTimezone() ) );
+			$parts[] = sprintf( __( 'until %s', 'feriae' ), wp_date( (string) get_option( 'date_format' ), $until->getTimestamp(), $until->getTimezone() ) );
 		}
 
 		return implode( ', ', $parts );
@@ -48,16 +48,16 @@ final class Describer {
 		switch ( $rule->freq ) {
 			case 'DAILY':
 				/* translators: %d: number of days */
-				return 1 === $n ? __( 'Every day', 'openevents' ) : sprintf( _n( 'Every %d day', 'Every %d days', $n, 'openevents' ), $n );
+				return 1 === $n ? __( 'Every day', 'feriae' ) : sprintf( _n( 'Every %d day', 'Every %d days', $n, 'feriae' ), $n );
 			case 'WEEKLY':
 				/* translators: %d: number of weeks */
-				return 1 === $n ? __( 'Every week', 'openevents' ) : sprintf( _n( 'Every %d week', 'Every %d weeks', $n, 'openevents' ), $n );
+				return 1 === $n ? __( 'Every week', 'feriae' ) : sprintf( _n( 'Every %d week', 'Every %d weeks', $n, 'feriae' ), $n );
 			case 'MONTHLY':
 				/* translators: %d: number of months */
-				return 1 === $n ? __( 'Every month', 'openevents' ) : sprintf( _n( 'Every %d month', 'Every %d months', $n, 'openevents' ), $n );
+				return 1 === $n ? __( 'Every month', 'feriae' ) : sprintf( _n( 'Every %d month', 'Every %d months', $n, 'feriae' ), $n );
 			default:
 				/* translators: %d: number of years */
-				return 1 === $n ? __( 'Every year', 'openevents' ) : sprintf( _n( 'Every %d year', 'Every %d years', $n, 'openevents' ), $n );
+				return 1 === $n ? __( 'Every year', 'feriae' ) : sprintf( _n( 'Every %d year', 'Every %d years', $n, 'feriae' ), $n );
 		}
 	}
 
@@ -67,16 +67,16 @@ final class Describer {
 
 		if ( $rule->bysetpos && $is_weekdays ) {
 			/* translators: %s: ordinal(s), e.g. "last" */
-			return sprintf( __( 'the %s weekday', 'openevents' ), self::join( array_map( array( self::class, 'ordinal' ), $rule->bysetpos ) ) );
+			return sprintf( __( 'the %s weekday', 'feriae' ), self::join( array_map( array( self::class, 'ordinal' ), $rule->bysetpos ) ) );
 		}
 		if ( $is_weekdays && ! $rule->bymonthday ) {
-			return __( 'weekdays', 'openevents' );
+			return __( 'weekdays', 'feriae' );
 		}
 		if ( $rule->bysetpos && $rule->byday ) {
 			$days = self::join( array_map( static fn( $d ) => self::day( $d[1] ), $rule->byday ) );
 			$pos  = self::join( array_map( array( self::class, 'ordinal' ), $rule->bysetpos ) );
 			/* translators: 1: ordinal(s), e.g. "last"; 2: days, e.g. "Monday, Tuesday, or Friday" */
-			return sprintf( __( 'the %1$s of %2$s', 'openevents' ), $pos, $days );
+			return sprintf( __( 'the %1$s of %2$s', 'feriae' ), $pos, $days );
 		}
 
 		$items = array();
@@ -84,14 +84,14 @@ final class Describer {
 			$items[] = 0 === $n
 				? self::day( $code )
 				/* translators: 1: ordinal, e.g. "second"; 2: weekday */
-				: sprintf( __( 'the %1$s %2$s', 'openevents' ), self::ordinal( $n ), self::day( $code ) );
+				: sprintf( __( 'the %1$s %2$s', 'feriae' ), self::ordinal( $n ), self::day( $code ) );
 		}
 		foreach ( $rule->bymonthday as $day ) {
 			$items[] = $day > 0
 				/* translators: %d: day of the month */
-				? sprintf( __( 'day %d', 'openevents' ), $day )
+				? sprintf( __( 'day %d', 'feriae' ), $day )
 				/* translators: %s: ordinal counting back from the end, e.g. "last" */
-				: sprintf( __( 'the %s day', 'openevents' ), self::ordinal( $day ) );
+				: sprintf( __( 'the %s day', 'feriae' ), self::ordinal( $day ) );
 		}
 
 		if ( 'YEARLY' === $rule->freq ) {
@@ -99,15 +99,15 @@ final class Describer {
 			$months = self::join( array_map( array( self::class, 'month' ), $months ) );
 			if ( ! $items ) {
 				/* translators: 1: month(s), 2: day of the month */
-				return sprintf( __( '%1$s %2$d', 'openevents' ), $months, (int) $dtstart->format( 'j' ) );
+				return sprintf( __( '%1$s %2$d', 'feriae' ), $months, (int) $dtstart->format( 'j' ) );
 			}
 			/* translators: 1: days, 2: month(s) */
-			return sprintf( __( '%1$s of %2$s', 'openevents' ), self::join( $items ), $months );
+			return sprintf( __( '%1$s of %2$s', 'feriae' ), self::join( $items ), $months );
 		}
 
 		if ( ! $items && 'MONTHLY' === $rule->freq ) {
 			/* translators: %d: day of the month */
-			return sprintf( __( 'day %d', 'openevents' ), (int) $dtstart->format( 'j' ) );
+			return sprintf( __( 'day %d', 'feriae' ), (int) $dtstart->format( 'j' ) );
 		}
 		if ( ! $items && 'WEEKLY' === $rule->freq ) {
 			return self::day( Rule::DAYS[ (int) $dtstart->format( 'N' ) - 1 ] );
@@ -117,23 +117,23 @@ final class Describer {
 
 	private static function ordinal( int $n ): string {
 		$positive = array(
-			1 => __( 'first', 'openevents' ),
-			2 => __( 'second', 'openevents' ),
-			3 => __( 'third', 'openevents' ),
-			4 => __( 'fourth', 'openevents' ),
-			5 => __( 'fifth', 'openevents' ),
+			1 => __( 'first', 'feriae' ),
+			2 => __( 'second', 'feriae' ),
+			3 => __( 'third', 'feriae' ),
+			4 => __( 'fourth', 'feriae' ),
+			5 => __( 'fifth', 'feriae' ),
 		);
 		if ( -1 === $n ) {
-			return __( 'last', 'openevents' );
+			return __( 'last', 'feriae' );
 		}
 		if ( -2 === $n ) {
-			return __( 'second to last', 'openevents' );
+			return __( 'second to last', 'feriae' );
 		}
 		if ( $n > 0 && isset( $positive[ $n ] ) ) {
 			return $positive[ $n ];
 		}
 		/* translators: %d: position, e.g. 20 for "20th" */
-		return $n > 0 ? sprintf( __( 'number %d', 'openevents' ), $n ) : sprintf( __( 'number %d from the end', 'openevents' ), abs( $n ) );
+		return $n > 0 ? sprintf( __( 'number %d', 'feriae' ), $n ) : sprintf( __( 'number %d from the end', 'feriae' ), abs( $n ) );
 	}
 
 	private static function day( string $code ): string {

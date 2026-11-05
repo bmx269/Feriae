@@ -2,21 +2,21 @@
 /**
  * Tickets module wiring: editor data, checkout form, REST, returns, settings.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Tests\Integration;
+namespace Feriae\Tests\Integration;
 
-use OpenEvents\Attendance\Guard;
-use OpenEvents\Attendance\Order;
-use OpenEvents\Attendance\Orders;
-use OpenEvents\Attendance\TicketTypes;
-use OpenEvents\Modules\Tickets\AbstractGateway;
-use OpenEvents\Modules\Tickets\Checkout;
-use OpenEvents\Modules\Tickets\Gateways;
-use OpenEvents\Modules\Tickets\Module;
-use OpenEvents\Modules\Tickets\TicketForm;
-use OpenEvents\Tests\TestCase;
+use Feriae\Attendance\Guard;
+use Feriae\Attendance\Order;
+use Feriae\Attendance\Orders;
+use Feriae\Attendance\TicketTypes;
+use Feriae\Modules\Tickets\AbstractGateway;
+use Feriae\Modules\Tickets\Checkout;
+use Feriae\Modules\Tickets\Gateways;
+use Feriae\Modules\Tickets\Module;
+use Feriae\Modules\Tickets\TicketForm;
+use Feriae\Tests\TestCase;
 
 final class TicketsModuleTest extends TestCase {
 
@@ -28,7 +28,7 @@ final class TicketsModuleTest extends TestCase {
 		Gateways::reset();
 		reset_phpmailer_instance();
 		$day         = current_datetime()->modify( '+10 days' )->format( 'Y-m-d' );
-		$this->event = $this->event( array( '_oe_start' => "{$day} 19:00:00" ), array( 'post_title' => 'Concert' ) );
+		$this->event = $this->event( array( '_feriae_start' => "{$day} 19:00:00" ), array( 'post_title' => 'Concert' ) );
 		$this->rows( $this->event );
 		update_post_meta(
 			$this->event,
@@ -73,31 +73,31 @@ final class TicketsModuleTest extends TestCase {
 
 	public function test_checkout_form_is_accessible(): void {
 		$checkout = new Checkout();
-		$html     = TicketForm::render( openevents_get_event( $this->event ), $checkout->ticket_types( $this->event ), $checkout );
+		$html     = TicketForm::render( feriae_get_event( $this->event ), $checkout->ticket_types( $this->event ), $checkout );
 		$adult    = $this->type( 'adult' );
 
-		$this->assertStringContainsString( '<caption class="oe-visually-hidden">Ticket types</caption>', $html );
+		$this->assertStringContainsString( '<caption class="feriae-visually-hidden">Ticket types</caption>', $html );
 		$this->assertStringContainsString( '<th scope="col">Quantity</th>', $html );
-		$this->assertMatchesRegularExpression( '/<label for="(oe-tickets-\d+-qty-' . $adult->id . ')">Adult<\/label><span class="oe-tickets__availability" id="\1-help">2 left<\/span>/', $html );
-		$this->assertStringContainsString( 'aria-describedby="oe-tickets-' . $this->event . '-qty-' . $adult->id . '-help"', $html );
+		$this->assertMatchesRegularExpression( '/<label for="(feriae-tickets-\d+-qty-' . $adult->id . ')">Adult<\/label><span class="feriae-tickets__availability" id="\1-help">2 left<\/span>/', $html );
+		$this->assertStringContainsString( 'aria-describedby="feriae-tickets-' . $this->event . '-qty-' . $adult->id . '-help"', $html );
 		$this->assertStringContainsString( '<legend>Payment</legend>', $html );
 		$this->assertStringContainsString( 'Pay at the door', $html );
 		$this->assertStringNotContainsString( 'Stripe', $html, 'Only configured gateways are offered.' );
-		preg_match( '/<select id="oe-tickets-\d+-qty-' . $adult->id . '"[^>]*>(.*?)<\/select>/s', $html, $select );
+		preg_match( '/<select id="feriae-tickets-\d+-qty-' . $adult->id . '"[^>]*>(.*?)<\/select>/s', $html, $select );
 		$this->assertSame( 3, substr_count( $select[1], '<option value=' ), 'Quantity options capped by seats left (0, 1, 2).' );
 	}
 
 	public function test_rest_checkout_status_codes(): void {
 		$adult   = $this->type( 'adult' );
 		$request = function ( array $tickets, array $extra = array() ) {
-			$r = new \WP_REST_Request( 'POST', "/openevents/v1/events/{$this->event}/orders" );
+			$r = new \WP_REST_Request( 'POST', "/feriae/v1/events/{$this->event}/orders" );
 			$r->set_body_params( array_merge( array( 'name' => 'Ada', 'email' => 'ada@example.com', 'tickets' => $tickets, 'gateway' => 'manual', 'ts' => Guard::sign_timestamp( time() - 10 ) ), $extra ) );
 			return rest_do_request( $r );
 		};
 
 		$ok = $request( array( $adult->id => 2 ) );
 		$this->assertSame( 200, $ok->get_status() );
-		$this->assertStringContainsString( 'oe_order_token=', $ok->get_data()['redirect'] );
+		$this->assertStringContainsString( 'feriae_order_token=', $ok->get_data()['redirect'] );
 
 		$this->assertSame( 409, $request( array( $adult->id => 1 ) )->get_status(), 'Sold out.' );
 		$this->assertSame( 422, $request( array( $adult->id => 1 ), array( 'email' => 'nope' ) )->get_status() );
@@ -106,7 +106,7 @@ final class TicketsModuleTest extends TestCase {
 	public function test_confirmation_view_shows_check_in_codes(): void {
 		$adult  = $this->type( 'adult' );
 		$result = ( new Checkout() )->place( $this->event, array( 'name' => 'Ada', 'email' => 'ada@example.com', 'tickets' => array( $adult->id => 2 ), 'gateway' => 'manual', 'ts' => Guard::sign_timestamp( time() - 10 ) ) );
-		$html   = TicketForm::render( openevents_get_event( $this->event ), ( new Checkout() )->ticket_types( $this->event ), new Checkout(), $result->token );
+		$html   = TicketForm::render( feriae_get_event( $this->event ), ( new Checkout() )->ticket_types( $this->event ), new Checkout(), $result->token );
 
 		$this->assertStringContainsString( 'Your order', $html );
 		$this->assertStringContainsString( 'Reserved — payment due', $html );
@@ -132,13 +132,13 @@ final class TicketsModuleTest extends TestCase {
 		$result = ( new Checkout() )->place( $this->event, array( 'name' => 'Ada', 'email' => 'ada@example.com', 'tickets' => array( $adult->id => 1 ), 'gateway' => 'stripe', 'ts' => Guard::sign_timestamp( time() - 10 ) ) );
 		$uuid   = $result->order->uuid;
 
-		$return = new \WP_REST_Request( 'GET', '/openevents/v1/orders/return' );
-		$return->set_query_params( array( 'oe_order' => $uuid, 'oe_checkout' => 'success', 'session_id' => 'cs_9' ) );
+		$return = new \WP_REST_Request( 'GET', '/feriae/v1/orders/return' );
+		$return->set_query_params( array( 'feriae_order' => $uuid, 'feriae_checkout' => 'success', 'session_id' => 'cs_9' ) );
 		$response = rest_do_request( $return );
 		remove_filter( 'pre_http_request', $mock, 10 );
 
 		$this->assertSame( 302, $response->get_status() );
-		$this->assertStringContainsString( 'oe_checkout=done', $response->get_headers()['Location'] );
+		$this->assertStringContainsString( 'feriae_checkout=done', $response->get_headers()['Location'] );
 		$this->assertSame( Order::COMPLETED, ( new Orders() )->get( $result->order->id )->status );
 	}
 
@@ -151,16 +151,16 @@ final class TicketsModuleTest extends TestCase {
 		$result = ( new Checkout() )->place( $this->event, array( 'name' => 'Ada', 'email' => 'ada@example.com', 'tickets' => array( $adult->id => 2 ), 'gateway' => 'stripe', 'ts' => Guard::sign_timestamp( time() - 10 ) ) );
 		remove_filter( 'pre_http_request', $mock, 10 );
 
-		$return = new \WP_REST_Request( 'GET', '/openevents/v1/orders/return' );
-		$return->set_query_params( array( 'oe_order' => $result->order->uuid, 'oe_checkout' => 'cancel' ) );
-		$this->assertStringContainsString( 'oe_checkout=cancelled', rest_do_request( $return )->get_headers()['Location'] );
+		$return = new \WP_REST_Request( 'GET', '/feriae/v1/orders/return' );
+		$return->set_query_params( array( 'feriae_order' => $result->order->uuid, 'feriae_checkout' => 'cancel' ) );
+		$this->assertStringContainsString( 'feriae_checkout=cancelled', rest_do_request( $return )->get_headers()['Location'] );
 		$this->assertSame( 0, $this->type( 'adult' )->sold );
 	}
 
 	public function test_gateway_settings_never_return_secrets(): void {
 		update_option( AbstractGateway::OPTION, array( 'stripe' => array( 'enabled' => true, 'secret_key' => 'sk_test_supersecret1234' ) ) );
 		Gateways::reset();
-		$get = new \WP_REST_Request( 'GET', '/openevents/v1/gateways' );
+		$get = new \WP_REST_Request( 'GET', '/feriae/v1/gateways' );
 
 		$this->assertGreaterThanOrEqual( 401, rest_do_request( $get )->get_status(), 'Admins only.' );
 
@@ -170,7 +170,7 @@ final class TicketsModuleTest extends TestCase {
 		$this->assertStringNotContainsString( 'supersecret', $body );
 		$this->assertStringEndsWith( '1234', $stripe['fields']['secret_key']['value'] );
 
-		$save = new \WP_REST_Request( 'POST', '/openevents/v1/gateways' );
+		$save = new \WP_REST_Request( 'POST', '/feriae/v1/gateways' );
 		$save->set_body_params( array( 'gateways' => array( 'stripe' => array( 'secret_key' => $stripe['fields']['secret_key']['value'], 'webhook_secret' => 'whsec_new' ) ) ) );
 		rest_do_request( $save );
 		$stored = get_option( AbstractGateway::OPTION );
@@ -181,7 +181,7 @@ final class TicketsModuleTest extends TestCase {
 	public function test_order_actions_need_edit_rights(): void {
 		$adult  = $this->type( 'adult' );
 		$result = ( new Checkout() )->place( $this->event, array( 'name' => 'Ada', 'email' => 'ada@example.com', 'tickets' => array( $adult->id => 1 ), 'gateway' => 'manual', 'ts' => Guard::sign_timestamp( time() - 10 ) ) );
-		$action = new \WP_REST_Request( 'POST', '/openevents/v1/orders/' . $result->order->id );
+		$action = new \WP_REST_Request( 'POST', '/feriae/v1/orders/' . $result->order->id );
 		$action->set_body_params( array( 'action' => 'mark_paid' ) );
 
 		$this->assertGreaterThanOrEqual( 401, rest_do_request( $action )->get_status() );
@@ -192,6 +192,6 @@ final class TicketsModuleTest extends TestCase {
 	}
 
 	public function test_unknown_webhook_gateway_is_404(): void {
-		$this->assertSame( 404, rest_do_request( new \WP_REST_Request( 'POST', '/openevents/v1/gateways/nope/webhook' ) )->get_status() );
+		$this->assertSame( 404, rest_do_request( new \WP_REST_Request( 'POST', '/feriae/v1/gateways/nope/webhook' ) )->get_status() );
 	}
 }

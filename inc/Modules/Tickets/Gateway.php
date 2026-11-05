@@ -2,15 +2,15 @@
 /**
  * Payment gateway contract.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Tickets;
+namespace Feriae\Modules\Tickets;
 
-use OpenEvents\Attendance\Order;
+use Feriae\Attendance\Order;
 
 /**
- * A way to pay for tickets. Register with the openevents/tickets/gateways
+ * A way to pay for tickets. Register with the feriae/tickets/gateways
  * filter; extend AbstractGateway for settings storage and defaults.
  *
  * Gateways never see card details: hosted gateways redirect to the
@@ -39,7 +39,7 @@ interface Gateway {
 	 */
 	public function handle_return( Order $order, array $query ): PaymentResult;
 
-	/** Provider-to-site notification (POST /openevents/v1/gateways/{id}/webhook). */
+	/** Provider-to-site notification (POST /feriae/v1/gateways/{id}/webhook). */
 	public function handle_webhook( \WP_REST_Request $request ): \WP_REST_Response;
 
 	public function refund( Order $order ): true|\WP_Error;

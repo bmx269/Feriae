@@ -5,16 +5,16 @@
  * These guard the contract in docs/ARCHITECTURE.md ("Performance"). If one
  * fails, something reintroduced a per-event query (N+1).
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Tests\Integration;
+namespace Feriae\Tests\Integration;
 
-use OpenEvents\Content\PostTypes;
-use OpenEvents\Frontend\CalendarView;
-use OpenEvents\Occurrences\Repository;
-use OpenEvents\Rest\OccurrencesController;
-use OpenEvents\Tests\TestCase;
+use Feriae\Content\PostTypes;
+use Feriae\Frontend\CalendarView;
+use Feriae\Occurrences\Repository;
+use Feriae\Rest\OccurrencesController;
+use Feriae\Tests\TestCase;
 
 final class PerformanceTest extends TestCase {
 
@@ -26,19 +26,19 @@ final class PerformanceTest extends TestCase {
 	public function set_up(): void {
 		parent::set_up();
 		// Measure the real query path, not the HTML fragment cache.
-		add_filter( 'openevents/calendar/cache', '__return_false' );
+		add_filter( 'feriae/calendar/cache', '__return_false' );
 
 		$this->venue      = self::factory()->post->create( array( 'post_type' => PostTypes::VENUE ) );
 		$this->organizer  = self::factory()->post->create( array( 'post_type' => PostTypes::ORGANIZER ) );
 		$this->categories = self::factory()->term->create_many( 3, array( 'taxonomy' => PostTypes::CATEGORY ) );
 		foreach ( $this->categories as $i => $term ) {
-			update_term_meta( $term, 'oe_color', array( '#ff0000', '#00ff00', '#0000ff' )[ $i ] );
+			update_term_meta( $term, 'feriae_color', array( '#ff0000', '#00ff00', '#0000ff' )[ $i ] );
 		}
 	}
 
 	public function tear_down(): void {
-		remove_filter( 'openevents/calendar/cache', '__return_false' );
-		unset( $_GET['oe_month'] );
+		remove_filter( 'feriae/calendar/cache', '__return_false' );
+		unset( $_GET['feriae_month'] );
 		parent::tear_down();
 	}
 
@@ -53,18 +53,18 @@ final class PerformanceTest extends TestCase {
 			$day = $first->modify( '+' . ( $i % 28 ) . ' days' )->format( 'Y-m-d' );
 			$id  = $this->event(
 				array(
-					'_oe_start'         => "{$day} 10:00:00",
-					'_oe_end'           => "{$day} 11:00:00",
-					'_oe_venue_id'      => $this->venue,
-					'_oe_organizer_ids' => array( $this->organizer ),
-					'_oe_cost'          => '10',
+					'_feriae_start'         => "{$day} 10:00:00",
+					'_feriae_end'           => "{$day} 11:00:00",
+					'_feriae_venue_id'      => $this->venue,
+					'_feriae_organizer_ids' => array( $this->organizer ),
+					'_feriae_cost'          => '10',
 				)
 			);
 			wp_set_object_terms( $id, array( $this->categories[ $i % 3 ] ), PostTypes::CATEGORY );
 			$attachment = self::factory()->attachment->create( array( 'post_parent' => $id ) );
 			set_post_thumbnail( $id, $attachment );
 		}
-		openevents()->occurrences()->query( array( 'per_page' => 1 ) ); // Flush syncs outside the measurement.
+		feriae()->occurrences()->query( array( 'per_page' => 1 ) ); // Flush syncs outside the measurement.
 	}
 
 	/**
@@ -72,7 +72,7 @@ final class PerformanceTest extends TestCase {
 	 */
 	private function cold(): void {
 		wp_cache_flush();
-		openevents()->occurrences()->forget_all();
+		feriae()->occurrences()->forget_all();
 		Repository::bump_cache();
 	}
 
@@ -83,7 +83,7 @@ final class PerformanceTest extends TestCase {
 	}
 
 	public function test_month_view_cost_is_independent_of_event_count(): void {
-		$_GET['oe_month'] = current_datetime()->modify( '+1 day' )->format( 'Y-m' );
+		$_GET['feriae_month'] = current_datetime()->modify( '+1 day' )->format( 'Y-m' );
 		$render           = static fn() => ( new CalendarView( array( 'views' => array( 'month' ) ) ) )->render();
 
 		$few  = $this->cost( 5, $render );
@@ -109,9 +109,9 @@ final class PerformanceTest extends TestCase {
 	}
 
 	public function test_rest_cost_is_independent_of_item_count(): void {
-		$controller = new OccurrencesController( openevents()->occurrences() );
+		$controller = new OccurrencesController( feriae()->occurrences() );
 		$render     = static function () use ( $controller ): void {
-			$request = new \WP_REST_Request( 'GET', '/openevents/v1/occurrences' );
+			$request = new \WP_REST_Request( 'GET', '/feriae/v1/occurrences' );
 			$request->set_param( 'per_page', 100 );
 			$request->set_param( 'start', current_datetime()->modify( '+1 day' )->format( 'Y-m-d' ) );
 			$request->set_param( 'end', current_datetime()->modify( '+30 days' )->format( 'Y-m-d' ) );
@@ -141,13 +141,13 @@ final class PerformanceTest extends TestCase {
 			)
 		);
 
-		$queries = $this->count_queries( static fn() => openevents()->occurrences()->for_events( $ids ) );
+		$queries = $this->count_queries( static fn() => feriae()->occurrences()->for_events( $ids ) );
 		$this->assertSame( 1, $queries );
 
 		$again = $this->count_queries(
 			static function () use ( $ids ): void {
 				foreach ( $ids as $id ) {
-					openevents()->occurrences()->for_event( $id );
+					feriae()->occurrences()->for_event( $id );
 				}
 			}
 		);
@@ -158,7 +158,7 @@ final class PerformanceTest extends TestCase {
 		$this->seed( 3 );
 		$sql     = '';
 		$capture = static function ( string $query ) use ( &$sql ): string {
-			if ( str_contains( $query, 'oe_occurrences' ) && str_contains( $query, 'start_local' ) ) {
+			if ( str_contains( $query, 'feriae_occurrences' ) && str_contains( $query, 'start_local' ) ) {
 				$sql = $query;
 			}
 			return $query;
@@ -173,7 +173,7 @@ final class PerformanceTest extends TestCase {
 	}
 
 	public function test_rendered_calendar_is_served_from_cache(): void {
-		remove_filter( 'openevents/calendar/cache', '__return_false' );
+		remove_filter( 'feriae/calendar/cache', '__return_false' );
 		$this->seed( 5 );
 		$this->cold();
 		$view = static fn() => ( new CalendarView( array( 'views' => array( 'month' ) ) ) )->render();
@@ -191,7 +191,7 @@ final class PerformanceTest extends TestCase {
 	}
 
 	public function test_cache_is_invalidated_by_edits(): void {
-		remove_filter( 'openevents/calendar/cache', '__return_false' );
+		remove_filter( 'feriae/calendar/cache', '__return_false' );
 		$this->seed( 1 );
 		$this->cold();
 		$id = get_posts(

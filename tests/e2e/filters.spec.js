@@ -5,8 +5,8 @@ test.describe( 'More filters', () => {
 	test( 'filter the list by an event attribute, in place', async ( {
 		page,
 	} ) => {
-		await page.goto( '/events/?oe_view=list' );
-		const calendar = page.locator( '.oe-calendar' );
+		await page.goto( '/events/?feriae_view=list' );
+		const calendar = page.locator( '.feriae-calendar' );
 		await calendar.getByText( 'More filters' ).click();
 		await expect(
 			calendar.getByRole( 'group', { name: 'Day of the week' } )
@@ -20,7 +20,7 @@ test.describe( 'More filters', () => {
 				'wcag21aa',
 				'wcag22aa',
 			] )
-			.include( '.oe-calendar__filters' )
+			.include( '.feriae-calendar__filters' )
 			.analyze();
 		expect( violations.map( ( v ) => v.id ) ).toEqual( [] );
 
@@ -30,9 +30,9 @@ test.describe( 'More filters', () => {
 			.check();
 		await calendar.getByRole( 'button', { name: 'Filter' } ).click();
 
-		await expect( page ).toHaveURL( /oe_audiences/ );
+		await expect( page ).toHaveURL( /feriae_audiences/ );
 		await expect(
-			calendar.locator( '.oe-calendar__summary' )
+			calendar.locator( '.feriae-calendar__summary' )
 		).toContainText( 'Kids' );
 		await expect(
 			calendar.getByText( 'Weekly Storytime' ).first()
@@ -45,15 +45,15 @@ test.describe( 'More filters', () => {
 			javaScriptEnabled: false,
 		} );
 		const page = await context.newPage();
-		await page.goto( '/events/?oe_view=list' );
-		const calendar = page.locator( '.oe-calendar' );
+		await page.goto( '/events/?feriae_view=list' );
+		const calendar = page.locator( '.feriae-calendar' );
 		await calendar.getByText( 'More filters' ).click();
 		await calendar
 			.getByRole( 'group', { name: 'Audiences' } )
 			.getByRole( 'checkbox', { name: 'Adults' } )
 			.check();
 		await calendar.getByRole( 'button', { name: 'Filter' } ).click();
-		await expect( page ).toHaveURL( /oe_audiences%5B%5D=adults/ );
+		await expect( page ).toHaveURL( /feriae_audiences%5B%5D=adults/ );
 		await expect(
 			calendar.getByText( 'Spring Concert' ).first()
 		).toBeVisible();

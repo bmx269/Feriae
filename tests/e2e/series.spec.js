@@ -8,8 +8,8 @@ test.describe( 'Series', () => {
 		page,
 	} ) => {
 		await page.goto( '/series/autumn-film-season/' );
-		const series = page.locator( '.oe-series' );
-		await expect( series.locator( 'article.oe-event-card' ) ).toHaveCount(
+		const series = page.locator( '.feriae-series' );
+		await expect( series.locator( 'article.feriae-event-card' ) ).toHaveCount(
 			3
 		);
 		await expect( series ).toContainText( 'Film Night: Casablanca' );
@@ -22,11 +22,11 @@ test.describe( 'Series', () => {
 				'wcag21aa',
 				'wcag22aa',
 			] )
-			.include( '.oe-series' )
+			.include( '.feriae-series' )
 			.analyze();
 		expect( violations.map( ( v ) => v.id ) ).toEqual( [] );
 
-		const form = series.locator( '.oe-tickets__form:not(.oe-waitlist)' );
+		const form = series.locator( '.feriae-tickets__form:not(.feriae-waitlist)' );
 		await form
 			.getByLabel( 'Season pass', { exact: true } )
 			.selectOption( '1' );
@@ -36,15 +36,15 @@ test.describe( 'Series', () => {
 			.fill( 'fan@example.com' );
 		await humanPause( page );
 		await form.getByRole( 'button', { name: 'Get tickets' } ).click();
-		await expect( page ).toHaveURL( /oe_order_token=/ );
-		await expect( page.locator( '.oe-tickets__order code' ) ).toHaveCount(
+		await expect( page ).toHaveURL( /feriae_order_token=/ );
+		await expect( page.locator( '.feriae-tickets__order code' ) ).toHaveCount(
 			1
 		);
 	} );
 
 	test( 'events link to their series', async ( { page } ) => {
 		await page.goto( '/events/film-night-casablanca/' );
-		const row = page.locator( '.oe-details__row--series' );
+		const row = page.locator( '.feriae-details__row--series' );
 		await expect( row ).toContainText( 'Autumn Film Season' );
 		await row.getByRole( 'link' ).click();
 		await expect( page ).toHaveURL( /\/series\/autumn-film-season\/$/ );

@@ -8,11 +8,11 @@ test.describe( 'Per-date places', () => {
 		page,
 	} ) => {
 		await page.goto( '/events/weekly-storytime/' );
-		const rsvp = page.locator( '.oe-rsvp' );
-		await expect( rsvp.locator( '.oe-rsvp__date' ) ).toContainText(
+		const rsvp = page.locator( '.feriae-rsvp' );
+		await expect( rsvp.locator( '.feriae-rsvp__date' ) ).toContainText(
 			'For '
 		);
-		await expect( rsvp.locator( '.oe-rsvp__count' ) ).toHaveText(
+		await expect( rsvp.locator( '.feriae-rsvp__count' ) ).toHaveText(
 			'0 going · 3 spots left'
 		);
 
@@ -23,8 +23,8 @@ test.describe( 'Per-date places', () => {
 			.first()
 			.click();
 		await expect( page ).toHaveURL( /\d{4}-\d{2}-\d{2}\/?$/ );
-		const date = await rsvp.locator( '.oe-rsvp__date time' ).innerText();
-		await expect( rsvp.locator( '.oe-rsvp__count' ) ).toHaveText(
+		const date = await rsvp.locator( '.feriae-rsvp__date time' ).innerText();
+		await expect( rsvp.locator( '.feriae-rsvp__count' ) ).toHaveText(
 			'1 going · 2 spots left'
 		);
 
@@ -36,7 +36,7 @@ test.describe( 'Per-date places', () => {
 				'wcag21aa',
 				'wcag22aa',
 			] )
-			.include( '.oe-rsvp' )
+			.include( '.feriae-rsvp' )
 			.analyze();
 		expect( violations.map( ( v ) => v.id ) ).toEqual( [] );
 
@@ -44,22 +44,22 @@ test.describe( 'Per-date places', () => {
 		await rsvp.getByLabel( 'Email' ).fill( 'second-date@example.com' );
 		await humanPause( page );
 		await rsvp.getByRole( 'button', { name: 'RSVP' } ).click();
-		await expect( rsvp.locator( '.oe-rsvp__live' ) ).toHaveText(
+		await expect( rsvp.locator( '.feriae-rsvp__live' ) ).toHaveText(
 			/You’re going/
 		);
-		await expect( rsvp.locator( '.oe-rsvp__count' ) ).toHaveText(
+		await expect( rsvp.locator( '.feriae-rsvp__count' ) ).toHaveText(
 			'2 going · 1 spot left'
 		);
 
 		// The first date is unchanged.
 		await page.goto( '/events/weekly-storytime/' );
-		await expect( rsvp.locator( '.oe-rsvp__count' ) ).toHaveText(
+		await expect( rsvp.locator( '.feriae-rsvp__count' ) ).toHaveText(
 			'0 going · 3 spots left'
 		);
 
 		// Organisers see who's coming on which date.
 		await page.goto(
-			'/wp-admin/edit.php?post_type=oe_event&page=openevents-attendees'
+			'/wp-admin/edit.php?post_type=feriae_event&page=feriae-attendees'
 		);
 		await expect(
 			page

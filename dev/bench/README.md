@@ -5,7 +5,7 @@ can be compared before and after a change (or before and after a migration from
 another events plugin).
 
 - `server-timing.php`: a must-use plugin. For requests from 127.0.0.1 with the
-  header `X-OE-Bench: 1`, it adds `Server-Timing` with total PHP time, query
+  header `X-Feriae-Bench: 1`, it adds `Server-Timing` with total PHP time, query
   count and time, and peak memory. Copy it into `wp-content/mu-plugins/` on a
   local site only.
 - `run.php`: requests each URL in a JSON list (warm-ups, then N runs) and

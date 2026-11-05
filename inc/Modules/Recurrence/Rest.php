@@ -2,29 +2,29 @@
 /**
  * REST routes for repeating events.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Recurrence;
+namespace Feriae\Modules\Recurrence;
 
 use DateTimeImmutable;
 use InvalidArgumentException;
-use OpenEvents\Content\Event;
-use OpenEvents\Content\Meta;
-use OpenEvents\Occurrences\Occurrence;
-use OpenEvents\Rest\OccurrencesController;
+use Feriae\Content\Event;
+use Feriae\Content\Meta;
+use Feriae\Occurrences\Occurrence;
+use Feriae\Rest\OccurrencesController;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_REST_Server;
 
 /**
- * - POST /openevents/v1/recurrence/preview: dates and a description for a rule,
+ * - POST /feriae/v1/recurrence/preview: dates and a description for a rule,
  *   without saving (the editor's live preview; also useful to validate a rule).
- * - POST /openevents/v1/events/{id}/occurrences/{occurrence}/{skip|detach|split}:
+ * - POST /feriae/v1/events/{id}/occurrences/{occurrence}/{skip|detach|split}:
  *   skip one date, make one date its own event, or start a new series from it.
  *
- * Rules themselves are read and written as the `_oe_recurrence` meta on the
+ * Rules themselves are read and written as the `_feriae_recurrence` meta on the
  * core post routes (e.g. /wp/v2/events/{id}).
  */
 final class Rest {
@@ -46,7 +46,7 @@ final class Rest {
 				'permission_callback' => static fn() => current_user_can( 'edit_posts' ),
 				'args'                => array(
 					'start'    => array(
-						'description' => __( 'First start, "Y-m-d H:i:s" in the event timezone.', 'openevents' ),
+						'description' => __( 'First start, "Y-m-d H:i:s" in the event timezone.', 'feriae' ),
 						'type'        => 'string',
 						'required'    => true,
 					),
@@ -103,7 +103,7 @@ final class Rest {
 		$tz    = Event::resolve_timezone( (string) $request['timezone'] );
 		$start = DateTimeImmutable::createFromFormat( Meta::DATETIME_FORMAT, Meta::sanitize_datetime( $request['start'] ), $tz );
 		if ( ! $start ) {
-			return new WP_Error( 'openevents_invalid_start', __( 'Start must be a date and time ("Y-m-d H:i:s").', 'openevents' ), array( 'status' => 400 ) );
+			return new WP_Error( 'feriae_invalid_start', __( 'Start must be a date and time ("Y-m-d H:i:s").', 'feriae' ), array( 'status' => 400 ) );
 		}
 		$end = DateTimeImmutable::createFromFormat( Meta::DATETIME_FORMAT, Meta::sanitize_datetime( $request['end'] ), $tz );
 		$end = ( $end && $end >= $start ) ? $end : $start;
@@ -113,7 +113,7 @@ final class Rest {
 			try {
 				$rule = Rule::parse( (string) $request['rrule'] );
 			} catch ( InvalidArgumentException $e ) {
-				return new WP_Error( 'openevents_invalid_rrule', $e->getMessage(), array( 'status' => 400 ) );
+				return new WP_Error( 'feriae_invalid_rrule', $e->getMessage(), array( 'status' => 400 ) );
 			}
 		}
 
@@ -170,9 +170,9 @@ final class Rest {
 	 */
 	private function act( WP_REST_Request $request, callable $callback ): WP_REST_Response|WP_Error {
 		$event      = Event::get( (int) $request['id'] );
-		$occurrence = openevents()->occurrences()->get( (int) $request['occurrence'] );
+		$occurrence = feriae()->occurrences()->get( (int) $request['occurrence'] );
 		if ( ! $event || ! $occurrence || $occurrence->event_id !== $event->id() ) {
-			return new WP_Error( 'openevents_not_found', __( 'That date does not belong to this event.', 'openevents' ), array( 'status' => 404 ) );
+			return new WP_Error( 'feriae_not_found', __( 'That date does not belong to this event.', 'feriae' ), array( 'status' => 404 ) );
 		}
 		$result = $callback( $event, $occurrence );
 		return is_wp_error( $result ) ? $result : new WP_REST_Response( $result );
@@ -197,7 +197,7 @@ final class Rest {
 	 * sanitiser silently dropping it.
 	 */
 	public function validate_on_save(): void {
-		foreach ( openevents_event_post_types() as $post_type ) {
+		foreach ( feriae_event_post_types() as $post_type ) {
 			add_filter(
 				"rest_pre_insert_{$post_type}",
 				static function ( $prepared, WP_REST_Request $request ) {
@@ -206,7 +206,7 @@ final class Rest {
 						try {
 							Rule::parse( $rrule );
 						} catch ( InvalidArgumentException $e ) {
-							return new WP_Error( 'openevents_invalid_rrule', $e->getMessage(), array( 'status' => 400 ) );
+							return new WP_Error( 'feriae_invalid_rrule', $e->getMessage(), array( 'status' => 400 ) );
 						}
 					}
 					return $prepared;

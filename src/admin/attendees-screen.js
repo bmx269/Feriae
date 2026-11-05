@@ -11,9 +11,9 @@ import { ButtonLink, Notice } from '@wordpress/ui';
 import { useCallback, useEffect, useMemo, useState } from '@wordpress/element';
 
 const STATUS = [
-	{ value: 'going', label: __( 'Going', 'openevents' ) },
-	{ value: 'not_going', label: __( 'Not going', 'openevents' ) },
-	{ value: 'cancelled', label: __( 'Cancelled', 'openevents' ) },
+	{ value: 'going', label: __( 'Going', 'feriae' ) },
+	{ value: 'not_going', label: __( 'Not going', 'feriae' ) },
+	{ value: 'cancelled', label: __( 'Cancelled', 'feriae' ) },
 ];
 
 export default function AttendeesScreen( { root } ) {
@@ -79,7 +79,7 @@ export default function AttendeesScreen( { root } ) {
 			return;
 		}
 		apiFetch( {
-			path: addQueryArgs( '/openevents/v1/attendees/dates', {
+			path: addQueryArgs( '/feriae/v1/attendees/dates', {
 				event: query.event,
 			} ),
 		} )
@@ -90,7 +90,7 @@ export default function AttendeesScreen( { root } ) {
 	useEffect( () => {
 		setIsLoading( true );
 		apiFetch( {
-			path: addQueryArgs( '/openevents/v1/attendees', query ),
+			path: addQueryArgs( '/feriae/v1/attendees', query ),
 			parse: false,
 		} )
 			.then( async ( response ) => {
@@ -100,7 +100,7 @@ export default function AttendeesScreen( { root } ) {
 			} )
 			.catch( ( e ) =>
 				setError(
-					e.message || __( 'Could not load attendees.', 'openevents' )
+					e.message || __( 'Could not load attendees.', 'feriae' )
 				)
 			)
 			.finally( () => setIsLoading( false ) );
@@ -111,7 +111,7 @@ export default function AttendeesScreen( { root } ) {
 			await Promise.all(
 				items.map( ( item ) =>
 					apiFetch( {
-						path: `/openevents/v1/attendees/${ item.id }`,
+						path: `/feriae/v1/attendees/${ item.id }`,
 						method: 'POST',
 						data: changes,
 					} )
@@ -127,13 +127,13 @@ export default function AttendeesScreen( { root } ) {
 		() => [
 			{
 				id: 'name',
-				label: __( 'Name', 'openevents' ),
+				label: __( 'Name', 'feriae' ),
 				enableHiding: false,
 			},
-			{ id: 'email', label: __( 'Email', 'openevents' ) },
+			{ id: 'email', label: __( 'Email', 'feriae' ) },
 			{
 				id: 'event',
-				label: __( 'Event', 'openevents' ),
+				label: __( 'Event', 'feriae' ),
 				getValue: ( { item } ) => item.event_id,
 				render: ( { item } ) => item.event_title,
 				elements: events,
@@ -142,7 +142,7 @@ export default function AttendeesScreen( { root } ) {
 			},
 			{
 				id: 'date',
-				label: __( 'Date', 'openevents' ),
+				label: __( 'Date', 'feriae' ),
 				render: ( { item } ) => item.date || '—',
 				elements: dates,
 				enableSorting: false,
@@ -150,41 +150,41 @@ export default function AttendeesScreen( { root } ) {
 			},
 			{
 				id: 'status',
-				label: __( 'Status', 'openevents' ),
+				label: __( 'Status', 'feriae' ),
 				elements: STATUS,
 				filterBy: { operators: [ 'is' ], isPrimary: true },
 			},
 			{
 				id: 'checked_in',
-				label: __( 'Checked in', 'openevents' ),
+				label: __( 'Checked in', 'feriae' ),
 				getValue: ( { item } ) => ( item.checked_in ? 'yes' : 'no' ),
 				render: ( { item } ) =>
-					item.checked_in ? __( 'Yes', 'openevents' ) : '—',
+					item.checked_in ? __( 'Yes', 'feriae' ) : '—',
 				elements: [
-					{ value: 'yes', label: __( 'Yes', 'openevents' ) },
-					{ value: 'no', label: __( 'No', 'openevents' ) },
+					{ value: 'yes', label: __( 'Yes', 'feriae' ) },
+					{ value: 'no', label: __( 'No', 'feriae' ) },
 				],
 				enableSorting: false,
 				filterBy: { operators: [ 'is' ] },
 			},
 			{
 				id: 'code',
-				label: __( 'Check-in code', 'openevents' ),
+				label: __( 'Check-in code', 'feriae' ),
 				enableSorting: false,
 			},
 			{
 				id: 'answers',
-				label: __( 'Details', 'openevents' ),
+				label: __( 'Details', 'feriae' ),
 				getValue: ( { item } ) =>
 					( item.answers || [] )
 						.map( ( a ) => `${ a.label }: ${ a.value }` )
 						.join( '; ' ),
 				render: ( { item } ) =>
 					item.answers?.length ? (
-						<ul className="oe-answers">
+						<ul className="feriae-answers">
 							{ item.answers.map( ( a ) => (
 								<li key={ a.key }>
-									<span className="oe-answers__label">
+									<span className="feriae-answers__label">
 										{ a.label }
 									</span>{ ' ' }
 									{ a.value }
@@ -198,7 +198,7 @@ export default function AttendeesScreen( { root } ) {
 			},
 			{
 				id: 'created_utc',
-				label: __( 'Responded', 'openevents' ),
+				label: __( 'Responded', 'feriae' ),
 				render: ( { item } ) =>
 					new Date(
 						`${ item.created_utc.replace( ' ', 'T' ) }Z`
@@ -212,7 +212,7 @@ export default function AttendeesScreen( { root } ) {
 		() => [
 			{
 				id: 'check-in',
-				label: __( 'Check in', 'openevents' ),
+				label: __( 'Check in', 'feriae' ),
 				isPrimary: true,
 				supportsBulk: true,
 				isEligible: ( item ) =>
@@ -221,21 +221,21 @@ export default function AttendeesScreen( { root } ) {
 			},
 			{
 				id: 'undo-check-in',
-				label: __( 'Undo check-in', 'openevents' ),
+				label: __( 'Undo check-in', 'feriae' ),
 				supportsBulk: true,
 				isEligible: ( item ) => item.checked_in,
 				callback: ( items ) => update( items, { checked_in: false } ),
 			},
 			{
 				id: 'pass',
-				label: __( 'Open pass', 'openevents' ),
+				label: __( 'Open pass', 'feriae' ),
 				isEligible: ( item ) => item.status === 'going',
 				callback: ( [ item ] ) =>
 					window.open( item.pass_url, '_blank', 'noopener' ),
 			},
 			{
 				id: 'cancel',
-				label: __( 'Cancel RSVP', 'openevents' ),
+				label: __( 'Cancel RSVP', 'feriae' ),
 				supportsBulk: true,
 				isDestructive: true,
 				isEligible: ( item ) => item.status === 'going',
@@ -253,15 +253,15 @@ export default function AttendeesScreen( { root } ) {
 
 	return (
 		<Page
-			title={ __( 'Attendees', 'openevents' ) }
+			title={ __( 'Attendees', 'feriae' ) }
 			subTitle={ sprintf(
 				/* translators: %d: number of attendees */
-				_n( '%d attendee', '%d attendees', total, 'openevents' ),
+				_n( '%d attendee', '%d attendees', total, 'feriae' ),
 				total
 			) }
 			actions={
 				<ButtonLink variant="outline" href={ csvUrl }>
-					{ __( 'Download CSV', 'openevents' ) }
+					{ __( 'Download CSV', 'feriae' ) }
 				</ButtonLink>
 			}
 		>
@@ -288,7 +288,7 @@ export default function AttendeesScreen( { root } ) {
 				defaultLayouts={ { table: {} } }
 				searchLabel={ __(
 					'Search name, email, or check-in code',
-					'openevents'
+					'feriae'
 				) }
 			/>
 		</Page>

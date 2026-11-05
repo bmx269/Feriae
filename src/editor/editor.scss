@@ -1,4 +1,4 @@
-.oe-editor-panel {
+.feriae-editor-panel {
 	&__row > span {
 		flex-shrink: 0;
 	}
@@ -14,12 +14,12 @@
 }
 
 // Fieldsets default to min-inline-size: min-content and would overflow the sidebar.
-.oe-editor-panel__ticket,
-.oe-editor-panel__question {
+.feriae-editor-panel__ticket,
+.feriae-editor-panel__question {
 	min-width: 0;
 }
 
-.oe-editor-panel__ticket {
+.feriae-editor-panel__ticket {
 	margin: 0;
 	padding: 12px;
 	border: 1px solid #ddd;
@@ -31,7 +31,7 @@
 	}
 }
 
-.oe-editor-panel__days {
+.feriae-editor-panel__days {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 4px;
@@ -54,8 +54,8 @@
 	}
 }
 
-.oe-editor-panel__preview,
-.oe-editor-panel__list {
+.feriae-editor-panel__preview,
+.feriae-editor-panel__list {
 	margin: 0;
 
 	p {
@@ -76,21 +76,21 @@
 	}
 }
 
-.oe-editor-panel__subhead {
+.feriae-editor-panel__subhead {
 	margin: 0 0 8px;
 	font-size: 11px;
 	font-weight: 500;
 	text-transform: uppercase;
 }
 
-.oe-editor-panel__hint {
+.feriae-editor-panel__hint {
 	margin: 0;
 	padding: 8px;
 	color: #757575;
 	font-size: 12px;
 }
 
-.oe-editor-panel__question {
+.feriae-editor-panel__question {
 	margin: 0;
 	padding: 12px;
 	border: 1px solid #ddd;
@@ -106,7 +106,7 @@
 	}
 }
 
-.oe-editor-panel__tag {
+.feriae-editor-panel__tag {
 	margin-inline-start: 6px;
 	padding: 0 4px;
 	border: 1px solid #757575;

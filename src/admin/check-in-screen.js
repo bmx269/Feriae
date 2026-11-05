@@ -15,7 +15,7 @@ import { Page } from '@wordpress/admin-ui';
 import { Button, Card, InputControl, Notice, Stack, Text } from '@wordpress/ui';
 import { useCallback, useEffect, useRef, useState } from '@wordpress/element';
 
-const PATH = '/openevents/v1/check-in';
+const PATH = '/feriae/v1/check-in';
 const canScan = typeof window !== 'undefined' && 'BarcodeDetector' in window;
 
 const intentFor = ( result ) =>
@@ -55,13 +55,13 @@ function Result( { data, busy, onCheck, onUndo } ) {
 					<Text>
 						{ sprintf(
 							/* translators: %s: check-in code */
-							__( 'Code: %s', 'openevents' ),
+							__( 'Code: %s', 'feriae' ),
 							attendee.code
 						) }
 						{ attendee.checked_in &&
 							` · ${ sprintf(
 								/* translators: %s: time */
-								__( 'Checked in at %s', 'openevents' ),
+								__( 'Checked in at %s', 'feriae' ),
 								attendee.checked_in_at
 							) }` }
 					</Text>
@@ -78,7 +78,7 @@ function Result( { data, busy, onCheck, onUndo } ) {
 								/* translators: 1: people checked in, 2: people booked */
 								__(
 									'%1$d of %2$d checked in for this date',
-									'openevents'
+									'feriae'
 								),
 								counts.checked_in,
 								counts.going
@@ -92,7 +92,7 @@ function Result( { data, busy, onCheck, onUndo } ) {
 									onClick={ () => onCheck( attendee.code ) }
 									disabled={ busy }
 								>
-									{ __( 'Check in', 'openevents' ) }
+									{ __( 'Check in', 'feriae' ) }
 								</Button>
 							) }
 						{ attendee.checked_in && (
@@ -101,7 +101,7 @@ function Result( { data, busy, onCheck, onUndo } ) {
 								onClick={ () => onUndo( attendee.code ) }
 								disabled={ busy }
 							>
-								{ __( 'Undo check-in', 'openevents' ) }
+								{ __( 'Undo check-in', 'feriae' ) }
 							</Button>
 						) }
 					</Stack>
@@ -147,7 +147,7 @@ export default function CheckInScreen( { root } ) {
 				result: 'error',
 				message:
 					error.message ||
-					__( 'Something went wrong. Try again.', 'openevents' ),
+					__( 'Something went wrong. Try again.', 'feriae' ),
 				...( error.data?.data || {} ),
 			} );
 		}
@@ -203,7 +203,7 @@ export default function CheckInScreen( { root } ) {
 					result: 'error',
 					message: __(
 						'The camera isn’t available. Allow camera access (the site must use HTTPS), or type the code.',
-						'openevents'
+						'feriae'
 					),
 				} );
 			} );
@@ -216,13 +216,13 @@ export default function CheckInScreen( { root } ) {
 
 	return (
 		<Page
-			title={ __( 'Check-in', 'openevents' ) }
+			title={ __( 'Check-in', 'feriae' ) }
 			subTitle={ __(
 				'Scan a pass or type its code. Each code checks in one person.',
-				'openevents'
+				'feriae'
 			) }
 		>
-			<Stack direction="column" gap="lg" className="oe-check-in">
+			<Stack direction="column" gap="lg" className="feriae-check-in">
 				<form
 					onSubmit={ ( event ) => {
 						event.preventDefault();
@@ -232,10 +232,10 @@ export default function CheckInScreen( { root } ) {
 					<Stack direction="row" gap="sm" align="end" wrap="wrap">
 						<InputControl
 							ref={ input }
-							label={ __( 'Check-in code', 'openevents' ) }
+							label={ __( 'Check-in code', 'feriae' ) }
 							description={ __(
 								'A handheld scanner can type here too.',
-								'openevents'
+								'feriae'
 							) }
 							value={ code }
 							onValueChange={ setCode }
@@ -246,7 +246,7 @@ export default function CheckInScreen( { root } ) {
 							autoFocus
 						/>
 						<Button type="submit" disabled={ busy || ! code }>
-							{ __( 'Check in', 'openevents' ) }
+							{ __( 'Check in', 'feriae' ) }
 						</Button>
 						{ canScan && (
 							<Button
@@ -254,8 +254,8 @@ export default function CheckInScreen( { root } ) {
 								onClick={ () => setScanning( ! scanning ) }
 							>
 								{ scanning
-									? __( 'Stop camera', 'openevents' )
-									: __( 'Scan with camera', 'openevents' ) }
+									? __( 'Stop camera', 'feriae' )
+									: __( 'Scan with camera', 'feriae' ) }
 							</Button>
 						) }
 					</Stack>
@@ -264,10 +264,10 @@ export default function CheckInScreen( { root } ) {
 				{ scanning && (
 					<video
 						ref={ video }
-						className="oe-check-in__video"
+						className="feriae-check-in__video"
 						muted
 						playsInline
-						aria-label={ __( 'Camera', 'openevents' ) }
+						aria-label={ __( 'Camera', 'feriae' ) }
 					/>
 				) }
 
@@ -280,7 +280,7 @@ export default function CheckInScreen( { root } ) {
 										( outcome.result === 'found' &&
 											__(
 												'Found. Check in when they arrive.',
-												'openevents'
+												'feriae'
 											) ) }
 								</Notice.Description>
 							</Notice.Root>
@@ -297,9 +297,9 @@ export default function CheckInScreen( { root } ) {
 				</div>
 
 				{ recent.length > 0 && (
-					<section aria-labelledby="oe-check-in-recent">
-						<h2 id="oe-check-in-recent">
-							{ __( 'Checked in on this device', 'openevents' ) }
+					<section aria-labelledby="feriae-check-in-recent">
+						<h2 id="feriae-check-in-recent">
+							{ __( 'Checked in on this device', 'feriae' ) }
 						</h2>
 						<ul>
 							{ recent.map( ( person ) => (

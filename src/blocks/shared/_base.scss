@@ -1,18 +1,18 @@
 // Shared tokens. Everything inherits the theme's fonts and colours; override
 // these custom properties in theme.json or CSS instead of fighting selectors.
-:where(.oe-calendar, .oe-upcoming, .oe-details) {
+:where(.feriae-calendar, .feriae-upcoming, .feriae-details) {
 	// Not currentColor: elements that set a light text colour on the accent would
 	// then paint an invisible light-on-light background.
-	--oe-accent: var(--wp--preset--color--primary, var(--wp--preset--color--contrast, #1e1e1e));
-	--oe-on-accent: var(--wp--preset--color--base, #fff);
-	--oe-border: color-mix(in srgb, currentColor 15%, transparent);
-	--oe-muted: color-mix(in srgb, currentColor 65%, transparent);
-	--oe-surface: color-mix(in srgb, currentColor 4%, transparent);
-	--oe-radius: 4px;
-	--oe-gap: var(--wp--preset--spacing--30, 1rem);
+	--feriae-accent: var(--wp--preset--color--primary, var(--wp--preset--color--contrast, #1e1e1e));
+	--feriae-on-accent: var(--wp--preset--color--base, #fff);
+	--feriae-border: color-mix(in srgb, currentColor 15%, transparent);
+	--feriae-muted: color-mix(in srgb, currentColor 65%, transparent);
+	--feriae-surface: color-mix(in srgb, currentColor 4%, transparent);
+	--feriae-radius: 4px;
+	--feriae-gap: var(--wp--preset--spacing--30, 1rem);
 }
 
-.oe-visually-hidden {
+.feriae-visually-hidden {
 	position: absolute !important;
 	width: 1px;
 	height: 1px;
@@ -26,18 +26,18 @@
 
 // Category stripes are the only sign of the category, so they need 3:1
 // (WCAG 1.4.11). Mixing toward the text colour gets there for light colours
-// like amber, in light and dark themes alike. Used where --oe-event-bg is set,
+// like amber, in light and dark themes alike. Used where --feriae-event-bg is set,
 // since a custom property would resolve it on the container instead.
-$event-line: color-mix(in srgb, var(--oe-event-bg, var(--oe-accent)) 60%, currentcolor);
+$event-line: color-mix(in srgb, var(--feriae-event-bg, var(--feriae-accent)) 60%, currentcolor);
 
 // Cancelled or postponed. The word carries the meaning (not colour), in the
 // text colour, so contrast follows the theme.
-.oe-status {
+.feriae-status {
 	display: inline-block;
 	margin-inline-end: 0.4em;
 	padding: 0 0.4em;
 	border: 1px solid currentcolor;
-	border-radius: var(--oe-radius, 4px);
+	border-radius: var(--feriae-radius, 4px);
 	font-size: 0.8em;
 	font-weight: 700;
 	letter-spacing: 0.03em;

@@ -10,11 +10,11 @@ import { Notice } from '@wordpress/ui';
 import { useCallback, useEffect, useMemo, useState } from '@wordpress/element';
 
 const STATUS = [
-	{ value: 'waiting', label: __( 'Waiting', 'openevents' ) },
-	{ value: 'offered', label: __( 'Tickets held', 'openevents' ) },
-	{ value: 'claimed', label: __( 'Got a spot', 'openevents' ) },
-	{ value: 'expired', label: __( 'Hold expired', 'openevents' ) },
-	{ value: 'left', label: __( 'Left', 'openevents' ) },
+	{ value: 'waiting', label: __( 'Waiting', 'feriae' ) },
+	{ value: 'offered', label: __( 'Tickets held', 'feriae' ) },
+	{ value: 'claimed', label: __( 'Got a spot', 'feriae' ) },
+	{ value: 'expired', label: __( 'Hold expired', 'feriae' ) },
+	{ value: 'left', label: __( 'Left', 'feriae' ) },
 ];
 
 const when = ( utc ) =>
@@ -60,7 +60,7 @@ export default function WaitlistScreen( { root } ) {
 			view.filters?.find( ( f ) => f.field === field )?.value;
 		setIsLoading( true );
 		apiFetch( {
-			path: addQueryArgs( '/openevents/v1/waitlist', {
+			path: addQueryArgs( '/feriae/v1/waitlist', {
 				page: view.page,
 				per_page: view.perPage,
 				search: view.search || undefined,
@@ -81,7 +81,7 @@ export default function WaitlistScreen( { root } ) {
 		try {
 			for ( const item of items ) {
 				await apiFetch( {
-					path: `/openevents/v1/waitlist/${ item.id }`,
+					path: `/feriae/v1/waitlist/${ item.id }`,
 					method: 'POST',
 					data: { action: 'remove' },
 				} );
@@ -94,7 +94,7 @@ export default function WaitlistScreen( { root } ) {
 						'%d person removed.',
 						'%d people removed.',
 						items.length,
-						'openevents'
+						'feriae'
 					),
 					items.length
 				),
@@ -109,18 +109,18 @@ export default function WaitlistScreen( { root } ) {
 		() => [
 			{
 				id: 'name',
-				label: __( 'Name', 'openevents' ),
+				label: __( 'Name', 'feriae' ),
 				enableHiding: false,
 				enableSorting: false,
 			},
 			{
 				id: 'email',
-				label: __( 'Email', 'openevents' ),
+				label: __( 'Email', 'feriae' ),
 				enableSorting: false,
 			},
 			{
 				id: 'event',
-				label: __( 'Event', 'openevents' ),
+				label: __( 'Event', 'feriae' ),
 				getValue: ( { item } ) => item.event_id,
 				render: ( { item } ) => item.event_title,
 				elements: events,
@@ -129,24 +129,24 @@ export default function WaitlistScreen( { root } ) {
 			},
 			{
 				id: 'date',
-				label: __( 'Date', 'openevents' ),
+				label: __( 'Date', 'feriae' ),
 				render: ( { item } ) => item.date || '—',
 				enableSorting: false,
 			},
 			{
 				id: 'type',
-				label: __( 'For', 'openevents' ),
+				label: __( 'For', 'feriae' ),
 				render: ( { item } ) => item.type_name,
 				enableSorting: false,
 			},
 			{
 				id: 'quantity',
-				label: __( 'People', 'openevents' ),
+				label: __( 'People', 'feriae' ),
 				enableSorting: false,
 			},
 			{
 				id: 'status',
-				label: __( 'Status', 'openevents' ),
+				label: __( 'Status', 'feriae' ),
 				elements: STATUS,
 				render: ( { item } ) => {
 					const label =
@@ -155,7 +155,7 @@ export default function WaitlistScreen( { root } ) {
 					return item.status === 'offered'
 						? sprintf(
 								/* translators: 1: status, 2: deadline */
-								__( '%1$s until %2$s', 'openevents' ),
+								__( '%1$s until %2$s', 'feriae' ),
 								label,
 								when( item.offer_expires_utc )
 						  )
@@ -166,17 +166,17 @@ export default function WaitlistScreen( { root } ) {
 			},
 			{
 				id: 'answers',
-				label: __( 'Details', 'openevents' ),
+				label: __( 'Details', 'feriae' ),
 				getValue: ( { item } ) =>
 					( item.answers || [] )
 						.map( ( a ) => `${ a.label }: ${ a.value }` )
 						.join( '; ' ),
 				render: ( { item } ) =>
 					item.answers?.length ? (
-						<ul className="oe-answers">
+						<ul className="feriae-answers">
 							{ item.answers.map( ( a ) => (
 								<li key={ a.key }>
-									<span className="oe-answers__label">
+									<span className="feriae-answers__label">
 										{ a.label }
 									</span>{ ' ' }
 									{ a.value }
@@ -190,7 +190,7 @@ export default function WaitlistScreen( { root } ) {
 			},
 			{
 				id: 'created_utc',
-				label: __( 'Joined', 'openevents' ),
+				label: __( 'Joined', 'feriae' ),
 				render: ( { item } ) => when( item.created_utc ),
 				enableSorting: false,
 			},
@@ -202,7 +202,7 @@ export default function WaitlistScreen( { root } ) {
 		() => [
 			{
 				id: 'remove',
-				label: __( 'Remove from waitlist', 'openevents' ),
+				label: __( 'Remove from waitlist', 'feriae' ),
 				isDestructive: true,
 				supportsBulk: true,
 				isEligible: ( item ) =>
@@ -215,10 +215,10 @@ export default function WaitlistScreen( { root } ) {
 
 	return (
 		<Page
-			title={ __( 'Waitlist', 'openevents' ) }
+			title={ __( 'Waitlist', 'feriae' ) }
 			subTitle={ __(
 				'First come, first served. Freed RSVP spots are filled automatically; freed tickets are held for the next person.',
-				'openevents'
+				'feriae'
 			) }
 		>
 			{ notice && (
@@ -242,7 +242,7 @@ export default function WaitlistScreen( { root } ) {
 					),
 				} }
 				defaultLayouts={ { table: {} } }
-				searchLabel={ __( 'Search name or email', 'openevents' ) }
+				searchLabel={ __( 'Search name or email', 'feriae' ) }
 			/>
 		</Page>
 	);

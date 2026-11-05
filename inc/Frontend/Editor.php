@@ -2,15 +2,15 @@
 /**
  * Block editor sidebar.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Frontend;
+namespace Feriae\Frontend;
 
-use OpenEvents\Content\PostTypes;
+use Feriae\Content\PostTypes;
 
-use const OpenEvents\PLUGIN_DIR;
-use const OpenEvents\PLUGIN_FILE;
+use const Feriae\PLUGIN_DIR;
+use const Feriae\PLUGIN_FILE;
 
 /**
  * Loads the sidebar panels for events, venues, and organizers.
@@ -28,9 +28,9 @@ final class Editor {
 		if ( ! $screen || ! $screen->post_type ) {
 			return;
 		}
-		$settings    = openevents()->settings();
+		$settings    = feriae()->settings();
 		$event_types = $settings->event_post_types();
-		if ( ! in_array( $screen->post_type, array_merge( $event_types, array( PostTypes::VENUE, PostTypes::ORGANIZER, \OpenEvents\Modules\Series\Module::POST_TYPE ) ), true ) ) {
+		if ( ! in_array( $screen->post_type, array_merge( $event_types, array( PostTypes::VENUE, PostTypes::ORGANIZER, \Feriae\Modules\Series\Module::POST_TYPE ) ), true ) ) {
 			return;
 		}
 
@@ -40,15 +40,15 @@ final class Editor {
 		}
 		$asset = require $asset_file;
 
-		wp_enqueue_script( 'openevents-editor', plugins_url( 'build/editor/index.js', PLUGIN_FILE ), $asset['dependencies'], $asset['version'], true );
-		wp_set_script_translations( 'openevents-editor', 'openevents' );
+		wp_enqueue_script( 'feriae-editor', plugins_url( 'build/editor/index.js', PLUGIN_FILE ), $asset['dependencies'], $asset['version'], true );
+		wp_set_script_translations( 'feriae-editor', 'feriae' );
 		if ( is_readable( PLUGIN_DIR . '/build/editor/index.css' ) ) {
-			wp_enqueue_style( 'openevents-editor', plugins_url( 'build/editor/index.css', PLUGIN_FILE ), array( 'wp-components' ), $asset['version'] );
+			wp_enqueue_style( 'feriae-editor', plugins_url( 'build/editor/index.css', PLUGIN_FILE ), array( 'wp-components' ), $asset['version'] );
 		}
 
 		wp_add_inline_script(
-			'openevents-editor',
-			'window.openEvents = ' . wp_json_encode(
+			'feriae-editor',
+			'window.feriae = ' . wp_json_encode(
 				array(
 					'eventPostTypes'  => $event_types,
 					// Posts in the dedicated type are always events; existing types opt in per post.
@@ -56,9 +56,9 @@ final class Editor {
 					'siteTimezone'    => wp_timezone_string(),
 					'timezones'       => timezone_identifiers_list(),
 					'timeFormat12h'   => (bool) preg_match( '/[aAgh]/', (string) get_option( 'time_format' ) ),
-					'modules'         => openevents()->modules()->enabled_ids(),
-					'attendeesUrl'    => admin_url( 'admin.php?page=openevents-attendees' ),
-					'ordersUrl'       => admin_url( 'admin.php?page=openevents-orders' ),
+					'modules'         => feriae()->modules()->enabled_ids(),
+					'attendeesUrl'    => admin_url( 'admin.php?page=feriae-attendees' ),
+					'ordersUrl'       => admin_url( 'admin.php?page=feriae-orders' ),
 					'currency'        => strtoupper( (string) ( $settings->get( 'currency' ) ?: 'USD' ) ),
 				)
 			) . ';',
@@ -74,8 +74,8 @@ final class Editor {
 		$asset_file = PLUGIN_DIR . '/build/editor/bindings.asset.php';
 		if ( is_readable( $asset_file ) ) {
 			$asset = require $asset_file;
-			wp_enqueue_script( 'openevents-bindings', plugins_url( 'build/editor/bindings.js', PLUGIN_FILE ), $asset['dependencies'], $asset['version'], true );
-			wp_set_script_translations( 'openevents-bindings', 'openevents' );
+			wp_enqueue_script( 'feriae-bindings', plugins_url( 'build/editor/bindings.js', PLUGIN_FILE ), $asset['dependencies'], $asset['version'], true );
+			wp_set_script_translations( 'feriae-bindings', 'feriae' );
 		}
 	}
 }

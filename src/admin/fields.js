@@ -15,7 +15,7 @@ import {
 	Text,
 } from '@wordpress/ui';
 
-const config = window.openEventsAdmin || {};
+const config = window.feriaeAdmin || {};
 
 /**
  * Where events live: the dedicated post type and/or existing post types.
@@ -36,10 +36,10 @@ export function EventContentFields( { settings, update } ) {
 	return (
 		<Stack direction="column" gap="lg">
 			<SwitchControl
-				label={ __( 'Create an Events post type', 'openevents' ) }
+				label={ __( 'Create an Events post type', 'feriae' ) }
 				description={ __(
 					'Adds an Events menu with its own archive page. Turning this off later hides existing events but does not delete them.',
-					'openevents'
+					'feriae'
 				) }
 				checked={ !! settings.register_event_type }
 				onCheckedChange={ ( checked ) =>
@@ -48,7 +48,7 @@ export function EventContentFields( { settings, update } ) {
 			/>
 			{ settings.register_event_type && (
 				<InputControl
-					label={ __( 'Events URL slug', 'openevents' ) }
+					label={ __( 'Events URL slug', 'feriae' ) }
 					prefix={
 						<InputLayout.Slot>
 							<Text variant="body-md">{ config.homeUrl }</Text>
@@ -64,11 +64,11 @@ export function EventContentFields( { settings, update } ) {
 				<SwitchControl
 					label={ __(
 						'Use the event template for events in existing post types',
-						'openevents'
+						'feriae'
 					) }
 					description={ __(
 						'Dated posts in the types below display with the Single Event template instead of their usual one. Off by default so existing posts keep their look.',
-						'openevents'
+						'feriae'
 					) }
 					checked={ !! settings.event_template }
 					onCheckedChange={ ( checked ) =>
@@ -81,13 +81,13 @@ export function EventContentFields( { settings, update } ) {
 					<Text variant="heading-sm">
 						{ __(
 							'Add events to existing post types',
-							'openevents'
+							'feriae'
 						) }
 					</Text>
 					<Text variant="body-sm">
 						{ __(
 							'An Event panel appears in the editor for these types. Existing posts are not changed: an item only becomes an event when you give it a date.',
-							'openevents'
+							'feriae'
 						) }
 					</Text>
 					{ config.postTypes.map( ( type ) => (
@@ -100,7 +100,7 @@ export function EventContentFields( { settings, update } ) {
 									'%d published',
 									'%d published',
 									type.count,
-									'openevents'
+									'feriae'
 								),
 								type.count
 							) }
@@ -128,8 +128,8 @@ export function DisplayFields( { settings, update } ) {
 		{
 			value: '0',
 			label: settings.register_event_type
-				? __( 'Use the Events archive', 'openevents' )
-				: __( 'None', 'openevents' ),
+				? __( 'Use the Events archive', 'feriae' )
+				: __( 'None', 'feriae' ),
 		},
 		...( config.pages || [] ).map( ( page ) => ( {
 			value: String( page.id ),
@@ -140,10 +140,10 @@ export function DisplayFields( { settings, update } ) {
 	return (
 		<Stack direction="column" gap="lg">
 			<SelectControl
-				label={ __( 'Calendar page', 'openevents' ) }
+				label={ __( 'Calendar page', 'feriae' ) }
 				description={ __(
 					'A page containing the Calendar block. Used for “View all events” links and the iCal feed.',
-					'openevents'
+					'feriae'
 				) }
 				items={ pageItems }
 				value={ String( settings.calendar_page || 0 ) }
@@ -152,22 +152,22 @@ export function DisplayFields( { settings, update } ) {
 				}
 			/>
 			<RadioGroupControl
-				label={ __( 'When someone selects an event', 'openevents' ) }
+				label={ __( 'When someone selects an event', 'feriae' ) }
 				description={ __(
 					'Calendar blocks can override this.',
-					'openevents'
+					'feriae'
 				) }
 				items={ [
 					{
 						value: 'page',
-						label: __( 'Go to the event page', 'openevents' ),
+						label: __( 'Go to the event page', 'feriae' ),
 					},
 					{
 						value: 'popup',
-						label: __( 'Show a summary popup', 'openevents' ),
+						label: __( 'Show a summary popup', 'feriae' ),
 						description: __(
 							'Date, venue, and summary, with a link to the full event.',
-							'openevents'
+							'feriae'
 						),
 					},
 				] }
@@ -175,23 +175,23 @@ export function DisplayFields( { settings, update } ) {
 				onValueChange={ ( value ) => update( { click_action: value } ) }
 			/>
 			<RadioGroupControl
-				label={ __( 'Default view', 'openevents' ) }
+				label={ __( 'Default view', 'feriae' ) }
 				items={ [
 					{
 						value: 'month',
-						label: __( 'Month grid', 'openevents' ),
+						label: __( 'Month grid', 'feriae' ),
 					},
 					{
 						value: 'week',
-						label: __( 'Week', 'openevents' ),
+						label: __( 'Week', 'feriae' ),
 					},
 					{
 						value: 'day',
-						label: __( 'Day', 'openevents' ),
+						label: __( 'Day', 'feriae' ),
 					},
 					{
 						value: 'list',
-						label: __( 'List', 'openevents' ),
+						label: __( 'List', 'feriae' ),
 					},
 				] }
 				value={ settings.default_view || 'month' }
@@ -215,24 +215,24 @@ export function FormatFields( { settings, update } ) {
 				type="number"
 				min={ 1 }
 				max={ 100 }
-				label={ __( 'Events per page', 'openevents' ) }
+				label={ __( 'Events per page', 'feriae' ) }
 				value={ String( settings.per_page ?? 10 ) }
 				onValueChange={ ( value ) =>
 					update( { per_page: Number( value ) || 10 } )
 				}
 			/>
 			<InputControl
-				label={ __( 'Date format', 'openevents' ) }
+				label={ __( 'Date format', 'feriae' ) }
 				description={ __(
 					'Leave blank to use the site date format.',
-					'openevents'
+					'feriae'
 				) }
 				placeholder={ config.siteFormats?.date }
 				value={ settings.date_format || '' }
 				onValueChange={ ( value ) => update( { date_format: value } ) }
 			/>
 			<InputControl
-				label={ __( 'Time format', 'openevents' ) }
+				label={ __( 'Time format', 'feriae' ) }
 				placeholder={ config.siteFormats?.time }
 				value={ settings.time_format || '' }
 				onValueChange={ ( value ) => update( { time_format: value } ) }
@@ -240,11 +240,11 @@ export function FormatFields( { settings, update } ) {
 			<SwitchControl
 				label={ __(
 					'Show event details above the content automatically',
-					'openevents'
+					'feriae'
 				) }
 				description={ __(
 					'Skipped when the Event Details block is already on the page.',
-					'openevents'
+					'feriae'
 				) }
 				checked={ !! settings.append_details }
 				onCheckedChange={ ( checked ) =>
@@ -277,7 +277,7 @@ export function ModuleFields( { enabled, onChange } ) {
 						module.requires.length
 							? `${ module.description } ${ sprintf(
 									/* translators: %s: comma-separated module names */
-									__( 'Requires: %s.', 'openevents' ),
+									__( 'Requires: %s.', 'feriae' ),
 									module.requires.map( labelFor ).join( ', ' )
 							  ) }`
 							: module.description
@@ -313,7 +313,7 @@ export function AttributeFields( { settings, update } ) {
 			<Text variant="body-sm">
 				{ __(
 					'Add lists such as “Audiences” or “Format”. Editors pick from them in the Event panel, visitors see them in the event details and can filter the calendar by them. Manage each list’s choices under Events.',
-					'openevents'
+					'feriae'
 				) }
 			</Text>
 			{ attributes.map( ( attribute, index ) => (
@@ -324,7 +324,7 @@ export function AttributeFields( { settings, update } ) {
 					align="end"
 				>
 					<InputControl
-						label={ __( 'Attribute name', 'openevents' ) }
+						label={ __( 'Attribute name', 'feriae' ) }
 						value={ attribute.label }
 						onValueChange={ ( label ) =>
 							set(
@@ -342,8 +342,8 @@ export function AttributeFields( { settings, update } ) {
 					>
 						{ sprintf(
 							/* translators: %s: attribute name */
-							__( 'Remove %s', 'openevents' ),
-							attribute.label || __( 'attribute', 'openevents' )
+							__( 'Remove %s', 'feriae' ),
+							attribute.label || __( 'attribute', 'feriae' )
 						) }
 					</Button>
 				</Stack>
@@ -355,7 +355,7 @@ export function AttributeFields( { settings, update } ) {
 						set( [ ...attributes, { slug: '', label: '' } ] )
 					}
 				>
-					{ __( 'Add attribute', 'openevents' ) }
+					{ __( 'Add attribute', 'feriae' ) }
 				</Button>
 			</div>
 		</Stack>

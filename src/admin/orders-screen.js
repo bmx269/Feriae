@@ -11,13 +11,13 @@ import { Button, Notice, Stack, Text } from '@wordpress/ui';
 import { useCallback, useEffect, useMemo, useState } from '@wordpress/element';
 
 const STATUS = [
-	{ value: 'completed', label: __( 'Paid', 'openevents' ) },
-	{ value: 'unpaid', label: __( 'Unpaid (pay later)', 'openevents' ) },
-	{ value: 'pending', label: __( 'Awaiting payment', 'openevents' ) },
-	{ value: 'refunded', label: __( 'Refunded', 'openevents' ) },
-	{ value: 'cancelled', label: __( 'Cancelled', 'openevents' ) },
-	{ value: 'expired', label: __( 'Expired', 'openevents' ) },
-	{ value: 'failed', label: __( 'Failed', 'openevents' ) },
+	{ value: 'completed', label: __( 'Paid', 'feriae' ) },
+	{ value: 'unpaid', label: __( 'Unpaid (pay later)', 'feriae' ) },
+	{ value: 'pending', label: __( 'Awaiting payment', 'feriae' ) },
+	{ value: 'refunded', label: __( 'Refunded', 'feriae' ) },
+	{ value: 'cancelled', label: __( 'Cancelled', 'feriae' ) },
+	{ value: 'expired', label: __( 'Expired', 'feriae' ) },
+	{ value: 'failed', label: __( 'Failed', 'feriae' ) },
 ];
 
 export default function OrdersScreen( { root } ) {
@@ -55,7 +55,7 @@ export default function OrdersScreen( { root } ) {
 			view.filters?.find( ( f ) => f.field === field )?.value;
 		setIsLoading( true );
 		apiFetch( {
-			path: addQueryArgs( '/openevents/v1/orders', {
+			path: addQueryArgs( '/feriae/v1/orders', {
 				page: view.page,
 				per_page: view.perPage,
 				search: view.search || undefined,
@@ -76,7 +76,7 @@ export default function OrdersScreen( { root } ) {
 		try {
 			for ( const item of items ) {
 				await apiFetch( {
-					path: `/openevents/v1/orders/${ item.id }`,
+					path: `/feriae/v1/orders/${ item.id }`,
 					method: 'POST',
 					data: { action },
 				} );
@@ -89,7 +89,7 @@ export default function OrdersScreen( { root } ) {
 						'%d order updated.',
 						'%d orders updated.',
 						items.length,
-						'openevents'
+						'feriae'
 					),
 					items.length
 				),
@@ -105,18 +105,18 @@ export default function OrdersScreen( { root } ) {
 		() => [
 			{
 				id: 'name',
-				label: __( 'Buyer', 'openevents' ),
+				label: __( 'Buyer', 'feriae' ),
 				enableHiding: false,
 				enableSorting: false,
 			},
 			{
 				id: 'email',
-				label: __( 'Email', 'openevents' ),
+				label: __( 'Email', 'feriae' ),
 				enableSorting: false,
 			},
 			{
 				id: 'event',
-				label: __( 'Event', 'openevents' ),
+				label: __( 'Event', 'feriae' ),
 				getValue: ( { item } ) => item.event_id,
 				render: ( { item } ) => item.event_title,
 				elements: events,
@@ -125,32 +125,32 @@ export default function OrdersScreen( { root } ) {
 			},
 			{
 				id: 'total',
-				label: __( 'Total', 'openevents' ),
+				label: __( 'Total', 'feriae' ),
 				render: ( { item } ) => item.total_text,
 				enableSorting: false,
 			},
 			{
 				id: 'status',
-				label: __( 'Status', 'openevents' ),
+				label: __( 'Status', 'feriae' ),
 				elements: STATUS,
 				render: ( { item } ) =>
 					( STATUS.find( ( s ) => s.value === item.status )?.label ||
 						item.status ) +
 					( item.oversold
-						? ` · ${ __( 'over capacity', 'openevents' ) }`
+						? ` · ${ __( 'over capacity', 'feriae' ) }`
 						: '' ),
 				enableSorting: false,
 				filterBy: { operators: [ 'is' ], isPrimary: true },
 			},
 			{
 				id: 'gateway',
-				label: __( 'Payment', 'openevents' ),
+				label: __( 'Payment', 'feriae' ),
 				render: ( { item } ) => item.gateway_label,
 				enableSorting: false,
 			},
 			{
 				id: 'created_utc',
-				label: __( 'Ordered', 'openevents' ),
+				label: __( 'Ordered', 'feriae' ),
 				render: ( { item } ) =>
 					new Date(
 						`${ item.created_utc.replace( ' ', 'T' ) }Z`
@@ -165,7 +165,7 @@ export default function OrdersScreen( { root } ) {
 		() => [
 			{
 				id: 'mark-paid',
-				label: __( 'Mark as paid', 'openevents' ),
+				label: __( 'Mark as paid', 'feriae' ),
 				isPrimary: true,
 				supportsBulk: true,
 				isEligible: ( item ) => item.status === 'unpaid',
@@ -173,7 +173,7 @@ export default function OrdersScreen( { root } ) {
 			},
 			{
 				id: 'refund',
-				label: __( 'Refund', 'openevents' ),
+				label: __( 'Refund', 'feriae' ),
 				isDestructive: true,
 				supportsBulk: false,
 				isEligible: ( item ) =>
@@ -185,7 +185,7 @@ export default function OrdersScreen( { root } ) {
 								/* translators: 1: amount, 2: buyer name */
 								__(
 									'Refund %1$s to %2$s and cancel their tickets? This can’t be undone.',
-									'openevents'
+									'feriae'
 								),
 								items[ 0 ].total_text,
 								items[ 0 ].name
@@ -193,7 +193,7 @@ export default function OrdersScreen( { root } ) {
 						</Text>
 						<Stack direction="row" gap="sm" justify="flex-end">
 							<Button variant="outline" onClick={ closeModal }>
-								{ __( 'Keep order', 'openevents' ) }
+								{ __( 'Keep order', 'feriae' ) }
 							</Button>
 							<Button
 								tone="neutral"
@@ -201,7 +201,7 @@ export default function OrdersScreen( { root } ) {
 									act( items, 'refund', closeModal )
 								}
 							>
-								{ __( 'Refund', 'openevents' ) }
+								{ __( 'Refund', 'feriae' ) }
 							</Button>
 						</Stack>
 					</Stack>
@@ -209,7 +209,7 @@ export default function OrdersScreen( { root } ) {
 			},
 			{
 				id: 'cancel',
-				label: __( 'Cancel order', 'openevents' ),
+				label: __( 'Cancel order', 'feriae' ),
 				isDestructive: true,
 				supportsBulk: true,
 				isEligible: ( item ) =>
@@ -222,10 +222,10 @@ export default function OrdersScreen( { root } ) {
 
 	return (
 		<Page
-			title={ __( 'Orders', 'openevents' ) }
+			title={ __( 'Orders', 'feriae' ) }
 			subTitle={ sprintf(
 				/* translators: %d: number of orders */
-				_n( '%d order', '%d orders', total, 'openevents' ),
+				_n( '%d order', '%d orders', total, 'feriae' ),
 				total
 			) }
 		>
@@ -252,7 +252,7 @@ export default function OrdersScreen( { root } ) {
 				defaultLayouts={ { table: {} } }
 				searchLabel={ __(
 					'Search buyer, email, or order number',
-					'openevents'
+					'feriae'
 				) }
 			/>
 		</Page>

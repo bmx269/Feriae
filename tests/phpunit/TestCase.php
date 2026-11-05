@@ -2,15 +2,15 @@
 /**
  * Shared test helpers.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Tests;
+namespace Feriae\Tests;
 
-use OpenEvents\Installer;
-use OpenEvents\Occurrences\Repository;
-use OpenEvents\Occurrences\Sync;
-use OpenEvents\Settings;
+use Feriae\Installer;
+use Feriae\Occurrences\Repository;
+use Feriae\Occurrences\Sync;
+use Feriae\Settings;
 
 abstract class TestCase extends \WP_UnitTestCase {
 
@@ -18,20 +18,20 @@ abstract class TestCase extends \WP_UnitTestCase {
 		parent::set_up();
 		// WP_UnitTestCase::tear_down() unregisters every meta key after each test;
 		// restore the plugin's registrations (sanitisers, REST exposure).
-		( new \OpenEvents\Content\Meta( openevents()->settings() ) )->register_meta();
-		\OpenEvents\Frontend\CategoryColors::register_meta();
+		( new \Feriae\Content\Meta( feriae()->settings() ) )->register_meta();
+		\Feriae\Frontend\CategoryColors::register_meta();
 		update_option( 'timezone_string', 'America/Vancouver' );
 		update_option( 'start_of_week', 1 );
 		delete_option( Settings::OPTION );
 		delete_option( Sync::MAX_DURATION_OPTION );
-		openevents()->occurrences()->forget_all();
+		feriae()->occurrences()->forget_all();
 		Repository::bump_cache();
 	}
 
 	/**
 	 * Creates a published event (or any post type) with schedule meta.
 	 *
-	 * @param array<string, mixed> $meta Meta, e.g. _oe_start/_oe_end.
+	 * @param array<string, mixed> $meta Meta, e.g. _feriae_start/_feriae_end.
 	 * @param array<string, mixed> $post wp_insert_post() overrides.
 	 */
 	protected function event( array $meta = array(), array $post = array() ): int {
@@ -73,7 +73,7 @@ abstract class TestCase extends \WP_UnitTestCase {
 	/**
 	 * Titles of the events in a query result, in order.
 	 *
-	 * @param array{items: \OpenEvents\Occurrences\Occurrence[]} $result Query result.
+	 * @param array{items: \Feriae\Occurrences\Occurrence[]} $result Query result.
 	 * @return string[]
 	 */
 	protected function titles( array $result ): array {

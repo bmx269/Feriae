@@ -2,25 +2,25 @@
 /**
  * Waitlists for RSVPs and tickets.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Tests\Integration;
+namespace Feriae\Tests\Integration;
 
-use OpenEvents\Attendance\Attendees;
-use OpenEvents\Attendance\Guard;
-use OpenEvents\Attendance\Order;
-use OpenEvents\Attendance\Orders;
-use OpenEvents\Attendance\TicketTypes;
-use OpenEvents\Attendance\Waitlist;
-use OpenEvents\Attendance\WaitlistEntry;
-use OpenEvents\Attendance\WaitlistService;
-use OpenEvents\Modules\Rsvp\Service as Rsvp;
-use OpenEvents\Modules\Tickets\AbstractGateway;
-use OpenEvents\Modules\Tickets\Checkout;
-use OpenEvents\Modules\Tickets\Gateways;
-use OpenEvents\Modules\Tickets\Module as Tickets;
-use OpenEvents\Tests\TestCase;
+use Feriae\Attendance\Attendees;
+use Feriae\Attendance\Guard;
+use Feriae\Attendance\Order;
+use Feriae\Attendance\Orders;
+use Feriae\Attendance\TicketTypes;
+use Feriae\Attendance\Waitlist;
+use Feriae\Attendance\WaitlistEntry;
+use Feriae\Attendance\WaitlistService;
+use Feriae\Modules\Rsvp\Service as Rsvp;
+use Feriae\Modules\Tickets\AbstractGateway;
+use Feriae\Modules\Tickets\Checkout;
+use Feriae\Modules\Tickets\Gateways;
+use Feriae\Modules\Tickets\Module as Tickets;
+use Feriae\Tests\TestCase;
 
 final class WaitlistTest extends TestCase {
 
@@ -36,7 +36,7 @@ final class WaitlistTest extends TestCase {
 
 	private function upcoming( array $meta = array() ): int {
 		$day = current_datetime()->modify( '+10 days' )->format( 'Y-m-d' );
-		$id  = $this->event( array_merge( array( '_oe_start' => "{$day} 19:00:00" ), $meta ) );
+		$id  = $this->event( array_merge( array( '_feriae_start' => "{$day} 19:00:00" ), $meta ) );
 		$this->rows( $id );
 		return $id;
 	}
@@ -91,7 +91,7 @@ final class WaitlistTest extends TestCase {
 	public function test_cancellation_promotes_the_next_person_who_fits(): void {
 		$event = $this->rsvp_event( 2 );
 		$this->respond( $event, 'a@example.com', 2 );
-		$token = $this->token_from_last_email( 'oe_rsvp_token' );
+		$token = $this->token_from_last_email( 'feriae_rsvp_token' );
 		$this->respond( $event, 'big@example.com', 3, 'waitlist' );   // Needs 3: won't fit in 2.
 		$this->respond( $event, 'small@example.com', 2, 'waitlist' ); // Fits.
 
@@ -101,7 +101,7 @@ final class WaitlistTest extends TestCase {
 		$this->assertSame( array( 'small@example.com', 'small@example.com' ), array_map( static fn( $a ) => $a->email, $people ) );
 		$this->assertSame( 2, $this->rsvp_type( $event )->sold );
 		$this->assertStringContainsString( 'A spot opened up', $this->last_email()->subject );
-		$this->assertStringContainsString( 'oe_rsvp_token=', $this->last_email()->body, 'Promoted people get a change/cancel link.' );
+		$this->assertStringContainsString( 'feriae_rsvp_token=', $this->last_email()->body, 'Promoted people get a change/cancel link.' );
 
 		$big = ( new Waitlist() )->queue( $this->rsvp_type( $event )->id );
 		$this->assertCount( 1, $big );
@@ -133,7 +133,7 @@ final class WaitlistTest extends TestCase {
 		$event = $this->rsvp_event( 1 );
 		$this->respond( $event, 'a@example.com' );
 		$this->respond( $event, 'b@example.com', 1, 'waitlist' );
-		$token = $this->token_from_last_email( 'oe_waitlist' );
+		$token = $this->token_from_last_email( 'feriae_waitlist' );
 
 		$this->assertTrue( $this->waitlist->leave( $token )->ok );
 		$this->assertSame( array(), ( new Waitlist() )->queue( $this->rsvp_type( $event )->id ) );
@@ -163,7 +163,7 @@ final class WaitlistTest extends TestCase {
 		$this->assertSame( WaitlistEntry::OFFERED, $entry->status );
 		$this->assertSame( 2, ( new TicketTypes() )->get( $type->id )->sold, 'Seats are held for the offer.' );
 		$this->assertStringContainsString( 'being held for you', $this->last_email()->subject );
-		$token = $this->token_from_last_email( 'oe_waitlist' );
+		$token = $this->token_from_last_email( 'feriae_waitlist' );
 
 		$stranger = $this->buy( $event, $type->id, 1 );
 		$this->assertSame( 'full', $stranger->code, 'Nobody else can take held seats.' );
@@ -188,7 +188,7 @@ final class WaitlistTest extends TestCase {
 		$this->assertSame( array( 'offered', 'waiting' ), array_map( static fn( $e ) => $e->status, $entries ) );
 
 		global $wpdb;
-		$wpdb->update( \OpenEvents\Attendance\Schema::waitlist(), array( 'offer_expires_utc' => gmdate( 'Y-m-d H:i:s', time() - 60 ) ), array( 'id' => $entries[0]->id ) ); // phpcs:ignore WordPress.DB
+		$wpdb->update( \Feriae\Attendance\Schema::waitlist(), array( 'offer_expires_utc' => gmdate( 'Y-m-d H:i:s', time() - 60 ) ), array( 'id' => $entries[0]->id ) ); // phpcs:ignore WordPress.DB
 		$this->assertSame( 1, $this->waitlist->expire_offers() );
 
 		$entries = ( new Waitlist() )->query( array( 'event_id' => $event ) )['items'];
@@ -204,7 +204,7 @@ final class WaitlistTest extends TestCase {
 		$this->waitlist->join( $repo->get( $type->id ), array( 'name' => 'One', 'email' => 'one@example.com', 'quantity' => 1 ) );
 		$this->waitlist->join( $repo->get( $type->id ), array( 'name' => 'Two', 'email' => 'two@example.com', 'quantity' => 1 ) );
 		( new Checkout() )->release( ( new Orders() )->get( $first->order->id ), Order::CANCELLED );
-		$token = $this->token_from_last_email( 'oe_waitlist' );
+		$token = $this->token_from_last_email( 'feriae_waitlist' );
 
 		$claim = $this->buy( $event, $type->id, 1, array( 'waitlist_token' => $token ) );
 		( new Checkout() )->release( ( new Orders() )->get( $claim->order->id ), Order::CANCELLED );
@@ -236,7 +236,7 @@ final class WaitlistTest extends TestCase {
 	public function test_processing_twice_does_not_double_promote(): void {
 		$event = $this->rsvp_event( 1 );
 		$this->respond( $event, 'a@example.com' );
-		$token = $this->token_from_last_email( 'oe_rsvp_token' );
+		$token = $this->token_from_last_email( 'feriae_rsvp_token' );
 		$this->respond( $event, 'b@example.com', 1, 'waitlist' );
 		( new Rsvp() )->cancel( $token );
 

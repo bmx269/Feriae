@@ -2,10 +2,10 @@
 /**
  * Deletes attendance data with the event it belongs to.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Attendance;
+namespace Feriae\Attendance;
 
 /**
  * When an event (or a series selling passes) is deleted permanently, its
@@ -51,7 +51,7 @@ final class Cleanup {
 			 * @param int               $post_id Deleted post id.
 			 * @param array<string,int> $counts  Rows deleted per table.
 			 */
-			do_action( 'openevents/attendance/deleted', $post_id, $counts );
+			do_action( 'feriae/attendance/deleted', $post_id, $counts );
 		}
 	}
 }

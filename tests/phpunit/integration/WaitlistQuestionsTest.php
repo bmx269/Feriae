@@ -4,21 +4,21 @@
  * direct response, carried onto attendees at promotion, and covered by the
  * privacy tools.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Tests\Integration;
+namespace Feriae\Tests\Integration;
 
-use OpenEvents\Attendance\Attendees;
-use OpenEvents\Attendance\Guard;
-use OpenEvents\Attendance\Privacy;
-use OpenEvents\Attendance\TicketTypes;
-use OpenEvents\Attendance\Waitlist;
-use OpenEvents\Attendance\WaitlistEntry;
-use OpenEvents\Attendance\WaitlistService;
-use OpenEvents\Modules\Rsvp\Form;
-use OpenEvents\Modules\Rsvp\Service as Rsvp;
-use OpenEvents\Tests\TestCase;
+use Feriae\Attendance\Attendees;
+use Feriae\Attendance\Guard;
+use Feriae\Attendance\Privacy;
+use Feriae\Attendance\TicketTypes;
+use Feriae\Attendance\Waitlist;
+use Feriae\Attendance\WaitlistEntry;
+use Feriae\Attendance\WaitlistService;
+use Feriae\Modules\Rsvp\Form;
+use Feriae\Modules\Rsvp\Service as Rsvp;
+use Feriae\Tests\TestCase;
 
 final class WaitlistQuestionsTest extends TestCase {
 
@@ -41,7 +41,7 @@ final class WaitlistQuestionsTest extends TestCase {
 		parent::set_up();
 		reset_phpmailer_instance();
 		$day         = current_datetime()->modify( '+10 days' )->format( 'Y-m-d' );
-		$this->event = $this->event( array( '_oe_start' => "{$day} 19:00:00" ) );
+		$this->event = $this->event( array( '_feriae_start' => "{$day} 19:00:00" ) );
 		update_post_meta(
 			$this->event,
 			Rsvp::META_KEY,
@@ -79,7 +79,7 @@ final class WaitlistQuestionsTest extends TestCase {
 	private function fill(): string {
 		$this->respond( 'first@example.com' );
 		$mailer = tests_retrieve_phpmailer_instance();
-		preg_match( '/oe_rsvp_token=([a-f0-9]+)/', $mailer->get_sent( count( $mailer->mock_sent ) - 1 )->body, $m );
+		preg_match( '/feriae_rsvp_token=([a-f0-9]+)/', $mailer->get_sent( count( $mailer->mock_sent ) - 1 )->body, $m );
 		return $m[1];
 	}
 
@@ -164,10 +164,10 @@ final class WaitlistQuestionsTest extends TestCase {
 	public function test_waitlist_form_asks_the_questions(): void {
 		$this->fill();
 		$type = ( new TicketTypes() )->find( $this->event, Rsvp::TYPE_KEY );
-		$html = Form::render( \OpenEvents\Content\Event::get( $this->event ), $type, new Rsvp() );
+		$html = Form::render( \Feriae\Content\Event::get( $this->event ), $type, new Rsvp() );
 
 		$this->assertStringContainsString( 'name="status" value="waitlist"', $html );
-		$this->assertSame( 3, substr_count( $html, '<fieldset class="oe-person"' ) );
+		$this->assertSame( 3, substr_count( $html, '<fieldset class="feriae-person"' ) );
 		$this->assertStringContainsString( 'name="attendees[0][fields][age-range]"', $html );
 		$this->assertStringContainsString( 'data-wp-on--change="actions.setQuantity"', $html );
 		$this->assertStringContainsString( '{&quot;quantity&quot;:1,&quot;going&quot;:true}', $html, 'Groups beyond the party size hide, as on the RSVP form.' );
@@ -178,7 +178,7 @@ final class WaitlistQuestionsTest extends TestCase {
 		$this->join_with_guest();
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
 
-		$request = new \WP_REST_Request( 'GET', '/openevents/v1/waitlist' );
+		$request = new \WP_REST_Request( 'GET', '/feriae/v1/waitlist' );
 		$request->set_param( 'event', $this->event );
 		$answers = array_column( rest_do_request( $request )->get_data()[0]['answers'], 'value', 'label' );
 
@@ -191,7 +191,7 @@ final class WaitlistQuestionsTest extends TestCase {
 		$this->fill();
 		$this->join_with_guest();
 
-		$lead = array_column( Privacy::export( 'lead@example.com' )['data'], null, 'group_id' )['openevents-waitlist'];
+		$lead = array_column( Privacy::export( 'lead@example.com' )['data'], null, 'group_id' )['feriae-waitlist'];
 		$lead = array_column( $lead['data'], 'value', 'name' );
 		$this->assertSame( '604 555 0100', $lead['You: Phone number'] );
 		$this->assertSame( 'gus@example.com', $lead['Guest 2: Email'] );

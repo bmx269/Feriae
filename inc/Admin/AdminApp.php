@@ -2,17 +2,17 @@
 /**
  * Admin screens.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Admin;
+namespace Feriae\Admin;
 
-use OpenEvents\Content\PostTypes;
-use OpenEvents\Modules\Registry;
-use OpenEvents\Settings;
+use Feriae\Content\PostTypes;
+use Feriae\Modules\Registry;
+use Feriae\Settings;
 
-use const OpenEvents\PLUGIN_DIR;
-use const OpenEvents\PLUGIN_FILE;
+use const Feriae\PLUGIN_DIR;
+use const Feriae\PLUGIN_FILE;
 
 /**
  * Settings and the first-run setup wizard, rendered by one React app built on
@@ -22,9 +22,9 @@ use const OpenEvents\PLUGIN_FILE;
  */
 final class AdminApp {
 
-	public const SETTINGS_SLUG   = 'openevents-settings';
-	public const SETUP_SLUG      = 'openevents-setup';
-	public const REDIRECT_OPTION = 'openevents_setup_redirect';
+	public const SETTINGS_SLUG   = 'feriae-settings';
+	public const SETUP_SLUG      = 'feriae-setup';
+	public const REDIRECT_OPTION = 'feriae_setup_redirect';
 
 	private string $hook_settings = '';
 	private string $hook_setup    = '';
@@ -47,7 +47,7 @@ final class AdminApp {
 	}
 
 	public static function settings_url(): string {
-		$parent = PostTypes::menu_parent( openevents()->settings() );
+		$parent = PostTypes::menu_parent( feriae()->settings() );
 		$base   = str_starts_with( $parent, 'edit.php' ) ? admin_url( $parent ) : admin_url( 'admin.php' );
 		return add_query_arg( 'page', self::SETTINGS_SLUG, $base );
 	}
@@ -58,7 +58,7 @@ final class AdminApp {
 
 	public function register_settings(): void {
 		register_setting(
-			'openevents',
+			'feriae',
 			Settings::OPTION,
 			array(
 				'type'              => 'object',
@@ -109,7 +109,7 @@ final class AdminApp {
 		);
 
 		register_setting(
-			'openevents',
+			'feriae',
 			Settings::MODULES_OPTION,
 			array(
 				'type'              => 'array',
@@ -125,7 +125,7 @@ final class AdminApp {
 		);
 
 		register_setting(
-			'openevents',
+			'feriae',
 			Settings::SETUP_OPTION,
 			array(
 				'type'         => 'boolean',
@@ -140,22 +140,22 @@ final class AdminApp {
 
 		// Without the Events post type there is no Events menu to hang off, so add one.
 		if ( ! $this->settings->registers_event_type() ) {
-			add_menu_page( __( 'Events', 'openevents' ), __( 'Events', 'openevents' ), 'edit_posts', $parent, array( $this, 'render_overview' ), 'dashicons-calendar-alt', 6 );
-			add_submenu_page( $parent, __( 'Events', 'openevents' ), __( 'Overview', 'openevents' ), 'edit_posts', $parent, array( $this, 'render_overview' ) );
-			add_submenu_page( $parent, __( 'Event Categories', 'openevents' ), __( 'Event Categories', 'openevents' ), 'manage_categories', 'edit-tags.php?taxonomy=' . PostTypes::CATEGORY );
+			add_menu_page( __( 'Events', 'feriae' ), __( 'Events', 'feriae' ), 'edit_posts', $parent, array( $this, 'render_overview' ), 'dashicons-calendar-alt', 6 );
+			add_submenu_page( $parent, __( 'Events', 'feriae' ), __( 'Overview', 'feriae' ), 'edit_posts', $parent, array( $this, 'render_overview' ) );
+			add_submenu_page( $parent, __( 'Event Categories', 'feriae' ), __( 'Event Categories', 'feriae' ), 'manage_categories', 'edit-tags.php?taxonomy=' . PostTypes::CATEGORY );
 		}
 
-		$this->hook_settings = (string) add_submenu_page( $parent, __( 'OpenEvents Settings', 'openevents' ), __( 'Settings', 'openevents' ), 'manage_options', self::SETTINGS_SLUG, array( $this, 'render_app' ) );
+		$this->hook_settings = (string) add_submenu_page( $parent, __( 'Feriae Settings', 'feriae' ), __( 'Settings', 'feriae' ), 'manage_options', self::SETTINGS_SLUG, array( $this, 'render_app' ) );
 		// Registered under options.php so it has a screen but no menu entry.
-		$this->hook_setup = (string) add_submenu_page( 'options.php', __( 'OpenEvents setup', 'openevents' ), __( 'OpenEvents setup', 'openevents' ), 'manage_options', self::SETUP_SLUG, array( $this, 'render_app' ) );
+		$this->hook_setup = (string) add_submenu_page( 'options.php', __( 'Feriae setup', 'feriae' ), __( 'Feriae setup', 'feriae' ), 'manage_options', self::SETUP_SLUG, array( $this, 'render_app' ) );
 	}
 
 	public function render_app(): void {
 		$screen = self::SETUP_SLUG === ( $_GET['page'] ?? '' ) ? 'setup' : 'settings'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		printf(
-			'<div id="openevents-admin" class="openevents-admin" data-screen="%s"><noscript>%s</noscript></div>',
+			'<div id="feriae-admin" class="feriae-admin" data-screen="%s"><noscript>%s</noscript></div>',
 			esc_attr( $screen ),
-			esc_html__( 'Event settings need JavaScript.', 'openevents' )
+			esc_html__( 'Event settings need JavaScript.', 'feriae' )
 		);
 	}
 
@@ -163,15 +163,15 @@ final class AdminApp {
 	 * Landing page when events live on existing post types only.
 	 */
 	public function render_overview(): void {
-		echo '<div class="wrap"><h1>' . esc_html__( 'Events', 'openevents' ) . '</h1>';
-		echo '<p>' . esc_html__( 'Events are added to these post types. Open an item and set a date in the Event panel of the editor sidebar.', 'openevents' ) . '</p><ul class="ul-disc">';
+		echo '<div class="wrap"><h1>' . esc_html__( 'Events', 'feriae' ) . '</h1>';
+		echo '<p>' . esc_html__( 'Events are added to these post types. Open an item and set a date in the Event panel of the editor sidebar.', 'feriae' ) . '</p><ul class="ul-disc">';
 		foreach ( $this->settings->event_post_types() as $type ) {
 			$object = get_post_type_object( $type );
 			if ( $object ) {
 				printf( '<li><a href="%s">%s</a></li>', esc_url( admin_url( 'edit.php?post_type=' . $type ) ), esc_html( $object->labels->name ) );
 			}
 		}
-		echo '</ul><p><a class="button" href="' . esc_url( openevents_calendar_url() ) . '">' . esc_html__( 'View calendar', 'openevents' ) . '</a></p></div>';
+		echo '</ul><p><a class="button" href="' . esc_url( feriae_calendar_url() ) . '">' . esc_html__( 'View calendar', 'feriae' ) . '</a></p></div>';
 	}
 
 	public function enqueue( string $hook ): void {
@@ -182,7 +182,7 @@ final class AdminApp {
 		 * @param array<string, string> $screens Page slug => screen.
 		 */
 		$screens = apply_filters(
-			'openevents/admin/screens',
+			'feriae/admin/screens',
 			array(
 				self::SETTINGS_SLUG => 'settings',
 				self::SETUP_SLUG    => 'setup',
@@ -198,13 +198,13 @@ final class AdminApp {
 		}
 		$asset = require $asset_file;
 
-		wp_enqueue_script( 'openevents-admin', plugins_url( 'build/admin/index.js', PLUGIN_FILE ), $asset['dependencies'], $asset['version'], true );
-		wp_set_script_translations( 'openevents-admin', 'openevents' );
+		wp_enqueue_script( 'feriae-admin', plugins_url( 'build/admin/index.js', PLUGIN_FILE ), $asset['dependencies'], $asset['version'], true );
+		wp_set_script_translations( 'feriae-admin', 'feriae' );
 		if ( is_readable( PLUGIN_DIR . '/build/admin/index.css' ) ) {
-			wp_enqueue_style( 'openevents-admin', plugins_url( 'build/admin/index.css', PLUGIN_FILE ), array(), $asset['version'] );
+			wp_enqueue_style( 'feriae-admin', plugins_url( 'build/admin/index.css', PLUGIN_FILE ), array(), $asset['version'] );
 		}
 
-		wp_add_inline_script( 'openevents-admin', 'window.openEventsAdmin = ' . wp_json_encode( $this->app_config() ) . ';', 'before' );
+		wp_add_inline_script( 'feriae-admin', 'window.feriaeAdmin = ' . wp_json_encode( $this->app_config() ) . ';', 'before' );
 	}
 
 	/**
@@ -251,7 +251,7 @@ final class AdminApp {
 			'homeUrl'      => home_url( '/' ),
 			'adminUrl'     => admin_url( '/' ),
 			'settingsUrl'  => self::settings_url(),
-			'calendarUrl'  => openevents_calendar_url(),
+			'calendarUrl'  => feriae_calendar_url(),
 			'siteFormats'  => array(
 				'date' => (string) get_option( 'date_format' ),
 				'time' => (string) get_option( 'time_format' ),
@@ -276,14 +276,14 @@ final class AdminApp {
 
 	public function setup_notice(): void {
 		$screen = get_current_screen();
-		if ( $this->settings->is_setup_complete() || ! current_user_can( 'manage_options' ) || ( $screen && str_contains( (string) $screen->id, 'openevents' ) ) ) {
+		if ( $this->settings->is_setup_complete() || ! current_user_can( 'manage_options' ) || ( $screen && str_contains( (string) $screen->id, 'feriae' ) ) ) {
 			return;
 		}
 		printf(
 			'<div class="notice notice-info"><p>%s <a class="button button-primary" href="%s">%s</a></p></div>',
-			esc_html__( 'OpenEvents is active. Answer a few questions to set it up for your site.', 'openevents' ),
+			esc_html__( 'Feriae is active. Answer a few questions to set it up for your site.', 'feriae' ),
 			esc_url( self::setup_url() ),
-			esc_html__( 'Run setup', 'openevents' )
+			esc_html__( 'Run setup', 'feriae' )
 		);
 	}
 
@@ -292,7 +292,7 @@ final class AdminApp {
 	 * @return string[]
 	 */
 	public function action_links( array $links ): array {
-		array_unshift( $links, sprintf( '<a href="%s">%s</a>', esc_url( self::settings_url() ), esc_html__( 'Settings', 'openevents' ) ) );
+		array_unshift( $links, sprintf( '<a href="%s">%s</a>', esc_url( self::settings_url() ), esc_html__( 'Settings', 'feriae' ) ) );
 		return $links;
 	}
 }

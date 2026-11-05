@@ -2,20 +2,20 @@
 /**
  * Ticket checkout and order lifecycle.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Tickets;
+namespace Feriae\Modules\Tickets;
 
-use OpenEvents\Attendance\Attendee;
-use OpenEvents\Attendance\Attendees;
-use OpenEvents\Attendance\Guard;
-use OpenEvents\Attendance\Money;
-use OpenEvents\Attendance\Order;
-use OpenEvents\Attendance\Orders;
-use OpenEvents\Attendance\Schema;
-use OpenEvents\Attendance\TicketType;
-use OpenEvents\Attendance\TicketTypes;
+use Feriae\Attendance\Attendee;
+use Feriae\Attendance\Attendees;
+use Feriae\Attendance\Guard;
+use Feriae\Attendance\Money;
+use Feriae\Attendance\Order;
+use Feriae\Attendance\Orders;
+use Feriae\Attendance\Schema;
+use Feriae\Attendance\TicketType;
+use Feriae\Attendance\TicketTypes;
 
 /**
  * Places orders and moves them through their lifecycle. Every status change
@@ -44,7 +44,7 @@ final class Checkout {
 	}
 
 	public static function currency(): string {
-		return strtoupper( (string) ( openevents()->settings()->get( 'currency' ) ?: 'USD' ) );
+		return strtoupper( (string) ( feriae()->settings()->get( 'currency' ) ?: 'USD' ) );
 	}
 
 	/**
@@ -57,7 +57,7 @@ final class Checkout {
 	 */
 	public function ticket_types( int $event_id, bool $on_sale_only = false, int $sequence = 0 ): array {
 		global $wpdb;
-		if ( $sequence && ! openevents()->occurrences()->by_sequence( $event_id, $sequence ) ) {
+		if ( $sequence && ! feriae()->occurrences()->by_sequence( $event_id, $sequence ) ) {
 			return array();
 		}
 		$table = Schema::ticket_types();
@@ -114,24 +114,24 @@ final class Checkout {
 		$this->expire_due( 20 );
 
 		if ( Guard::is_bot( $input ) ) {
-			return CheckoutResult::error( 'invalid', __( 'Please try again.', 'openevents' ) );
+			return CheckoutResult::error( 'invalid', __( 'Please try again.', 'feriae' ) );
 		}
 		if ( ! Guard::verify_timestamp( (string) ( $input['ts'] ?? '' ) ) ) {
-			return CheckoutResult::error( 'invalid', __( 'Please wait a moment and submit the form again.', 'openevents' ) );
+			return CheckoutResult::error( 'invalid', __( 'Please wait a moment and submit the form again.', 'feriae' ) );
 		}
 
 		$name  = sanitize_text_field( (string) ( $input['name'] ?? '' ) );
 		$email = sanitize_email( (string) ( $input['email'] ?? '' ) );
 		if ( '' === $name || mb_strlen( $name ) > 200 ) {
-			return CheckoutResult::error( 'invalid', __( 'Please enter your name.', 'openevents' ) );
+			return CheckoutResult::error( 'invalid', __( 'Please enter your name.', 'feriae' ) );
 		}
 		if ( ! is_email( $email ) ) {
-			return CheckoutResult::error( 'invalid', __( 'Please enter a valid email address.', 'openevents' ) );
+			return CheckoutResult::error( 'invalid', __( 'Please enter a valid email address.', 'feriae' ) );
 		}
 
 		$ip_hash = Guard::hash_ip( (string) ( $input['ip'] ?? '' ) );
 		if ( $this->recent_orders( $ip_hash ) >= self::RATE ) {
-			return CheckoutResult::error( 'rate_limited', __( 'Too many orders from your connection. Please try again later.', 'openevents' ) );
+			return CheckoutResult::error( 'rate_limited', __( 'Too many orders from your connection. Please try again later.', 'feriae' ) );
 		}
 
 		$currency = self::currency();
@@ -140,11 +140,11 @@ final class Checkout {
 		// Claiming a waitlist offer: exactly the held tickets, whose seats are already reserved.
 		$offer = null;
 		if ( '' !== (string) ( $input['waitlist_token'] ?? '' ) ) {
-			$offer      = ( new \OpenEvents\Attendance\WaitlistService() )->offer_for_token( (string) $input['waitlist_token'] );
+			$offer      = ( new \Feriae\Attendance\WaitlistService() )->offer_for_token( (string) $input['waitlist_token'] );
 			$offer_type = $offer ? $this->types->get( $offer->ticket_type_id ) : null;
 			$types      = $offer_type ? $this->ticket_types( $event_id, false, $offer_type->sequence ) : array();
 			if ( ! $offer || $offer->event_id !== $event_id || ! isset( $types[ $offer->ticket_type_id ] ) ) {
-				return CheckoutResult::error( 'invalid', __( 'This waitlist offer has expired or was already used.', 'openevents' ) );
+				return CheckoutResult::error( 'invalid', __( 'This waitlist offer has expired or was already used.', 'feriae' ) );
 			}
 			$input['tickets'] = array( $offer->ticket_type_id => $offer->quantity );
 		} else {
@@ -159,21 +159,21 @@ final class Checkout {
 			}
 			$type = $types[ (int) $type_id ] ?? null;
 			if ( ! $type ) {
-				return CheckoutResult::error( 'invalid', __( 'One of those tickets is no longer available.', 'openevents' ) );
+				return CheckoutResult::error( 'invalid', __( 'One of those tickets is no longer available.', 'feriae' ) );
 			}
 			$state = $this->sale_state( $type );
 			if ( $state && 'sold_out' !== $state ) {
 				/* translators: %s: ticket name */
-				return CheckoutResult::error( 'closed', sprintf( __( '“%s” tickets aren’t on sale.', 'openevents' ), $type->name ) );
+				return CheckoutResult::error( 'closed', sprintf( __( '“%s” tickets aren’t on sale.', 'feriae' ), $type->name ) );
 			}
 			$max = $offer ? $offer->quantity : (int) $type->setting( 'max_per_order', 10 );
 			if ( $quantity > $max ) {
 				/* translators: 1: maximum, 2: ticket name */
-				return CheckoutResult::error( 'invalid', sprintf( __( 'You can buy up to %1$d “%2$s” tickets per order.', 'openevents' ), $max, $type->name ) );
+				return CheckoutResult::error( 'invalid', sprintf( __( 'You can buy up to %1$d “%2$s” tickets per order.', 'feriae' ), $max, $type->name ) );
 			}
 			$people = array();
-			if ( \OpenEvents\Attendance\Fields::asks( $type ) ) {
-				$answers = \OpenEvents\Attendance\Fields::people(
+			if ( \Feriae\Attendance\Fields::asks( $type ) ) {
+				$answers = \Feriae\Attendance\Fields::people(
 					$type,
 					$input['attendees'][ $type->id ] ?? array(),
 					$quantity,
@@ -200,18 +200,18 @@ final class Checkout {
 			$total  += $price * $quantity;
 		}
 		if ( 0 === $count ) {
-			return CheckoutResult::error( 'invalid', __( 'Choose at least one ticket.', 'openevents' ) );
+			return CheckoutResult::error( 'invalid', __( 'Choose at least one ticket.', 'feriae' ) );
 		}
 		if ( $count > self::MAX_TICKETS ) {
 			/* translators: %d: maximum tickets */
-			return CheckoutResult::error( 'invalid', sprintf( __( 'You can buy up to %d tickets in one order.', 'openevents' ), self::MAX_TICKETS ) );
+			return CheckoutResult::error( 'invalid', sprintf( __( 'You can buy up to %d tickets in one order.', 'feriae' ), self::MAX_TICKETS ) );
 		}
 
 		$gateway = null;
 		if ( $total > 0 ) {
 			$gateway = Gateways::get( (string) ( $input['gateway'] ?? '' ) );
 			if ( ! $gateway || ! $gateway->is_available( $currency ) ) {
-				return CheckoutResult::error( 'invalid', __( 'Please choose how you’d like to pay.', 'openevents' ) );
+				return CheckoutResult::error( 'invalid', __( 'Please choose how you’d like to pay.', 'feriae' ) );
 			}
 		}
 
@@ -230,9 +230,9 @@ final class Checkout {
 					'full',
 					$left > 0
 						/* translators: 1: number left, 2: ticket name */
-						? sprintf( _n( 'Only %1$d “%2$s” ticket is left.', 'Only %1$d “%2$s” tickets are left.', $left, 'openevents' ), $left, $line['type']->name )
+						? sprintf( _n( 'Only %1$d “%2$s” ticket is left.', 'Only %1$d “%2$s” tickets are left.', $left, 'feriae' ), $left, $line['type']->name )
 						/* translators: %s: ticket name */
-						: sprintf( __( '“%s” is sold out.', 'openevents' ), $line['type']->name )
+						: sprintf( __( '“%s” is sold out.', 'feriae' ), $line['type']->name )
 				);
 			}
 			$held[] = $line;
@@ -279,12 +279,12 @@ final class Checkout {
 		}
 
 		if ( $offer ) {
-			( new \OpenEvents\Attendance\WaitlistService() )->mark_claimed( $offer, $order->id );
+			( new \Feriae\Attendance\WaitlistService() )->mark_claimed( $offer, $order->id );
 		}
 
 		if ( ! $gateway ) {
 			$this->complete( $order );
-			return CheckoutResult::confirmed( $order, $token, __( 'You’re all set! Your tickets are on their way to your inbox.', 'openevents' ) );
+			return CheckoutResult::confirmed( $order, $token, __( 'You’re all set! Your tickets are on their way to your inbox.', 'feriae' ) );
 		}
 
 		$result = $gateway->start_payment( $order );
@@ -294,13 +294,13 @@ final class Checkout {
 				return CheckoutResult::redirect( $order, $token, $result->url );
 			case 'paid':
 				$this->complete( $this->orders->get( $order->id ), $result->txn );
-				return CheckoutResult::confirmed( $order, $token, __( 'Payment received. Your tickets are on their way to your inbox.', 'openevents' ) );
+				return CheckoutResult::confirmed( $order, $token, __( 'Payment received. Your tickets are on their way to your inbox.', 'feriae' ) );
 			case 'unpaid':
 				$this->confirm_unpaid( $this->orders->get( $order->id ) );
-				return CheckoutResult::confirmed( $order, $token, __( 'Your tickets are reserved. We’ve emailed you the details.', 'openevents' ) );
+				return CheckoutResult::confirmed( $order, $token, __( 'Your tickets are reserved. We’ve emailed you the details.', 'feriae' ) );
 			default:
 				$this->release( $this->orders->get( $order->id ), Order::FAILED );
-				return CheckoutResult::error( 'payment_failed', $result->message ?: __( 'We couldn’t start the payment. Please try again.', 'openevents' ) );
+				return CheckoutResult::error( 'payment_failed', $result->message ?: __( 'We couldn’t start the payment. Please try again.', 'feriae' ) );
 		}
 	}
 
@@ -336,7 +336,7 @@ final class Checkout {
 				 *
 				 * @param Order $order Order.
 				 */
-				do_action( 'openevents/tickets/oversold', $this->orders->get( $fresh->id ) );
+				do_action( 'feriae/tickets/oversold', $this->orders->get( $fresh->id ) );
 			}
 		} elseif ( ! $this->orders->transition( $fresh->id, array( Order::PENDING, Order::UNPAID ), Order::COMPLETED, array( 'gateway_txn' => $txn, 'expires_utc' => null ) ) ) {
 			return false; // Already completed (or refunded) by another request.
@@ -353,7 +353,7 @@ final class Checkout {
 		 *
 		 * @param Order $order Order.
 		 */
-		do_action( 'openevents/tickets/order_completed', $order );
+		do_action( 'feriae/tickets/order_completed', $order );
 		return true;
 	}
 
@@ -366,7 +366,7 @@ final class Checkout {
 		}
 		$this->attendees->set_group_status( $order->uuid, Attendee::GOING );
 		$this->mailer->confirmation( $this->orders->get( $order->id ) );
-		do_action( 'openevents/tickets/order_unpaid', $this->orders->get( $order->id ) );
+		do_action( 'feriae/tickets/order_unpaid', $this->orders->get( $order->id ) );
 		return true;
 	}
 
@@ -389,7 +389,7 @@ final class Checkout {
 		}
 		$this->free_seats( $order );
 		$this->attendees->set_group_status( $order->uuid, Attendee::CANCELLED );
-		do_action( 'openevents/tickets/order_released', $this->orders->get( $order->id ), $status );
+		do_action( 'feriae/tickets/order_released', $this->orders->get( $order->id ), $status );
 		return true;
 	}
 
@@ -398,21 +398,21 @@ final class Checkout {
 	 */
 	public function refund( Order $order ): true|\WP_Error {
 		if ( ! in_array( $order->status, array( Order::COMPLETED, Order::UNPAID ), true ) ) {
-			return new \WP_Error( 'openevents_not_refundable', __( 'Only paid or unpaid orders can be refunded.', 'openevents' ) );
+			return new \WP_Error( 'feriae_not_refundable', __( 'Only paid or unpaid orders can be refunded.', 'feriae' ) );
 		}
 		if ( $order->total_minor > 0 && Order::COMPLETED === $order->status ) {
 			$gateway = Gateways::get( $order->gateway );
-			$result  = $gateway ? $gateway->refund( $order ) : new \WP_Error( 'openevents_gateway_missing', __( 'The payment method for this order is no longer available.', 'openevents' ) );
+			$result  = $gateway ? $gateway->refund( $order ) : new \WP_Error( 'feriae_gateway_missing', __( 'The payment method for this order is no longer available.', 'feriae' ) );
 			if ( is_wp_error( $result ) ) {
 				return $result;
 			}
 		}
 		if ( ! $this->orders->transition( $order->id, array( Order::COMPLETED, Order::UNPAID ), Order::REFUNDED ) ) {
-			return new \WP_Error( 'openevents_refund_conflict', __( 'This order changed while refunding. Reload and check its status.', 'openevents' ) );
+			return new \WP_Error( 'feriae_refund_conflict', __( 'This order changed while refunding. Reload and check its status.', 'feriae' ) );
 		}
 		$this->free_seats( $order );
 		$this->attendees->set_group_status( $order->uuid, 'refunded' );
-		do_action( 'openevents/tickets/order_refunded', $this->orders->get( $order->id ) );
+		do_action( 'feriae/tickets/order_refunded', $this->orders->get( $order->id ) );
 		return true;
 	}
 
@@ -425,7 +425,7 @@ final class Checkout {
 		}
 		$this->free_seats( $order );
 		$this->attendees->set_group_status( $order->uuid, 'refunded' );
-		do_action( 'openevents/tickets/order_refunded', $this->orders->get( $order->id ) );
+		do_action( 'feriae/tickets/order_refunded', $this->orders->get( $order->id ) );
 		return true;
 	}
 
@@ -463,9 +463,9 @@ final class Checkout {
 	 * Where the buyer lands after checkout: the event page with their order.
 	 */
 	public static function confirmation_url( Order $order, string $token = '' ): string {
-		$args = array( 'oe_checkout' => 'done' );
+		$args = array( 'feriae_checkout' => 'done' );
 		if ( '' !== $token ) {
-			$args['oe_order_token'] = $token;
+			$args['feriae_order_token'] = $token;
 		}
 		return add_query_arg( $args, self::order_page( $order ) ) . '#tickets';
 	}
@@ -475,7 +475,7 @@ final class Checkout {
 	 * that date's types.
 	 */
 	public static function order_type( Order $order ): ?TicketType {
-		$items = ( new \OpenEvents\Attendance\Orders() )->items( $order->id );
+		$items = ( new \Feriae\Attendance\Orders() )->items( $order->id );
 		return $items ? ( new TicketTypes() )->get( (int) $items[0]->ticket_type_id ) : null;
 	}
 

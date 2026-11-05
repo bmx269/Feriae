@@ -1,5 +1,5 @@
 /**
- * Automated WCAG 2.2 AA checks (axe-core) on everything OpenEvents renders.
+ * Automated WCAG 2.2 AA checks (axe-core) on everything Feriae renders.
  * Scans are limited to the plugin's own markup so theme or wp-admin issues
  * outside it don't mask or cause failures.
  */
@@ -25,18 +25,18 @@ async function scan( page, include ) {
 }
 
 const PAGES = [
-	[ 'month view', '/events/?oe_view=month', [ '.oe-calendar' ] ],
-	[ 'list view', '/events/?oe_view=list', [ '.oe-calendar' ] ],
-	[ 'past events', '/events/?oe_view=list&oe_past=1', [ '.oe-calendar' ] ],
-	[ 'event details', '/events/jazz-night/', [ '.oe-details' ] ],
-	[ 'RSVP form', '/events/next-month-gala/', [ '.oe-details' ] ],
+	[ 'month view', '/events/?feriae_view=month', [ '.feriae-calendar' ] ],
+	[ 'list view', '/events/?feriae_view=list', [ '.feriae-calendar' ] ],
+	[ 'past events', '/events/?feriae_view=list&feriae_past=1', [ '.feriae-calendar' ] ],
+	[ 'event details', '/events/jazz-night/', [ '.feriae-details' ] ],
+	[ 'RSVP form', '/events/next-month-gala/', [ '.feriae-details' ] ],
 	[
 		'ticket checkout and waitlist',
 		'/events/spring-concert/',
-		[ '.oe-details' ],
+		[ '.feriae-details' ],
 	],
-	[ 'RSVP waitlist', '/events/author-talk-full/', [ '.oe-details' ] ],
-	[ 'existing post as event', '/blog-post-book-launch/', [ '.oe-details' ] ],
+	[ 'RSVP waitlist', '/events/author-talk-full/', [ '.feriae-details' ] ],
+	[ 'existing post as event', '/blog-post-book-launch/', [ '.feriae-details' ] ],
 ];
 
 test.describe( 'Accessibility (WCAG 2.2 AA)', () => {
@@ -50,57 +50,57 @@ test.describe( 'Accessibility (WCAG 2.2 AA)', () => {
 	test.describe( 'on a phone', () => {
 		test.use( { viewport: { width: 390, height: 844 } } );
 		test( 'front end: month view as agenda', async ( { page } ) => {
-			await page.goto( '/events/?oe_view=month' );
-			await scan( page, [ '.oe-calendar' ] );
+			await page.goto( '/events/?feriae_view=month' );
+			await scan( page, [ '.feriae-calendar' ] );
 		} );
 	} );
 
 	test( 'admin: settings', async ( { page } ) => {
 		await page.goto(
-			'/wp-admin/edit.php?post_type=oe_event&page=openevents-settings'
+			'/wp-admin/edit.php?post_type=feriae_event&page=feriae-settings'
 		);
-		await page.waitForSelector( '#openevents-admin button' );
-		await scan( page, [ '#openevents-admin' ] );
+		await page.waitForSelector( '#feriae-admin button' );
+		await scan( page, [ '#feriae-admin' ] );
 	} );
 
 	test( 'admin: setup wizard', async ( { page } ) => {
-		await page.goto( '/wp-admin/admin.php?page=openevents-setup' );
-		await page.waitForSelector( '#openevents-admin button' );
-		await scan( page, [ '#openevents-admin' ] );
+		await page.goto( '/wp-admin/admin.php?page=feriae-setup' );
+		await page.waitForSelector( '#feriae-admin button' );
+		await scan( page, [ '#feriae-admin' ] );
 	} );
 
 	test( 'admin: orders', async ( { page } ) => {
 		await page.goto(
-			'/wp-admin/edit.php?post_type=oe_event&page=openevents-orders'
+			'/wp-admin/edit.php?post_type=feriae_event&page=feriae-orders'
 		);
 		await page.waitForSelector( '.dataviews-view-table' );
-		await scan( page, [ '#openevents-attendance' ] );
+		await scan( page, [ '#feriae-attendance' ] );
 	} );
 
 	test( 'admin: tickets settings', async ( { page } ) => {
 		await page.goto(
-			'/wp-admin/edit.php?post_type=oe_event&page=openevents-settings'
+			'/wp-admin/edit.php?post_type=feriae_event&page=feriae-settings'
 		);
 		await page.getByRole( 'tab', { name: 'Tickets' } ).click();
 		await page.waitForSelector( 'text=Card (Stripe)' );
-		await scan( page, [ '#openevents-admin' ] );
+		await scan( page, [ '#feriae-admin' ] );
 	} );
 
 	test( 'admin: waitlist', async ( { page } ) => {
 		await page.goto(
-			'/wp-admin/edit.php?post_type=oe_event&page=openevents-waitlist'
+			'/wp-admin/edit.php?post_type=feriae_event&page=feriae-waitlist'
 		);
 		await page.waitForSelector(
 			'.dataviews-view-table, .dataviews-no-results'
 		);
-		await scan( page, [ '#openevents-attendance' ] );
+		await scan( page, [ '#feriae-attendance' ] );
 	} );
 
 	test( 'admin: attendees', async ( { page } ) => {
 		await page.goto(
-			'/wp-admin/edit.php?post_type=oe_event&page=openevents-attendees'
+			'/wp-admin/edit.php?post_type=feriae_event&page=feriae-attendees'
 		);
 		await page.waitForSelector( '.dataviews-view-table' );
-		await scan( page, [ '#openevents-attendance' ] );
+		await scan( page, [ '#feriae-attendance' ] );
 	} );
 } );

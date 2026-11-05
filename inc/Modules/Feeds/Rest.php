@@ -2,24 +2,24 @@
 /**
  * Calendar feed endpoints and abilities.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Feeds;
+namespace Feriae\Modules\Feeds;
 
-use OpenEvents\Content\PostTypes;
+use Feriae\Content\PostTypes;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_REST_Server;
 
 /**
- * GET    /openevents/v1/feeds             List calendars.
- * POST   /openevents/v1/feeds             Add one (and import it now).
- * POST   /openevents/v1/feeds/{id}        Change one (an empty url keeps the address).
- * DELETE /openevents/v1/feeds/{id}        Remove one; events=trash also trashes its events.
- * POST   /openevents/v1/feeds/{id}/sync   Sync now.
- * POST   /openevents/v1/feeds/import      Import an .ics file's text once.
+ * GET    /feriae/v1/feeds             List calendars.
+ * POST   /feriae/v1/feeds             Add one (and import it now).
+ * POST   /feriae/v1/feeds/{id}        Change one (an empty url keeps the address).
+ * DELETE /feriae/v1/feeds/{id}        Remove one; events=trash also trashes its events.
+ * POST   /feriae/v1/feeds/{id}/sync   Sync now.
+ * POST   /feriae/v1/feeds/import      Import an .ics file's text once.
  *
  * Administrators only: this site fetches the address, and imported events
  * are published under the feed's author.
@@ -52,7 +52,7 @@ final class Rest {
 			),
 			'post_type'   => array(
 				'type' => 'string',
-				'enum' => openevents_event_post_types(),
+				'enum' => feriae_event_post_types(),
 			),
 		);
 		$url     = array(
@@ -67,7 +67,7 @@ final class Rest {
 		);
 
 		register_rest_route(
-			'openevents/v1',
+			'feriae/v1',
 			'/feeds',
 			array(
 				array(
@@ -90,7 +90,7 @@ final class Rest {
 			)
 		);
 		register_rest_route(
-			'openevents/v1',
+			'feriae/v1',
 			'/feeds/(?P<id>\d+)',
 			array(
 				array(
@@ -114,7 +114,7 @@ final class Rest {
 			)
 		);
 		register_rest_route(
-			'openevents/v1',
+			'feriae/v1',
 			'/feeds/(?P<id>\d+)/sync',
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
@@ -124,7 +124,7 @@ final class Rest {
 			)
 		);
 		register_rest_route(
-			'openevents/v1',
+			'feriae/v1',
 			'/feeds/import',
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
@@ -200,7 +200,7 @@ final class Rest {
 	public function import( WP_REST_Request $request ): WP_REST_Response|WP_Error {
 		$ics = (string) $request['ics'];
 		if ( ! Parser::is_calendar( $ics ) ) {
-			return new WP_Error( 'openevents_feed_format', __( 'That file isn’t an iCal (.ics) calendar.', 'openevents' ), array( 'status' => 400 ) );
+			return new WP_Error( 'feriae_feed_format', __( 'That file isn’t an iCal (.ics) calendar.', 'feriae' ), array( 'status' => 400 ) );
 		}
 		$options = Feed::options( $request->get_params() );
 		$parser  = new Parser();
@@ -217,7 +217,7 @@ final class Rest {
 	}
 
 	private static function feed( WP_REST_Request $request ): Feed|WP_Error {
-		return Feed::get( (int) $request['id'] ) ?? new WP_Error( 'openevents_feed_not_found', __( 'That calendar wasn’t found.', 'openevents' ), array( 'status' => 404 ) );
+		return Feed::get( (int) $request['id'] ) ?? new WP_Error( 'feriae_feed_not_found', __( 'That calendar wasn’t found.', 'feriae' ), array( 'status' => 404 ) );
 	}
 
 	/**
@@ -253,7 +253,7 @@ final class Rest {
 				'name'    => array( 'type' => 'string' ),
 				'address' => array(
 					'type'        => 'string',
-					'description' => __( 'Masked iCal address.', 'openevents' ),
+					'description' => __( 'Masked iCal address.', 'feriae' ),
 				),
 				'events'  => array( 'type' => 'integer' ),
 				'last'    => array( 'type' => array( 'object', 'null' ) ),
@@ -270,11 +270,11 @@ final class Rest {
 		);
 
 		wp_register_ability(
-			'openevents/list-calendar-feeds',
+			'feriae/list-calendar-feeds',
 			array(
-				'label'               => __( 'List calendar feeds', 'openevents' ),
-				'description'         => __( 'Lists the calendars (iCal feeds) events are imported from, with each one’s last sync.', 'openevents' ),
-				'category'            => 'openevents',
+				'label'               => __( 'List calendar feeds', 'feriae' ),
+				'description'         => __( 'Lists the calendars (iCal feeds) events are imported from, with each one’s last sync.', 'feriae' ),
+				'category'            => 'feriae',
 				'output_schema'       => array(
 					'type'  => 'array',
 					'items' => $feed,
@@ -285,11 +285,11 @@ final class Rest {
 			)
 		);
 		wp_register_ability(
-			'openevents/sync-calendar-feed',
+			'feriae/sync-calendar-feed',
 			array(
-				'label'               => __( 'Sync calendar feed', 'openevents' ),
-				'description'         => __( 'Imports a calendar feed now: adds new events, updates changed ones, and unpublishes upcoming events no longer in it.', 'openevents' ),
-				'category'            => 'openevents',
+				'label'               => __( 'Sync calendar feed', 'feriae' ),
+				'description'         => __( 'Imports a calendar feed now: adds new events, updates changed ones, and unpublishes upcoming events no longer in it.', 'feriae' ),
+				'category'            => 'feriae',
 				'input_schema'        => array(
 					'type'                 => 'object',
 					'properties'           => array( 'id' => array( 'type' => 'integer' ) ),
@@ -305,7 +305,7 @@ final class Rest {
 				),
 				'execute_callback'    => static function ( array $input ) {
 					$feed = Feed::get( (int) $input['id'] );
-					return $feed ? $feed->sync( self::REQUEST_BUDGET ) : new WP_Error( 'openevents_feed_not_found', __( 'That calendar wasn’t found.', 'openevents' ) );
+					return $feed ? $feed->sync( self::REQUEST_BUDGET ) : new WP_Error( 'feriae_feed_not_found', __( 'That calendar wasn’t found.', 'feriae' ) );
 				},
 				'permission_callback' => array( self::class, 'can_manage' ),
 				'meta'                => $meta( false ),

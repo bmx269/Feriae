@@ -2,28 +2,28 @@
 /**
  * Gateway base class.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Tickets;
+namespace Feriae\Modules\Tickets;
 
-use OpenEvents\Attendance\Order;
+use Feriae\Attendance\Order;
 
 /**
- * Settings live in the openevents_gateways option (not autoloaded, never in
+ * Settings live in the feriae_gateways option (not autoloaded, never in
  * REST settings). Any setting can instead come from a constant such as
- * OPENEVENTS_STRIPE_SECRET_KEY in wp-config.php, which wins over the option.
+ * FERIAE_STRIPE_SECRET_KEY in wp-config.php, which wins over the option.
  */
 abstract class AbstractGateway implements Gateway {
 
-	public const OPTION = 'openevents_gateways';
+	public const OPTION = 'feriae_gateways';
 
 	public function description(): string {
 		return '';
 	}
 
 	public function setting( string $key, mixed $default = '' ): mixed {
-		$constant = 'OPENEVENTS_' . strtoupper( $this->id() . '_' . $key );
+		$constant = 'FERIAE_' . strtoupper( $this->id() . '_' . $key );
 		if ( defined( $constant ) ) {
 			return constant( $constant );
 		}
@@ -32,7 +32,7 @@ abstract class AbstractGateway implements Gateway {
 	}
 
 	public function is_constant( string $key ): bool {
-		return defined( 'OPENEVENTS_' . strtoupper( $this->id() . '_' . $key ) );
+		return defined( 'FERIAE_' . strtoupper( $this->id() . '_' . $key ) );
 	}
 
 	public function enabled(): bool {
@@ -48,13 +48,13 @@ abstract class AbstractGateway implements Gateway {
 	}
 
 	public function refund( Order $order ): true|\WP_Error {
-		return new \WP_Error( 'openevents_refund_unsupported', __( 'This payment method can’t issue refunds. Refund the buyer directly.', 'openevents' ) );
+		return new \WP_Error( 'feriae_refund_unsupported', __( 'This payment method can’t issue refunds. Refund the buyer directly.', 'feriae' ) );
 	}
 
 	public function settings_fields(): array {
 		return array(
 			'enabled' => array(
-				'label' => __( 'Enabled', 'openevents' ),
+				'label' => __( 'Enabled', 'feriae' ),
 				'type'  => 'toggle',
 			),
 		);
@@ -66,14 +66,14 @@ abstract class AbstractGateway implements Gateway {
 	protected function return_url( Order $order, string $outcome ): string {
 		return add_query_arg(
 			array(
-				'oe_checkout' => $outcome,
-				'oe_order'    => $order->uuid,
+				'feriae_checkout' => $outcome,
+				'feriae_order'    => $order->uuid,
 			),
-			rest_url( 'openevents/v1/orders/return' )
+			rest_url( 'feriae/v1/orders/return' )
 		);
 	}
 
 	protected function webhook_url(): string {
-		return rest_url( 'openevents/v1/gateways/' . $this->id() . '/webhook' );
+		return rest_url( 'feriae/v1/gateways/' . $this->id() . '/webhook' );
 	}
 }

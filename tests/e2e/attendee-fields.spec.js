@@ -9,14 +9,14 @@ test.describe( 'Attendee questions', () => {
 		page,
 	} ) => {
 		await page.goto( '/events/puppet-show-registration/' );
-		const form = page.locator( '.oe-tickets__form:not(.oe-waitlist)' );
-		const holders = form.locator( '.oe-tickets__holders' );
+		const form = page.locator( '.feriae-tickets__form:not(.feriae-waitlist)' );
+		const holders = form.locator( '.feriae-tickets__holders' );
 
 		// No tickets chosen: no holder questions.
 		await expect( holders ).toBeHidden();
 		await form.getByLabel( 'Child', { exact: true } ).selectOption( '2' );
 		await expect( holders ).toBeVisible();
-		const groups = holders.locator( 'fieldset.oe-person:visible' );
+		const groups = holders.locator( 'fieldset.feriae-person:visible' );
 		await expect( groups ).toHaveCount( 2 );
 
 		const results = await new AxeBuilder( { page } )
@@ -27,7 +27,7 @@ test.describe( 'Attendee questions', () => {
 				'wcag21aa',
 				'wcag22aa',
 			] )
-			.include( '.oe-tickets' )
+			.include( '.feriae-tickets' )
 			.analyze();
 		expect( results.violations.map( ( v ) => v.id ) ).toEqual( [] );
 
@@ -60,17 +60,17 @@ test.describe( 'Attendee questions', () => {
 
 		await humanPause( page );
 		await form.getByRole( 'button', { name: 'Get tickets' } ).click();
-		await expect( page ).toHaveURL( /oe_order_token=/ );
-		await expect( page.locator( '.oe-tickets__order code' ) ).toHaveCount(
+		await expect( page ).toHaveURL( /feriae_order_token=/ );
+		await expect( page.locator( '.feriae-tickets__order code' ) ).toHaveCount(
 			2
 		);
 
 		const id = await page
-			.locator( '.oe-tickets__form input[name="event_id"]' )
+			.locator( '.feriae-tickets__form input[name="event_id"]' )
 			.first()
 			.inputValue();
 		const attendees = (
-			await rest( page, `/openevents/v1/attendees?event=${ id }` )
+			await rest( page, `/feriae/v1/attendees?event=${ id }` )
 		).body;
 		const kidOne = attendees.find( ( a ) => a.name === 'Kid One' );
 		expect( kidOne.email ).toBe( 'kid0@example.com' );
@@ -88,9 +88,9 @@ test.describe( 'Attendee questions', () => {
 		page,
 	} ) => {
 		await page.goto( '/events/puppet-show-registration/' );
-		const form = page.locator( '.oe-tickets__form:not(.oe-waitlist)' );
+		const form = page.locator( '.feriae-tickets__form:not(.feriae-waitlist)' );
 		await form.getByLabel( 'Child', { exact: true } ).selectOption( '1' );
-		const group = form.locator( 'fieldset.oe-person:visible' ).first();
+		const group = form.locator( 'fieldset.feriae-person:visible' ).first();
 
 		// The browser requires the answers once the group is in use.
 		await expect(
@@ -114,9 +114,9 @@ test.describe( 'Attendee questions', () => {
 				title: 'Book Club (questions)',
 				status: 'publish',
 				meta: {
-					_oe_start: `${ day } 18:00:00`,
-					_oe_end: `${ day } 19:00:00`,
-					_oe_rsvp: {
+					_feriae_start: `${ day } 18:00:00`,
+					_feriae_end: `${ day } 19:00:00`,
+					_feriae_rsvp: {
 						enabled: true,
 						max_per_response: 3,
 						attendee_details: 'optional',
@@ -135,8 +135,8 @@ test.describe( 'Attendee questions', () => {
 		expect( created.status ).toBe( 201 );
 
 		await page.goto( created.body.link );
-		const form = page.locator( '.oe-rsvp__form' );
-		const groups = form.locator( 'fieldset.oe-person:visible' );
+		const form = page.locator( '.feriae-rsvp__form' );
+		const groups = form.locator( 'fieldset.feriae-person:visible' );
 		await expect( groups ).toHaveCount( 1 );
 		await form.getByLabel( 'People' ).selectOption( '2' );
 		await expect( groups ).toHaveCount( 2 );
@@ -168,14 +168,14 @@ test.describe( 'Attendee questions', () => {
 			.selectOption( 'Large print' );
 		await humanPause( page );
 		await form.getByRole( 'button', { name: 'RSVP' } ).click();
-		await expect( page.locator( '.oe-rsvp__live' ) ).toContainText(
+		await expect( page.locator( '.feriae-rsvp__live' ) ).toContainText(
 			'party of 2'
 		);
 
 		const attendees = (
 			await rest(
 				page,
-				`/openevents/v1/attendees?event=${ created.body.id }&orderby=id&order=asc`
+				`/feriae/v1/attendees?event=${ created.body.id }&orderby=id&order=asc`
 			)
 		).body;
 		expect(

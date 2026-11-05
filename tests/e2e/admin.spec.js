@@ -5,7 +5,7 @@ test.describe( 'Admin', () => {
 	test( 'setup wizard creates a calendar page and saves choices', async ( {
 		page,
 	} ) => {
-		await page.goto( '/wp-admin/admin.php?page=openevents-setup' );
+		await page.goto( '/wp-admin/admin.php?page=feriae-setup' );
 
 		await expect(
 			page.getByText( 'Where should events live?' )
@@ -31,22 +31,22 @@ test.describe( 'Admin', () => {
 		await expect( page.getByText( 'You’re all set' ) ).toBeVisible();
 
 		const settings = ( await rest( page, '/wp/v2/settings' ) ).body;
-		const options = settings.openevents_settings;
+		const options = settings.feriae_settings;
 		expect( options.calendar_page ).toBeGreaterThan( 0 );
 		expect( options.default_view ).toBe( 'list' );
-		expect( settings.openevents_setup_complete ).toBe( true );
+		expect( settings.feriae_setup_complete ).toBe( true );
 
 		const calendarPage = (
 			await rest( page, `/wp/v2/pages/${ options.calendar_page }` )
 		).body;
 		await page.goto( calendarPage.link );
-		await expect( page.locator( '.oe-calendar--list' ) ).toBeVisible();
+		await expect( page.locator( '.feriae-calendar--list' ) ).toBeVisible();
 
 		// Restore the month default for other tests.
 		await rest( page, '/wp/v2/settings', {
 			method: 'POST',
 			data: {
-				openevents_settings: { ...options, default_view: 'month' },
+				feriae_settings: { ...options, default_view: 'month' },
 			},
 		} );
 	} );
@@ -55,9 +55,9 @@ test.describe( 'Admin', () => {
 		page,
 	} ) => {
 		const original = ( await rest( page, '/wp/v2/settings' ) ).body
-			.openevents_modules;
+			.feriae_modules;
 		await page.goto(
-			'/wp-admin/edit.php?post_type=oe_event&page=openevents-settings'
+			'/wp-admin/edit.php?post_type=feriae_event&page=feriae-settings'
 		);
 		await page.getByRole( 'tab', { name: 'Modules' } ).click();
 		const ical = page.getByRole( 'switch', { name: 'iCal export' } );
@@ -74,7 +74,7 @@ test.describe( 'Admin', () => {
 		// Restore for other tests.
 		await rest( page, '/wp/v2/settings', {
 			method: 'POST',
-			data: { openevents_modules: original },
+			data: { feriae_modules: original },
 		} );
 		await page.goto( '/events/' );
 		await expect(
@@ -86,11 +86,11 @@ test.describe( 'Admin', () => {
 		page,
 	} ) => {
 		await page.goto(
-			'/wp-admin/edit.php?post_type=oe_event&orderby=oe_event_date&order=asc'
+			'/wp-admin/edit.php?post_type=feriae_event&orderby=feriae_event_date&order=asc'
 		);
-		await expect( page.locator( 'th#oe_event_date' ) ).toBeVisible();
+		await expect( page.locator( 'th#feriae_event_date' ) ).toBeVisible();
 		const dates = await page
-			.locator( 'td.column-oe_event_date' )
+			.locator( 'td.column-feriae_event_date' )
 			.allTextContents();
 		expect( dates.length ).toBeGreaterThan( 3 );
 		expect( dates[ 0 ] ).not.toBe( '—' );
@@ -99,7 +99,7 @@ test.describe( 'Admin', () => {
 	test( 'editor: create an event from the sidebar panel', async ( {
 		page,
 	} ) => {
-		await newPost( page, 'oe_event' );
+		await newPost( page, 'feriae_event' );
 
 		const canvas = page.frameLocator( 'iframe[name="editor-canvas"]' );
 		await canvas
@@ -115,7 +115,7 @@ test.describe( 'Admin', () => {
 			await panelToggle.click();
 		}
 		await page.getByRole( 'button', { name: /^Starts:/ } ).click();
-		const picker = page.locator( '.oe-editor-panel__picker' );
+		const picker = page.locator( '.feriae-editor-panel__picker' );
 		// Fields commit on blur, so tab out of each one.
 		for ( const [ name, value ] of [
 			[ 'Year', '2031' ],
@@ -152,7 +152,7 @@ test.describe( 'Admin', () => {
 				window.wp.data.select( 'core/editor' ).getCurrentPostId()
 			) );
 		const [ occurrence ] = (
-			await rest( page, `/openevents/v1/occurrences?event=${ id }` )
+			await rest( page, `/feriae/v1/occurrences?event=${ id }` )
 		).body;
 		expect( occurrence.title ).toBe( 'Editor Event' );
 		expect( occurrence.start ).toMatch( /^2031-\d{2}-15T07:30:00/ );

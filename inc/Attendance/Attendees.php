@@ -2,13 +2,13 @@
 /**
  * Attendee storage.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Attendance;
+namespace Feriae\Attendance;
 
 /**
- * Reads and writes oe_attendees. Responses and orders are groups of rows (one
+ * Reads and writes feriae_attendees. Responses and orders are groups of rows (one
  * per person) sharing a group_uuid.
  */
 final class Attendees {
@@ -41,7 +41,7 @@ final class Attendees {
 					'occurrence_id'  => (int) ( $data['occurrence_id'] ?? 0 ),
 					'name'           => '' !== (string) ( $people[ $i ]['name'] ?? '' ) ? (string) $people[ $i ]['name'] : ( 0 === $i || $same_name ? (string) $data['name'] : sprintf(
 						/* translators: %s: name of the person who RSVPed */
-						__( 'Guest of %s', 'openevents' ),
+						__( 'Guest of %s', 'feriae' ),
 						(string) $data['name']
 					) ),
 					'email'          => '' !== (string) ( $people[ $i ]['email'] ?? '' ) ? (string) $people[ $i ]['email'] : (string) $data['email'],

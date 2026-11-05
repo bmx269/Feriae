@@ -2,21 +2,21 @@
 /**
  * Stripe and PayPal gateways against mocked provider APIs.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Tests\Integration;
+namespace Feriae\Tests\Integration;
 
-use OpenEvents\Attendance\Guard;
-use OpenEvents\Attendance\Order;
-use OpenEvents\Attendance\Orders;
-use OpenEvents\Attendance\TicketTypes;
-use OpenEvents\Modules\Tickets\AbstractGateway;
-use OpenEvents\Modules\Tickets\Checkout;
-use OpenEvents\Modules\Tickets\Gateways;
-use OpenEvents\Modules\Tickets\Gateways\PayPal;
-use OpenEvents\Modules\Tickets\Gateways\Stripe;
-use OpenEvents\Tests\TestCase;
+use Feriae\Attendance\Guard;
+use Feriae\Attendance\Order;
+use Feriae\Attendance\Orders;
+use Feriae\Attendance\TicketTypes;
+use Feriae\Modules\Tickets\AbstractGateway;
+use Feriae\Modules\Tickets\Checkout;
+use Feriae\Modules\Tickets\Gateways;
+use Feriae\Modules\Tickets\Gateways\PayPal;
+use Feriae\Modules\Tickets\Gateways\Stripe;
+use Feriae\Tests\TestCase;
 
 final class GatewaysTest extends TestCase {
 
@@ -43,7 +43,7 @@ final class GatewaysTest extends TestCase {
 		add_filter( 'pre_http_request', array( $this, 'route' ), 10, 3 );
 
 		$day        = current_datetime()->modify( '+10 days' )->format( 'Y-m-d' );
-		$this->event = $this->event( array( '_oe_start' => "{$day} 19:00:00" ), array( 'post_title' => 'Gala' ) );
+		$this->event = $this->event( array( '_feriae_start' => "{$day} 19:00:00" ), array( 'post_title' => 'Gala' ) );
 		$this->rows( $this->event );
 		$this->type = ( new TicketTypes() )->upsert(
 			$this->event,
@@ -91,7 +91,7 @@ final class GatewaysTest extends TestCase {
 	// ── Stripe ────────────────────────────────────────────────────────────
 
 	private function stripe_session_routes( string $status = 'paid', int $amount = 5000 ): void {
-		$this->routes['/v1/checkout/sessions/cs_1'] = static fn() => array( 200, array( 'id' => 'cs_1', 'payment_status' => $status, 'payment_intent' => 'pi_1', 'amount_total' => $amount, 'currency' => 'usd', 'client_reference_id' => $GLOBALS['oe_test_uuid'] ?? '' ) );
+		$this->routes['/v1/checkout/sessions/cs_1'] = static fn() => array( 200, array( 'id' => 'cs_1', 'payment_status' => $status, 'payment_intent' => 'pi_1', 'amount_total' => $amount, 'currency' => 'usd', 'client_reference_id' => $GLOBALS['feriae_test_uuid'] ?? '' ) );
 		$this->routes['/v1/checkout/sessions']      = static fn() => array( 200, array( 'id' => 'cs_1', 'url' => 'https://checkout.stripe.com/c/pay/cs_1' ) );
 	}
 
@@ -106,7 +106,7 @@ final class GatewaysTest extends TestCase {
 		$request = $this->last_request( '/v1/checkout/sessions' );
 		parse_str( $request['args']['body'], $body );
 		$this->assertSame( 'Bearer sk_test_123', $request['args']['headers']['Authorization'] );
-		$this->assertSame( 'oe-' . $result->order->uuid, $request['args']['headers']['Idempotency-Key'] );
+		$this->assertSame( 'feriae-' . $result->order->uuid, $request['args']['headers']['Idempotency-Key'] );
 		$this->assertSame( '2500', $body['line_items'][0]['price_data']['unit_amount'] );
 		$this->assertSame( '2', $body['line_items'][0]['quantity'] );
 		$this->assertSame( 'usd', $body['line_items'][0]['price_data']['currency'] );
@@ -117,24 +117,24 @@ final class GatewaysTest extends TestCase {
 	public function test_stripe_return_confirms_with_stripe_before_completing(): void {
 		$this->stripe_session_routes();
 		$result                  = $this->place( 'stripe' );
-		$GLOBALS['oe_test_uuid'] = $result->order->uuid;
+		$GLOBALS['feriae_test_uuid'] = $result->order->uuid;
 		$gateway                 = Gateways::get( 'stripe' );
 
-		$this->assertSame( 'pending', $gateway->handle_return( $this->order( $result ), array( 'oe_checkout' => 'success', 'session_id' => 'cs_other' ) )->status, 'A different session id is ignored.' );
+		$this->assertSame( 'pending', $gateway->handle_return( $this->order( $result ), array( 'feriae_checkout' => 'success', 'session_id' => 'cs_other' ) )->status, 'A different session id is ignored.' );
 
-		$paid = $gateway->handle_return( $this->order( $result ), array( 'oe_checkout' => 'success', 'session_id' => 'cs_1' ) );
+		$paid = $gateway->handle_return( $this->order( $result ), array( 'feriae_checkout' => 'success', 'session_id' => 'cs_1' ) );
 		$this->assertSame( 'paid', $paid->status );
 		$this->assertSame( 'pi_1', $paid->txn );
 
 		$this->stripe_session_routes( 'paid', 100 ); // Amount doesn't match the order.
-		$this->assertSame( 'pending', $gateway->handle_return( $this->order( $result ), array( 'oe_checkout' => 'success', 'session_id' => 'cs_1' ) )->status );
-		unset( $GLOBALS['oe_test_uuid'] );
+		$this->assertSame( 'pending', $gateway->handle_return( $this->order( $result ), array( 'feriae_checkout' => 'success', 'session_id' => 'cs_1' ) )->status );
+		unset( $GLOBALS['feriae_test_uuid'] );
 	}
 
 	private function stripe_webhook( array $event, ?int $time = null, string $secret = 'whsec_test' ): \WP_REST_Response {
 		$payload = wp_json_encode( $event );
 		$time  ??= time();
-		$request = new \WP_REST_Request( 'POST', '/openevents/v1/gateways/stripe/webhook' );
+		$request = new \WP_REST_Request( 'POST', '/feriae/v1/gateways/stripe/webhook' );
 		$request->set_body( $payload );
 		$request->set_header( 'stripe-signature', 't=' . $time . ',v1=' . hash_hmac( 'sha256', $time . '.' . $payload, $secret ) );
 		return Gateways::get( 'stripe' )->handle_webhook( $request );
@@ -203,7 +203,7 @@ final class GatewaysTest extends TestCase {
 				'status'         => 'COMPLETED',
 				'purchase_units' => array(
 					array(
-						'reference_id' => $uuid ?: ( $GLOBALS['oe_test_uuid'] ?? '' ),
+						'reference_id' => $uuid ?: ( $GLOBALS['feriae_test_uuid'] ?? '' ),
 						'payments'     => array( 'captures' => array( array( 'id' => 'CAP-1', 'status' => 'COMPLETED', 'amount' => array( 'currency_code' => 'USD', 'value' => $capture_value ) ) ) ),
 					),
 				),
@@ -226,7 +226,7 @@ final class GatewaysTest extends TestCase {
 		$body    = json_decode( $request['args']['body'], true );
 		$this->assertStringStartsWith( 'https://api-m.sandbox.paypal.com', $request['url'], 'Sandbox mode.' );
 		$this->assertSame( 'Bearer A21', $request['args']['headers']['Authorization'] );
-		$this->assertSame( 'oe-' . $result->order->uuid, $request['args']['headers']['PayPal-Request-Id'] );
+		$this->assertSame( 'feriae-' . $result->order->uuid, $request['args']['headers']['PayPal-Request-Id'] );
 		$this->assertSame( 'CAPTURE', $body['intent'] );
 		$this->assertSame( '50.00', $body['purchase_units'][0]['amount']['value'] );
 		$this->assertSame( '25.00', $body['purchase_units'][0]['items'][0]['unit_amount']['value'] );
@@ -236,18 +236,18 @@ final class GatewaysTest extends TestCase {
 	public function test_paypal_return_captures_and_checks_the_amount(): void {
 		$this->paypal_routes();
 		$result                  = $this->place( 'paypal' );
-		$GLOBALS['oe_test_uuid'] = $result->order->uuid;
+		$GLOBALS['feriae_test_uuid'] = $result->order->uuid;
 		$gateway                 = Gateways::get( 'paypal' );
 
-		$this->assertSame( 'pending', $gateway->handle_return( $this->order( $result ), array( 'oe_checkout' => 'success', 'token' => 'PP-OTHER' ) )->status );
+		$this->assertSame( 'pending', $gateway->handle_return( $this->order( $result ), array( 'feriae_checkout' => 'success', 'token' => 'PP-OTHER' ) )->status );
 
-		$paid = $gateway->handle_return( $this->order( $result ), array( 'oe_checkout' => 'success', 'token' => 'PP-1' ) );
+		$paid = $gateway->handle_return( $this->order( $result ), array( 'feriae_checkout' => 'success', 'token' => 'PP-1' ) );
 		$this->assertSame( 'paid', $paid->status );
 		$this->assertSame( 'CAP-1', $paid->txn );
 
 		$this->paypal_routes( '1.00', $result->order->uuid ); // Underpaid capture.
-		$this->assertSame( 'pending', $gateway->handle_return( $this->order( $result ), array( 'oe_checkout' => 'success', 'token' => 'PP-1' ) )->status );
-		unset( $GLOBALS['oe_test_uuid'] );
+		$this->assertSame( 'pending', $gateway->handle_return( $this->order( $result ), array( 'feriae_checkout' => 'success', 'token' => 'PP-1' ) )->status );
+		unset( $GLOBALS['feriae_test_uuid'] );
 	}
 
 	public function test_paypal_access_token_is_cached(): void {
@@ -260,7 +260,7 @@ final class GatewaysTest extends TestCase {
 	}
 
 	private function paypal_webhook( array $event, string $signature = 'transmission-sig-ok' ): \WP_REST_Response {
-		$request = new \WP_REST_Request( 'POST', '/openevents/v1/gateways/paypal/webhook' );
+		$request = new \WP_REST_Request( 'POST', '/feriae/v1/gateways/paypal/webhook' );
 		$request->set_body( wp_json_encode( $event ) );
 		foreach ( array( 'paypal-auth-algo' => 'SHA256withRSA', 'paypal-cert-url' => 'https://api.paypal.com/cert', 'paypal-transmission-id' => 't1', 'paypal-transmission-sig' => $signature, 'paypal-transmission-time' => gmdate( 'c' ) ) as $k => $v ) {
 			$request->set_header( $k, $v );
@@ -271,7 +271,7 @@ final class GatewaysTest extends TestCase {
 	public function test_paypal_webhooks_are_verified_and_capture_abandoned_approvals(): void {
 		$this->paypal_routes();
 		$result                  = $this->place( 'paypal' );
-		$GLOBALS['oe_test_uuid'] = $result->order->uuid;
+		$GLOBALS['feriae_test_uuid'] = $result->order->uuid;
 		$approved                = array( 'event_type' => 'CHECKOUT.ORDER.APPROVED', 'resource' => array( 'id' => 'PP-1' ) );
 
 		$this->assertSame( 400, $this->paypal_webhook( $approved, 'forged' )->get_status() );
@@ -282,7 +282,7 @@ final class GatewaysTest extends TestCase {
 
 		$this->paypal_webhook( array( 'event_type' => 'PAYMENT.CAPTURE.REFUNDED', 'resource' => array( 'id' => 'CAP-1' ) ) );
 		$this->assertSame( Order::REFUNDED, $this->order( $result )->status );
-		unset( $GLOBALS['oe_test_uuid'] );
+		unset( $GLOBALS['feriae_test_uuid'] );
 	}
 
 	public function test_paypal_refund_calls_the_captures_api(): void {

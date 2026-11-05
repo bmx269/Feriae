@@ -2,10 +2,10 @@
 /**
  * Event model.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Content;
+namespace Feriae\Content;
 
 use DateTimeImmutable;
 use DateTimeZone;
@@ -29,7 +29,7 @@ final class Event {
 	}
 
 	public static function is_event_type( string $post_type ): bool {
-		return in_array( $post_type, openevents()->settings()->event_post_types(), true );
+		return in_array( $post_type, feriae()->settings()->event_post_types(), true );
 	}
 
 	public function is_scheduled(): bool {
@@ -45,7 +45,7 @@ final class Event {
 	}
 
 	public function timezone(): DateTimeZone {
-		return self::resolve_timezone( (string) $this->meta( '_oe_timezone' ) );
+		return self::resolve_timezone( (string) $this->meta( '_feriae_timezone' ) );
 	}
 
 	public static function resolve_timezone( string $name ): DateTimeZone {
@@ -60,14 +60,14 @@ final class Event {
 	}
 
 	public function is_all_day(): bool {
-		return (bool) $this->meta( '_oe_all_day' );
+		return (bool) $this->meta( '_feriae_all_day' );
 	}
 
 	/**
 	 * Start in the event timezone, or null when the event has no start date yet.
 	 */
 	public function start(): ?DateTimeImmutable {
-		return $this->parse( (string) $this->meta( '_oe_start' ) );
+		return $this->parse( (string) $this->meta( '_feriae_start' ) );
 	}
 
 	/**
@@ -75,7 +75,7 @@ final class Event {
 	 */
 	public function end(): ?DateTimeImmutable {
 		$start = $this->start();
-		$end   = $this->parse( (string) $this->meta( '_oe_end' ) );
+		$end   = $this->parse( (string) $this->meta( '_feriae_end' ) );
 		if ( ! $start ) {
 			return null;
 		}
@@ -91,7 +91,7 @@ final class Event {
 	}
 
 	public function venue(): ?WP_Post {
-		$id = (int) $this->meta( '_oe_venue_id' );
+		$id = (int) $this->meta( '_feriae_venue_id' );
 		$venue = $id ? get_post( $id ) : null;
 		return ( $venue && PostTypes::VENUE === $venue->post_type && 'publish' === $venue->post_status ) ? $venue : null;
 	}
@@ -100,7 +100,7 @@ final class Event {
 	 * @return WP_Post[]
 	 */
 	public function organizers(): array {
-		$ids = array_filter( array_map( 'absint', (array) $this->meta( '_oe_organizer_ids' ) ) );
+		$ids = array_filter( array_map( 'absint', (array) $this->meta( '_feriae_organizer_ids' ) ) );
 		if ( ! $ids ) {
 			return array();
 		}
@@ -115,21 +115,21 @@ final class Event {
 	}
 
 	public function cost(): string {
-		$cost = trim( (string) $this->meta( '_oe_cost' ) );
+		$cost = trim( (string) $this->meta( '_feriae_cost' ) );
 		if ( '' === $cost ) {
 			return '';
 		}
 		if ( is_numeric( $cost ) ) {
 			if ( 0.0 === (float) $cost ) {
-				return __( 'Free', 'openevents' );
+				return __( 'Free', 'feriae' );
 			}
-			return (string) $this->meta( '_oe_currency_symbol' ) . $cost;
+			return (string) $this->meta( '_feriae_currency_symbol' ) . $cost;
 		}
 		return $cost;
 	}
 
 	public function url(): string {
-		return (string) $this->meta( '_oe_url' );
+		return (string) $this->meta( '_feriae_url' );
 	}
 
 	/**
@@ -137,7 +137,7 @@ final class Event {
 	 */
 	public static function venue_address( WP_Post $venue ): string {
 		$get    = static fn( string $key ): string => trim( (string) get_post_meta( $venue->ID, $key, true ) );
-		$region = trim( $get( '_oe_region' ) . ' ' . $get( '_oe_postal_code' ) );
-		return implode( ', ', array_filter( array( $get( '_oe_address' ), $get( '_oe_city' ), $region, $get( '_oe_country' ) ) ) );
+		$region = trim( $get( '_feriae_region' ) . ' ' . $get( '_feriae_postal_code' ) );
+		return implode( ', ', array_filter( array( $get( '_feriae_address' ), $get( '_feriae_city' ), $region, $get( '_feriae_country' ) ) ) );
 	}
 }

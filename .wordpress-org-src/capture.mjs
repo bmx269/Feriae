@@ -40,11 +40,11 @@ const scrollTo = ( selector ) => async ( page ) => {
 	await page.locator( selector ).first().evaluate( ( el ) => window.scrollTo( 0, el.getBoundingClientRect().top + window.scrollY - 24 ) );
 };
 
-await shot( 'month', '/events/', { hideAdminBar: true, prepare: scrollTo( '.oe-calendar' ) } );
-await shot( 'list', '/events/?oe_view=list&oe_past=1', { hideAdminBar: true, prepare: scrollTo( '.oe-calendar' ) } );
-await shot( 'phone', '/events/', { viewport: { width: 390, height: 844 }, scale: 3, hideAdminBar: true, prepare: scrollTo( '.oe-calendar' ) } );
+await shot( 'month', '/events/', { hideAdminBar: true, prepare: scrollTo( '.feriae-calendar' ) } );
+await shot( 'list', '/events/?feriae_view=list&feriae_past=1', { hideAdminBar: true, prepare: scrollTo( '.feriae-calendar' ) } );
+await shot( 'phone', '/events/', { viewport: { width: 390, height: 844 }, scale: 3, hideAdminBar: true, prepare: scrollTo( '.feriae-calendar' ) } );
 await shot( 'single', '/events/jazz-night/', { hideAdminBar: true, prepare: scrollTo( 'h1' ) } );
-await shot( 'editor', '/wp-admin/edit.php?post_type=oe_event', {
+await shot( 'editor', '/wp-admin/edit.php?post_type=feriae_event', {
 	prepare: async ( page ) => {
 		await page.locator( 'a.row-title', { hasText: 'Jazz Night' } ).click();
 		const guide = page.locator( '.components-guide' );
@@ -57,22 +57,22 @@ await shot( 'editor', '/wp-admin/edit.php?post_type=oe_event', {
 		if ( ( await toggle.getAttribute( 'aria-expanded' ) ) === 'false' ) {
 			await toggle.click();
 		}
-		await page.locator( '.oe-editor-panel' ).first().scrollIntoViewIfNeeded();
+		await page.locator( '.feriae-editor-panel' ).first().scrollIntoViewIfNeeded();
 		await page.locator( '.interface-complementary-area' ).evaluate( ( el ) => el.scrollTo( 0, 430 ) );
 		await page.waitForTimeout( 500 );
 	},
 } );
-await shot( 'setup', '/wp-admin/admin.php?page=openevents-setup', {
-	prepare: ( page ) => page.waitForSelector( '#openevents-admin button' ),
+await shot( 'setup', '/wp-admin/admin.php?page=feriae-setup', {
+	prepare: ( page ) => page.waitForSelector( '#feriae-admin button' ),
 } );
-await shot( 'settings', '/wp-admin/edit.php?post_type=oe_event&page=openevents-settings', {
+await shot( 'settings', '/wp-admin/edit.php?post_type=feriae_event&page=feriae-settings', {
 	prepare: async ( page ) => {
-		await page.waitForSelector( '#openevents-admin button' );
+		await page.waitForSelector( '#feriae-admin button' );
 		await page.getByRole( 'tab', { name: 'Modules' } ).click();
 	},
 } );
-await shot( 'rsvp', '/events/intro-to-bookbinding-3-places/', { hideAdminBar: true, prepare: scrollTo( '.oe-rsvp' ) } );
-await shot( 'tickets', '/events/spring-concert/', { hideAdminBar: true, prepare: scrollTo( '.oe-tickets' ) } );
-await shot( 'waitlist', '/events/author-talk-full/', { hideAdminBar: true, prepare: scrollTo( '.oe-rsvp' ) } );
+await shot( 'rsvp', '/events/intro-to-bookbinding-3-places/', { hideAdminBar: true, prepare: scrollTo( '.feriae-rsvp' ) } );
+await shot( 'tickets', '/events/spring-concert/', { hideAdminBar: true, prepare: scrollTo( '.feriae-tickets' ) } );
+await shot( 'waitlist', '/events/author-talk-full/', { hideAdminBar: true, prepare: scrollTo( '.feriae-rsvp' ) } );
 
 await browser.close();

@@ -2,13 +2,13 @@
 /**
  * Gateway registry.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Tickets;
+namespace Feriae\Modules\Tickets;
 
 /**
- * Bundled gateways plus any added with the openevents/tickets/gateways filter.
+ * Bundled gateways plus any added with the feriae/tickets/gateways filter.
  */
 final class Gateways {
 
@@ -27,7 +27,7 @@ final class Gateways {
 			 *
 			 * @param Gateway[] $gateways Gateways.
 			 */
-			$gateways   = apply_filters( 'openevents/tickets/gateways', $gateways );
+			$gateways   = apply_filters( 'feriae/tickets/gateways', $gateways );
 			self::$all = array();
 			foreach ( $gateways as $gateway ) {
 				if ( $gateway instanceof Gateway ) {

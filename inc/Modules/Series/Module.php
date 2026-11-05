@@ -2,30 +2,30 @@
 /**
  * Series module.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Series;
+namespace Feriae\Modules\Series;
 
-use OpenEvents\Content\Event;
-use OpenEvents\Content\PostTypes;
-use OpenEvents\Frontend\CalendarView;
-use OpenEvents\Installer;
-use OpenEvents\Modules\AbstractModule;
-use OpenEvents\Occurrences\Occurrence;
-use OpenEvents\Occurrences\Repository;
+use Feriae\Content\Event;
+use Feriae\Content\PostTypes;
+use Feriae\Frontend\CalendarView;
+use Feriae\Installer;
+use Feriae\Modules\AbstractModule;
+use Feriae\Occurrences\Occurrence;
+use Feriae\Occurrences\Repository;
 
 /**
  * Series group related events (a film season, a weekly class) under one page
  * that lists their dates, and can sell series passes when Tickets is on.
  *
- * An event belongs to at most one series, stored as `_oe_series_id`. Dates
+ * An event belongs to at most one series, stored as `_feriae_series_id`. Dates
  * split off a repeating event keep it, so they stay in the series.
  */
 final class Module extends AbstractModule {
 
-	public const POST_TYPE = 'oe_series';
-	public const META_KEY  = '_oe_series_id';
+	public const POST_TYPE = 'feriae_series';
+	public const META_KEY  = '_feriae_series_id';
 
 	/** @var array<int, true> Series whose page content was already added. */
 	private static array $rendered = array();
@@ -35,11 +35,11 @@ final class Module extends AbstractModule {
 	}
 
 	public function label(): string {
-		return __( 'Series', 'openevents' );
+		return __( 'Series', 'feriae' );
 	}
 
 	public function description(): string {
-		return __( 'Group events into a series with its own page, and sell series passes with Tickets.', 'openevents' );
+		return __( 'Group events into a series with its own page, and sell series passes with Tickets.', 'feriae' );
 	}
 
 	public function install(): void {
@@ -50,10 +50,10 @@ final class Module extends AbstractModule {
 	public function boot(): void {
 		add_action( 'init', array( self::class, 'register_type' ) );
 		add_action( 'init', array( self::class, 'register_meta' ), 50 );
-		add_filter( 'openevents/meta_fields', array( self::class, 'event_meta' ), 10, 2 );
-		add_filter( 'openevents/event_details/rows', array( self::class, 'detail_row' ), 10, 2 );
+		add_filter( 'feriae/meta_fields', array( self::class, 'event_meta' ), 10, 2 );
+		add_filter( 'feriae/event_details/rows', array( self::class, 'detail_row' ), 10, 2 );
 		add_filter( 'the_content', array( self::class, 'page_content' ), 6 );
-		add_filter( 'openevents/series/sections', array( self::class, 'dates_section' ), 10, 2 );
+		add_filter( 'feriae/series/sections', array( self::class, 'dates_section' ), 10, 2 );
 	}
 
 	public static function register_type(): void {
@@ -61,17 +61,17 @@ final class Module extends AbstractModule {
 			self::POST_TYPE,
 			array(
 				'labels'       => array(
-					'name'          => __( 'Series', 'openevents' ),
-					'singular_name' => __( 'Series', 'openevents' ),
-					'add_new_item'  => __( 'Add New Series', 'openevents' ),
-					'edit_item'     => __( 'Edit Series', 'openevents' ),
-					'all_items'     => __( 'Series', 'openevents' ),
-					'not_found'     => __( 'No series found.', 'openevents' ),
+					'name'          => __( 'Series', 'feriae' ),
+					'singular_name' => __( 'Series', 'feriae' ),
+					'add_new_item'  => __( 'Add New Series', 'feriae' ),
+					'edit_item'     => __( 'Edit Series', 'feriae' ),
+					'all_items'     => __( 'Series', 'feriae' ),
+					'not_found'     => __( 'No series found.', 'feriae' ),
 				),
 				'public'       => true,
 				'show_in_rest' => true,
 				'rest_base'    => 'series',
-				'show_in_menu' => PostTypes::menu_parent( openevents()->settings() ),
+				'show_in_menu' => PostTypes::menu_parent( feriae()->settings() ),
 				'rewrite'      => array(
 					'slug'       => 'series',
 					'with_front' => false,
@@ -87,7 +87,7 @@ final class Module extends AbstractModule {
 	 */
 	public static function register_meta(): void {
 		/** This filter is documented in inc/Content/Meta.php */
-		$fields = apply_filters( 'openevents/meta_fields', array(), self::POST_TYPE );
+		$fields = apply_filters( 'feriae/meta_fields', array(), self::POST_TYPE );
 		foreach ( $fields as $key => $args ) {
 			register_post_meta(
 				self::POST_TYPE,
@@ -110,10 +110,10 @@ final class Module extends AbstractModule {
 	 * @return array<string, array<string, mixed>>
 	 */
 	public static function event_meta( array $fields, string $post_type ): array {
-		if ( in_array( $post_type, openevents_event_post_types(), true ) ) {
+		if ( in_array( $post_type, feriae_event_post_types(), true ) ) {
 			$fields[ self::META_KEY ] = array(
 				'type'              => 'integer',
-				'description'       => __( 'Series this event belongs to.', 'openevents' ),
+				'description'       => __( 'Series this event belongs to.', 'feriae' ),
 				'sanitize_callback' => 'absint',
 			);
 		}
@@ -138,7 +138,7 @@ final class Module extends AbstractModule {
 		}
 		$row  = array(
 			'series' => array(
-				'label' => __( 'Series', 'openevents' ),
+				'label' => __( 'Series', 'feriae' ),
 				'html'  => sprintf( '<a href="%s">%s</a>', esc_url( get_permalink( $series ) ), esc_html( get_the_title( $series ) ) ),
 			),
 		);
@@ -164,13 +164,13 @@ final class Module extends AbstractModule {
 		 * @param string[] $sections Safe HTML keyed by id ("dates", "tickets").
 		 * @param int      $id       Series id.
 		 */
-		$sections = apply_filters( 'openevents/series/sections', array(), $id );
+		$sections = apply_filters( 'feriae/series/sections', array(), $id );
 		if ( ! $sections ) {
 			return $content;
 		}
-		wp_enqueue_style( generate_block_asset_handle( 'openevents/calendar', 'style' ) );
-		wp_enqueue_style( generate_block_asset_handle( 'openevents/event-details', 'style' ) );
-		return $content . '<div class="oe-series oe-details">' . implode( '', $sections ) . '</div>';
+		wp_enqueue_style( generate_block_asset_handle( 'feriae/calendar', 'style' ) );
+		wp_enqueue_style( generate_block_asset_handle( 'feriae/event-details', 'style' ) );
+		return $content . '<div class="feriae-series feriae-details">' . implode( '', $sections ) . '</div>';
 	}
 
 	/**
@@ -180,7 +180,7 @@ final class Module extends AbstractModule {
 	 * @return string[]
 	 */
 	public static function dates_section( array $sections, int $id ): array {
-		$repo     = openevents()->occurrences();
+		$repo     = feriae()->occurrences();
 		$upcoming = $repo->query(
 			array(
 				'series'     => $id,
@@ -199,13 +199,13 @@ final class Module extends AbstractModule {
 			)
 		)['items'];
 
-		$list = static fn( array $items ) => '<ol class="oe-list__items">' . implode( '', array_map( static fn( Occurrence $o ) => '<li>' . CalendarView::list_item( $o, 'h3', array( 'excerpt' => false ) ) . '</li>', $items ) ) . '</ol>';
+		$list = static fn( array $items ) => '<ol class="feriae-list__items">' . implode( '', array_map( static fn( Occurrence $o ) => '<li>' . CalendarView::list_item( $o, 'h3', array( 'excerpt' => false ) ) . '</li>', $items ) ) . '</ol>';
 
-		$html = '<section class="oe-series__dates" aria-labelledby="oe-series-dates-' . $id . '"><h2 id="oe-series-dates-' . $id . '">' . esc_html__( 'Dates', 'openevents' ) . '</h2>';
-		$html .= $upcoming ? $list( $upcoming ) : '<p>' . esc_html__( 'There are no upcoming dates in this series.', 'openevents' ) . '</p>';
+		$html = '<section class="feriae-series__dates" aria-labelledby="feriae-series-dates-' . $id . '"><h2 id="feriae-series-dates-' . $id . '">' . esc_html__( 'Dates', 'feriae' ) . '</h2>';
+		$html .= $upcoming ? $list( $upcoming ) : '<p>' . esc_html__( 'There are no upcoming dates in this series.', 'feriae' ) . '</p>';
 		if ( $past ) {
 			/* translators: %d: number of past dates */
-			$html .= '<details class="oe-series__past"><summary>' . esc_html( sprintf( _n( '%d past date', '%d past dates', count( $past ), 'openevents' ), count( $past ) ) ) . '</summary>' . $list( $past ) . '</details>';
+			$html .= '<details class="feriae-series__past"><summary>' . esc_html( sprintf( _n( '%d past date', '%d past dates', count( $past ), 'feriae' ), count( $past ) ) ) . '</summary>' . $list( $past ) . '</details>';
 		}
 		$sections['dates'] = $html . '</section>';
 		return $sections;

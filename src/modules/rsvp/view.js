@@ -13,7 +13,7 @@ import formObject from '../shared/form-object';
 const nextFrame = () =>
 	new Promise( ( resolve ) => window.requestAnimationFrame( resolve ) );
 
-store( 'openevents/rsvp', {
+store( 'feriae/rsvp', {
 	state: {
 		/** An attendee group is unused: beyond the party size, or not going. */
 		get groupHidden() {
@@ -94,8 +94,8 @@ store( 'openevents/rsvp', {
 
 			// Announce the result and put keyboard focus on it.
 			yield nextFrame();
-			ref.closest( '.oe-rsvp' )
-				?.querySelector( '.oe-rsvp__live' )
+			ref.closest( '.feriae-rsvp' )
+				?.querySelector( '.feriae-rsvp__live' )
 				?.focus();
 		} ),
 	},

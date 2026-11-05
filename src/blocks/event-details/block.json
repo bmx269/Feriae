@@ -1,13 +1,13 @@
 {
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
-	"name": "openevents/event-details",
+	"name": "feriae/event-details",
 	"title": "Event Details",
-	"category": "openevents",
+	"category": "feriae",
 	"icon": "info-outline",
 	"description": "Date, venue, organizers, cost, and calendar links for the current event.",
 	"keywords": [ "event", "date", "venue" ],
-	"textdomain": "openevents",
+	"textdomain": "feriae",
 	"usesContext": [ "postId", "postType" ],
 	"attributes": {
 		"showVenue": { "type": "boolean", "default": true },

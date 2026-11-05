@@ -2,15 +2,15 @@
 /**
  * Abilities API.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Integrations;
+namespace Feriae\Integrations;
 
-use OpenEvents\Content\EventStatus;
-use OpenEvents\Content\Meta;
-use OpenEvents\Occurrences\Repository;
-use OpenEvents\Rest\OccurrencesController;
+use Feriae\Content\EventStatus;
+use Feriae\Content\Meta;
+use Feriae\Occurrences\Repository;
+use Feriae\Rest\OccurrencesController;
 use WP_Error;
 
 /**
@@ -20,7 +20,7 @@ use WP_Error;
  */
 final class Abilities {
 
-	private const CATEGORY = 'openevents';
+	private const CATEGORY = 'feriae';
 
 	public function __construct( private OccurrencesController $presenter ) {}
 
@@ -33,8 +33,8 @@ final class Abilities {
 		wp_register_ability_category(
 			self::CATEGORY,
 			array(
-				'label'       => __( 'Events', 'openevents' ),
-				'description' => __( 'Find, read, and create calendar events.', 'openevents' ),
+				'label'       => __( 'Events', 'feriae' ),
+				'description' => __( 'Find, read, and create calendar events.', 'feriae' ),
 			)
 		);
 	}
@@ -61,10 +61,10 @@ final class Abilities {
 		);
 
 		wp_register_ability(
-			'openevents/list-events',
+			'feriae/list-events',
 			array(
-				'label'               => __( 'List events', 'openevents' ),
-				'description'         => __( 'Lists published events. Without dates, returns upcoming events soonest first.', 'openevents' ),
+				'label'               => __( 'List events', 'feriae' ),
+				'description'         => __( 'Lists published events. Without dates, returns upcoming events soonest first.', 'feriae' ),
 				'category'            => self::CATEGORY,
 				'input_schema'        => array(
 					'type'                 => 'object',
@@ -72,16 +72,16 @@ final class Abilities {
 						'start'      => array(
 							'type'        => 'string',
 							'format'      => 'date',
-							'description' => __( 'First day (Y-m-d) of a date range.', 'openevents' ),
+							'description' => __( 'First day (Y-m-d) of a date range.', 'feriae' ),
 						),
 						'end'        => array(
 							'type'        => 'string',
 							'format'      => 'date',
-							'description' => __( 'Last day (Y-m-d) of a date range, inclusive.', 'openevents' ),
+							'description' => __( 'Last day (Y-m-d) of a date range, inclusive.', 'feriae' ),
 						),
 						'past'       => array(
 							'type'        => 'boolean',
-							'description' => __( 'Return past events, newest first.', 'openevents' ),
+							'description' => __( 'Return past events, newest first.', 'feriae' ),
 						),
 						'search'     => array( 'type' => 'string' ),
 						'categories' => array(
@@ -115,10 +115,10 @@ final class Abilities {
 		);
 
 		wp_register_ability(
-			'openevents/create-event',
+			'feriae/create-event',
 			array(
-				'label'               => __( 'Create event', 'openevents' ),
-				'description'         => __( 'Creates an event. Saved as a draft unless status is "publish" and the user can publish.', 'openevents' ),
+				'label'               => __( 'Create event', 'feriae' ),
+				'description'         => __( 'Creates an event. Saved as a draft unless status is "publish" and the user can publish.', 'feriae' ),
 				'category'            => self::CATEGORY,
 				'input_schema'        => array(
 					'type'                 => 'object',
@@ -128,18 +128,18 @@ final class Abilities {
 						'content'   => array( 'type' => 'string' ),
 						'start'     => array(
 							'type'        => 'string',
-							'description' => __( 'Local start, "Y-m-d H:i" in the event timezone.', 'openevents' ),
+							'description' => __( 'Local start, "Y-m-d H:i" in the event timezone.', 'feriae' ),
 						),
 						'end'       => array( 'type' => 'string' ),
 						'all_day'   => array( 'type' => 'boolean' ),
 						'timezone'  => array(
 							'type'        => 'string',
-							'description' => __( 'IANA timezone. Defaults to the site timezone.', 'openevents' ),
+							'description' => __( 'IANA timezone. Defaults to the site timezone.', 'feriae' ),
 						),
 						'venue_id'  => array( 'type' => 'integer' ),
 						'post_type' => array(
 							'type' => 'string',
-							'enum' => openevents_event_post_types(),
+							'enum' => feriae_event_post_types(),
 						),
 						'status'    => array(
 							'type'    => 'string',
@@ -159,7 +159,7 @@ final class Abilities {
 				),
 				'execute_callback'    => array( $this, 'create_event' ),
 				'permission_callback' => static function ( $input ): bool {
-					$type   = get_post_type_object( (string) ( $input['post_type'] ?? openevents_event_post_types()[0] ?? '' ) );
+					$type   = get_post_type_object( (string) ( $input['post_type'] ?? feriae_event_post_types()[0] ?? '' ) );
 					return $type && current_user_can( $type->cap->edit_posts );
 				},
 				'meta'                => array(
@@ -174,10 +174,10 @@ final class Abilities {
 		);
 
 		wp_register_ability(
-			'openevents/set-event-status',
+			'feriae/set-event-status',
 			array(
-				'label'               => __( 'Cancel or postpone an event', 'openevents' ),
-				'description'         => __( 'Marks an event, or one date of a repeating event, as cancelled, postponed, or scheduled again, with an optional note shown to visitors. Bookings close while it is cancelled or postponed.', 'openevents' ),
+				'label'               => __( 'Cancel or postpone an event', 'feriae' ),
+				'description'         => __( 'Marks an event, or one date of a repeating event, as cancelled, postponed, or scheduled again, with an optional note shown to visitors. Bookings close while it is cancelled or postponed.', 'feriae' ),
 				'category'            => self::CATEGORY,
 				'input_schema'        => array(
 					'type'                 => 'object',
@@ -191,12 +191,12 @@ final class Abilities {
 						'reason'   => array(
 							'type'        => 'string',
 							'maxLength'   => 500,
-							'description' => __( 'Optional note for visitors, such as the reason.', 'openevents' ),
+							'description' => __( 'Optional note for visitors, such as the reason.', 'feriae' ),
 						),
 						'date'     => array(
 							'type'        => 'string',
 							'format'      => 'date',
-							'description' => __( 'One date (Y-m-d) of a repeating event; omit for the whole event.', 'openevents' ),
+							'description' => __( 'One date (Y-m-d) of a repeating event; omit for the whole event.', 'feriae' ),
 						),
 					),
 					'additionalProperties' => false,
@@ -244,7 +244,7 @@ final class Abilities {
 		} else {
 			$args['ends_after'] = Repository::now();
 		}
-		return array_map( array( $this->presenter, 'prepare_item' ), openevents_get_occurrences( $args )['items'] );
+		return array_map( array( $this->presenter, 'prepare_item' ), feriae_get_occurrences( $args )['items'] );
 	}
 
 	/**
@@ -253,15 +253,15 @@ final class Abilities {
 	 */
 	public function create_event( $input ) {
 		$input     = (array) $input;
-		$post_type = (string) ( $input['post_type'] ?? openevents_event_post_types()[0] ?? '' );
+		$post_type = (string) ( $input['post_type'] ?? feriae_event_post_types()[0] ?? '' );
 		$type      = get_post_type_object( $post_type );
 		if ( ! $type ) {
-			return new WP_Error( 'openevents_no_event_type', __( 'No event post type is enabled.', 'openevents' ) );
+			return new WP_Error( 'feriae_no_event_type', __( 'No event post type is enabled.', 'feriae' ) );
 		}
 
 		$start = Meta::sanitize_datetime( $input['start'] ?? '' );
 		if ( '' === $start ) {
-			return new WP_Error( 'openevents_invalid_start', __( 'Start must be a date like "2026-11-03 19:00".', 'openevents' ) );
+			return new WP_Error( 'feriae_invalid_start', __( 'Start must be a date like "2026-11-03 19:00".', 'feriae' ) );
 		}
 		$end = Meta::sanitize_datetime( $input['end'] ?? '' ) ?: $start;
 
@@ -274,11 +274,11 @@ final class Abilities {
 				'post_content' => wp_kses_post( (string) ( $input['content'] ?? '' ) ),
 				'post_status'  => $status,
 				'meta_input'   => array(
-					'_oe_start'    => $start,
-					'_oe_end'      => $end,
-					'_oe_all_day'  => ! empty( $input['all_day'] ),
-					'_oe_timezone' => Meta::sanitize_timezone( $input['timezone'] ?? '' ),
-					'_oe_venue_id' => absint( $input['venue_id'] ?? 0 ),
+					'_feriae_start'    => $start,
+					'_feriae_end'      => $end,
+					'_feriae_all_day'  => ! empty( $input['all_day'] ),
+					'_feriae_timezone' => Meta::sanitize_timezone( $input['timezone'] ?? '' ),
+					'_feriae_venue_id' => absint( $input['venue_id'] ?? 0 ),
 				),
 			),
 			true
@@ -306,12 +306,12 @@ final class Abilities {
 		if ( is_wp_error( $result ) ) {
 			return $result;
 		}
-		$occurrence = '' !== $date ? openevents()->occurrences()->on_date( $event_id, $date ) : null;
+		$occurrence = '' !== $date ? feriae()->occurrences()->on_date( $event_id, $date ) : null;
 		return array(
 			'event_id' => $event_id,
 			'status'   => (string) $input['status'],
 			'date'     => $date,
-			'link'     => $occurrence ? openevents_occurrence_url( $occurrence ) : (string) get_permalink( $event_id ),
+			'link'     => $occurrence ? feriae_occurrence_url( $occurrence ) : (string) get_permalink( $event_id ),
 		);
 	}
 }

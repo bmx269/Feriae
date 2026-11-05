@@ -1,4 +1,4 @@
-=== OpenEvents ===
+=== Feriae – Events Calendar, RSVP & Tickets ===
 Contributors: affinitybridge
 Tags: events, calendar, event calendar, venues, ical
 Requires at least: 7.1
@@ -12,7 +12,7 @@ Fast, open-source events: Calendar, with RSVP and Tickets as modules. Add events
 
 == Description ==
 
-OpenEvents adds events, venues, organizers, and calendar views to WordPress. Calendar is the core; RSVP, Tickets, and more are modules you switch on.
+Feriae adds events, venues, organizers, and calendar views to WordPress. Calendar is the core; RSVP, Tickets, and more are modules you switch on.
 
 * Use a dedicated Events post type, add event dates to existing post types, or both.
 * Month and list views that work without JavaScript and become an agenda list on phones.

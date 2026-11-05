@@ -2,14 +2,14 @@
 /**
  * Occurrence queries.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Tests\Integration;
+namespace Feriae\Tests\Integration;
 
-use OpenEvents\Content\PostTypes;
-use OpenEvents\Occurrences\Repository;
-use OpenEvents\Tests\TestCase;
+use Feriae\Content\PostTypes;
+use Feriae\Occurrences\Repository;
+use Feriae\Tests\TestCase;
 
 final class RepositoryTest extends TestCase {
 
@@ -21,8 +21,8 @@ final class RepositoryTest extends TestCase {
 		return $this->event(
 			array_merge(
 				array(
-					'_oe_start' => $this->day( $offset, '10:00:00' ),
-					'_oe_end'   => $this->day( $offset, '11:00:00' ),
+					'_feriae_start' => $this->day( $offset, '10:00:00' ),
+					'_feriae_end'   => $this->day( $offset, '11:00:00' ),
 				),
 				$meta
 			),
@@ -35,7 +35,7 @@ final class RepositoryTest extends TestCase {
 		$this->simple( 'Later', 9 );
 		$this->simple( 'Soon', 2 );
 
-		$result = openevents_get_occurrences( array( 'ends_after' => Repository::now() ) );
+		$result = feriae_get_occurrences( array( 'ends_after' => Repository::now() ) );
 
 		$this->assertSame( array( 'Soon', 'Later' ), $this->titles( $result ) );
 	}
@@ -45,7 +45,7 @@ final class RepositoryTest extends TestCase {
 		$this->simple( 'Recent', -2 );
 		$this->simple( 'Future', 4 );
 
-		$result = openevents_get_occurrences(
+		$result = feriae_get_occurrences(
 			array(
 				'ends_before' => Repository::now(),
 				'order'       => 'DESC',
@@ -60,40 +60,40 @@ final class RepositoryTest extends TestCase {
 		$this->simple( 'Private', 2, array(), array( 'post_status' => 'private' ) );
 		$this->simple( 'Public', 2 );
 
-		$this->assertSame( array( 'Public' ), $this->titles( openevents_get_occurrences( array( 'ends_after' => Repository::now() ) ) ) );
+		$this->assertSame( array( 'Public' ), $this->titles( feriae_get_occurrences( array( 'ends_after' => Repository::now() ) ) ) );
 	}
 
 	public function test_hidden_events_need_include_hidden(): void {
-		$this->simple( 'Hidden', 2, array( '_oe_hide_from_listings' => true ) );
+		$this->simple( 'Hidden', 2, array( '_feriae_hide_from_listings' => true ) );
 
-		$this->assertSame( array(), $this->titles( openevents_get_occurrences() ) );
-		$this->assertSame( array( 'Hidden' ), $this->titles( openevents_get_occurrences( array( 'include_hidden' => true ) ) ) );
+		$this->assertSame( array(), $this->titles( feriae_get_occurrences() ) );
+		$this->assertSame( array( 'Hidden' ), $this->titles( feriae_get_occurrences( array( 'include_hidden' => true ) ) ) );
 	}
 
 	public function test_local_range_includes_events_that_overlap_it(): void {
 		$this->event(
 			array(
-				'_oe_start' => '2030-04-28 10:00:00',
-				'_oe_end'   => '2030-05-02 10:00:00',
+				'_feriae_start' => '2030-04-28 10:00:00',
+				'_feriae_end'   => '2030-05-02 10:00:00',
 			),
 			array( 'post_title' => 'Spans in' )
 		);
 		$this->event(
 			array(
-				'_oe_start' => '2030-05-15 10:00:00',
-				'_oe_end'   => '2030-05-15 11:00:00',
+				'_feriae_start' => '2030-05-15 10:00:00',
+				'_feriae_end'   => '2030-05-15 11:00:00',
 			),
 			array( 'post_title' => 'Inside' )
 		);
 		$this->event(
 			array(
-				'_oe_start' => '2030-06-02 10:00:00',
-				'_oe_end'   => '2030-06-02 11:00:00',
+				'_feriae_start' => '2030-06-02 10:00:00',
+				'_feriae_end'   => '2030-06-02 11:00:00',
 			),
 			array( 'post_title' => 'After' )
 		);
 
-		$result = openevents_get_occurrences(
+		$result = feriae_get_occurrences(
 			array(
 				'local_from' => '2030-05-01 00:00:00',
 				'local_to'   => '2030-05-31 23:59:59',
@@ -108,14 +108,14 @@ final class RepositoryTest extends TestCase {
 		// Starts 60 days before the range: only found if the scan floor accounts for duration.
 		$this->event(
 			array(
-				'_oe_start'   => '2030-03-01 00:00:00',
-				'_oe_end'     => '2030-05-10 00:00:00',
-				'_oe_all_day' => true,
+				'_feriae_start'   => '2030-03-01 00:00:00',
+				'_feriae_end'     => '2030-05-10 00:00:00',
+				'_feriae_all_day' => true,
 			),
 			array( 'post_title' => 'Exhibition' )
 		);
 
-		$result = openevents_get_occurrences(
+		$result = feriae_get_occurrences(
 			array(
 				'local_from' => '2030-05-01 00:00:00',
 				'local_to'   => '2030-05-31 23:59:59',
@@ -138,15 +138,15 @@ final class RepositoryTest extends TestCase {
 		$this->simple( 'Uncategorised', 3 );
 		wp_set_object_terms( $a, array( $child ), PostTypes::CATEGORY );
 
-		$this->assertSame( array( 'In child' ), $this->titles( openevents_get_occurrences( array( 'categories' => array( $parent ) ) ) ) );
+		$this->assertSame( array( 'In child' ), $this->titles( feriae_get_occurrences( array( 'categories' => array( $parent ) ) ) ) );
 	}
 
 	public function test_venue_filter(): void {
 		$venue = self::factory()->post->create( array( 'post_type' => PostTypes::VENUE ) );
-		$this->simple( 'At venue', 2, array( '_oe_venue_id' => $venue ) );
+		$this->simple( 'At venue', 2, array( '_feriae_venue_id' => $venue ) );
 		$this->simple( 'Elsewhere', 3 );
 
-		$this->assertSame( array( 'At venue' ), $this->titles( openevents_get_occurrences( array( 'venue' => $venue ) ) ) );
+		$this->assertSame( array( 'At venue' ), $this->titles( feriae_get_occurrences( array( 'venue' => $venue ) ) ) );
 	}
 
 	public function test_search_matches_title_and_content(): void {
@@ -154,7 +154,7 @@ final class RepositoryTest extends TestCase {
 		$this->simple( 'Story time', 3, array(), array( 'post_content' => 'Bring your jazz hands' ) );
 		$this->simple( 'Book club', 4 );
 
-		$this->assertSame( array( 'Jazz night', 'Story time' ), $this->titles( openevents_get_occurrences( array( 'search' => 'jazz' ) ) ) );
+		$this->assertSame( array( 'Jazz night', 'Story time' ), $this->titles( feriae_get_occurrences( array( 'search' => 'jazz' ) ) ) );
 	}
 
 	public function test_pagination_totals_and_count_opt_out(): void {
@@ -162,7 +162,7 @@ final class RepositoryTest extends TestCase {
 			$this->simple( "E{$i}", $i );
 		}
 
-		$page = openevents_get_occurrences(
+		$page = feriae_get_occurrences(
 			array(
 				'per_page' => 3,
 				'page'     => 3,
@@ -172,7 +172,7 @@ final class RepositoryTest extends TestCase {
 		$this->assertSame( 3, $page['pages'] );
 		$this->assertSame( array( 'E7' ), $this->titles( $page ) );
 
-		$uncounted = openevents_get_occurrences(
+		$uncounted = feriae_get_occurrences(
 			array(
 				'per_page' => 3,
 				'count'    => false,
@@ -186,20 +186,20 @@ final class RepositoryTest extends TestCase {
 		$this->simple( 'Event type', 2 );
 		$this->simple( 'Blog event', 3, array(), array( 'post_type' => 'post' ) );
 
-		$this->assertSame( array( 'Event type', 'Blog event' ), $this->titles( openevents_get_occurrences() ) );
-		$this->assertSame( array( 'Blog event' ), $this->titles( openevents_get_occurrences( array( 'post_types' => array( 'post' ) ) ) ) );
+		$this->assertSame( array( 'Event type', 'Blog event' ), $this->titles( feriae_get_occurrences() ) );
+		$this->assertSame( array( 'Blog event' ), $this->titles( feriae_get_occurrences( array( 'post_types' => array( 'post' ) ) ) ) );
 
 		// Turning a type off hides its events without deleting anything.
 		$this->settings( array( 'event_post_types' => array() ) );
-		$this->assertSame( array( 'Event type' ), $this->titles( openevents_get_occurrences() ) );
+		$this->assertSame( array( 'Event type' ), $this->titles( feriae_get_occurrences() ) );
 	}
 
 	public function test_for_event_prefers_next_unfinished_occurrence(): void {
 		$past   = $this->simple( 'Was', -2 );
 		$future = $this->simple( 'Will be', 2 );
 
-		$this->assertSame( $this->day( -2, '10:00:00' ), openevents()->occurrences()->for_event( $past )->start->format( 'Y-m-d H:i:s' ) );
-		$batch = openevents()->occurrences()->for_events( array( $past, $future, 999999 ) );
+		$this->assertSame( $this->day( -2, '10:00:00' ), feriae()->occurrences()->for_event( $past )->start->format( 'Y-m-d H:i:s' ) );
+		$batch = feriae()->occurrences()->for_events( array( $past, $future, 999999 ) );
 		$this->assertNotNull( $batch[ $future ] );
 		$this->assertNull( $batch[999999] );
 	}
@@ -208,10 +208,10 @@ final class RepositoryTest extends TestCase {
 		$this->simple( 'Keep', 2 );
 		$this->simple( 'Drop', 3 );
 		$only_keep = static fn( array $args ) => array_merge( $args, array( 'search' => 'Keep' ) );
-		add_filter( 'openevents/occurrences/query_args', $only_keep );
+		add_filter( 'feriae/occurrences/query_args', $only_keep );
 
-		$this->assertSame( array( 'Keep' ), $this->titles( openevents_get_occurrences() ) );
+		$this->assertSame( array( 'Keep' ), $this->titles( feriae_get_occurrences() ) );
 
-		remove_filter( 'openevents/occurrences/query_args', $only_keep );
+		remove_filter( 'feriae/occurrences/query_args', $only_keep );
 	}
 }

@@ -2,10 +2,10 @@
 /**
  * Event attributes: site-defined taxonomies for events.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Content;
+namespace Feriae\Content;
 
 /**
  * Lists a site adds to describe events beyond categories, such as Audiences
@@ -14,12 +14,12 @@ namespace OpenEvents\Content;
  * event details, and filterable on the calendar.
  *
  * Defined in the `attributes` setting as [ { slug, label } ]; the taxonomy is
- * "oe_{slug}". They have no public archive pages of their own: the calendar's
+ * "feriae_{slug}". They have no public archive pages of their own: the calendar's
  * filters are how visitors browse by them.
  */
 final class Attributes {
 
-	public const PREFIX = 'oe_';
+	public const PREFIX = 'feriae_';
 
 	/** Taxonomy names are limited to 32 characters. */
 	private const MAX_SLUG = 20;
@@ -33,7 +33,7 @@ final class Attributes {
 	 */
 	public static function all(): array {
 		$out = array();
-		foreach ( (array) openevents()->settings()->get( 'attributes' ) as $attribute ) {
+		foreach ( (array) feriae()->settings()->get( 'attributes' ) as $attribute ) {
 			if ( ! empty( $attribute['slug'] ) ) {
 				$out[ self::PREFIX . $attribute['slug'] ] = (string) $attribute['label'];
 			}
@@ -43,7 +43,7 @@ final class Attributes {
 
 	/**
 	 * Cleans the `attributes` setting: unique slugs (from the label when
-	 * missing) that don't collide with OpenEvents' own taxonomy.
+	 * missing) that don't collide with Feriae' own taxonomy.
 	 *
 	 * @return array<int, array{slug: string, label: string}>
 	 */
@@ -74,7 +74,7 @@ final class Attributes {
 	}
 
 	public static function register_taxonomies(): void {
-		$types = openevents()->settings()->event_post_types();
+		$types = feriae()->settings()->event_post_types();
 		foreach ( self::all() as $taxonomy => $label ) {
 			register_taxonomy(
 				$taxonomy,
@@ -85,7 +85,7 @@ final class Attributes {
 						'singular_name' => $label,
 						'menu_name'     => $label,
 						/* translators: %s: attribute name, e.g. "Audiences" */
-						'add_new_item'  => sprintf( __( 'Add to %s', 'openevents' ), $label ),
+						'add_new_item'  => sprintf( __( 'Add to %s', 'feriae' ), $label ),
 					),
 					// Hierarchical for the checkbox list in the editor; terms are usually flat.
 					'hierarchical'       => true,

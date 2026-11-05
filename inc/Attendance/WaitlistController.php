@@ -2,28 +2,28 @@
 /**
  * Waitlist endpoints, forms, and admin screen.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Attendance;
+namespace Feriae\Attendance;
 
-use OpenEvents\Content\PostTypes;
+use Feriae\Content\PostTypes;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_REST_Server;
 
 /**
- * POST /openevents/v1/events/{id}/waitlist  Join a ticket type's waitlist (public).
- * POST /openevents/v1/waitlist/leave        Leave, with the private token (public).
- * GET  /openevents/v1/waitlist              Organiser list.
- * POST /openevents/v1/waitlist/{id}         Organiser: remove.
+ * POST /feriae/v1/events/{id}/waitlist  Join a ticket type's waitlist (public).
+ * POST /feriae/v1/waitlist/leave        Leave, with the private token (public).
+ * GET  /feriae/v1/waitlist              Organiser list.
+ * POST /feriae/v1/waitlist/{id}         Organiser: remove.
  *
  * RSVP waitlists join through the RSVP form (status "waitlist"), so one form
  * covers both. No-JS fallbacks post to admin-post.php.
  */
 final class WaitlistController {
 
-	public const SLUG = 'openevents-waitlist';
+	public const SLUG = 'feriae-waitlist';
 
 	private static bool $registered = false;
 
@@ -34,10 +34,10 @@ final class WaitlistController {
 		self::$registered = true;
 		$self             = new self();
 		add_action( 'rest_api_init', array( $self, 'routes' ) );
-		add_action( 'admin_post_openevents_waitlist', array( $self, 'handle_join' ) );
-		add_action( 'admin_post_nopriv_openevents_waitlist', array( $self, 'handle_join' ) );
-		add_action( 'admin_post_openevents_waitlist_leave', array( $self, 'handle_leave' ) );
-		add_action( 'admin_post_nopriv_openevents_waitlist_leave', array( $self, 'handle_leave' ) );
+		add_action( 'admin_post_feriae_waitlist', array( $self, 'handle_join' ) );
+		add_action( 'admin_post_nopriv_feriae_waitlist', array( $self, 'handle_join' ) );
+		add_action( 'admin_post_feriae_waitlist_leave', array( $self, 'handle_leave' ) );
+		add_action( 'admin_post_nopriv_feriae_waitlist_leave', array( $self, 'handle_leave' ) );
 		add_filter( 'wp_robots', array( $self, 'robots' ) );
 		add_action( 'template_redirect', array( $self, 'no_cache' ) );
 		if ( is_admin() ) {
@@ -48,7 +48,7 @@ final class WaitlistController {
 
 	public function routes(): void {
 		register_rest_route(
-			'openevents/v1',
+			'feriae/v1',
 			'/events/(?P<id>\d+)/waitlist',
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
@@ -65,7 +65,7 @@ final class WaitlistController {
 			)
 		);
 		register_rest_route(
-			'openevents/v1',
+			'feriae/v1',
 			'/waitlist/leave',
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
@@ -75,12 +75,12 @@ final class WaitlistController {
 			)
 		);
 		register_rest_route(
-			'openevents/v1',
+			'feriae/v1',
 			'/waitlist',
 			array(
 				'methods'             => WP_REST_Server::READABLE,
 				'callback'            => array( $this, 'list_entries' ),
-				'permission_callback' => static fn( WP_REST_Request $r ) => (int) $r['event'] ? current_user_can( 'edit_post', (int) $r['event'] ) : current_user_can( (string) apply_filters( 'openevents/attendees/capability', 'edit_others_posts' ) ),
+				'permission_callback' => static fn( WP_REST_Request $r ) => (int) $r['event'] ? current_user_can( 'edit_post', (int) $r['event'] ) : current_user_can( (string) apply_filters( 'feriae/attendees/capability', 'edit_others_posts' ) ),
 				'args'                => array(
 					'event'    => array( 'type' => 'integer', 'default' => 0 ),
 					'status'   => array( 'type' => 'string', 'default' => '' ),
@@ -91,7 +91,7 @@ final class WaitlistController {
 			)
 		);
 		register_rest_route(
-			'openevents/v1',
+			'feriae/v1',
 			'/waitlist/(?P<id>\d+)',
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
@@ -110,19 +110,19 @@ final class WaitlistController {
 	 */
 	private function do_join( int $event_id, array $input ): WaitlistResult {
 		if ( Guard::is_bot( $input ) ) {
-			return WaitlistResult::ok( 'waitlisted', __( 'You’re on the waitlist.', 'openevents' ) );
+			return WaitlistResult::ok( 'waitlisted', __( 'You’re on the waitlist.', 'feriae' ) );
 		}
 		if ( ! Guard::verify_timestamp( (string) ( $input['ts'] ?? '' ) ) ) {
-			return WaitlistResult::error( 'invalid', __( 'Please wait a moment and submit the form again.', 'openevents' ) );
+			return WaitlistResult::error( 'invalid', __( 'Please wait a moment and submit the form again.', 'feriae' ) );
 		}
 		$type = ( new TicketTypes() )->get( (int) ( $input['ticket_type_id'] ?? 0 ) );
 		if ( ! $type || $type->event_id !== $event_id || 'publish' !== get_post_status( $event_id ) ) {
-			return WaitlistResult::error( 'disabled', __( 'There’s no waitlist for this.', 'openevents' ) );
+			return WaitlistResult::error( 'disabled', __( 'There’s no waitlist for this.', 'feriae' ) );
 		}
 		// Not for a date that has already started (each date has its own waitlist).
 		$occurrence = TicketTypes::occurrence( $type );
 		if ( ! $occurrence || $occurrence->is_called_off() || gmdate( 'Y-m-d H:i:s' ) >= $occurrence->start_utc()->format( 'Y-m-d H:i:s' ) ) {
-			return WaitlistResult::error( 'disabled', __( 'There’s no waitlist for this.', 'openevents' ) );
+			return WaitlistResult::error( 'disabled', __( 'There’s no waitlist for this.', 'feriae' ) );
 		}
 		return ( new WaitlistService() )->join( $type, array_merge( $input, array( 'ip' => Guard::client_ip() ) ) );
 	}
@@ -154,7 +154,7 @@ final class WaitlistController {
 			)
 		);
 		// phpcs:enable
-		wp_safe_redirect( add_query_arg( 'oe_waitlist_result', $result->code, self::page( $event_id, $type_id ) ) . '#tickets', 303 );
+		wp_safe_redirect( add_query_arg( 'feriae_waitlist_result', $result->code, self::page( $event_id, $type_id ) ) . '#tickets', 303 );
 		exit;
 	}
 
@@ -174,7 +174,7 @@ final class WaitlistController {
 		// phpcs:enable
 		$entry  = ( new Waitlist() )->by_token( $token );
 		$result = ( new WaitlistService() )->leave( $token );
-		wp_safe_redirect( add_query_arg( 'oe_waitlist_result', $result->ok ? 'left' : 'invalid', self::page( $event_id, $entry ? $entry->ticket_type_id : 0 ) ) . '#' . $anchor, 303 );
+		wp_safe_redirect( add_query_arg( 'feriae_waitlist_result', $result->ok ? 'left' : 'invalid', self::page( $event_id, $entry ? $entry->ticket_type_id : 0 ) ) . '#' . $anchor, 303 );
 		exit;
 	}
 
@@ -184,7 +184,7 @@ final class WaitlistController {
 	 */
 	public function robots( array $robots ): array {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		if ( isset( $_GET['oe_waitlist'] ) || isset( $_GET['oe_waitlist_result'] ) ) {
+		if ( isset( $_GET['feriae_waitlist'] ) || isset( $_GET['feriae_waitlist_result'] ) ) {
 			$robots['noindex'] = true;
 		}
 		return $robots;
@@ -195,7 +195,7 @@ final class WaitlistController {
 	 */
 	public function no_cache(): void {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		if ( isset( $_GET['oe_waitlist'] ) || isset( $_GET['oe_waitlist_result'] ) ) {
+		if ( isset( $_GET['feriae_waitlist'] ) || isset( $_GET['feriae_waitlist_result'] ) ) {
 			nocache_headers();
 		}
 	}
@@ -220,7 +220,7 @@ final class WaitlistController {
 					array(
 						'event_title' => html_entity_decode( get_the_title( $e->event_id ), ENT_QUOTES ),
 						'date'        => $types->date_label( $e->ticket_type_id, $dates ),
-						'type_name'   => $type ? ( 'rsvp' === $type->kind ? __( 'RSVP', 'openevents' ) : $type->name ) : '',
+						'type_name'   => $type ? ( 'rsvp' === $type->kind ? __( 'RSVP', 'feriae' ) : $type->name ) : '',
 						'answers'     => self::answers( $e, $type ),
 					)
 				);
@@ -254,7 +254,7 @@ final class WaitlistController {
 						$rows,
 						array(
 							'key'   => $key,
-							'label' => 'name' === $key ? __( 'Name', 'openevents' ) : __( 'Email', 'openevents' ),
+							'label' => 'name' === $key ? __( 'Name', 'feriae' ) : __( 'Email', 'feriae' ),
 							'value' => $value,
 						)
 					);
@@ -264,7 +264,7 @@ final class WaitlistController {
 				$out[] = array(
 					'key'   => $i . '-' . $row['key'],
 					/* translators: 1: who, e.g. "Guest 2", 2: question */
-					'label' => $i > 0 ? sprintf( __( '%1$s: %2$s', 'openevents' ), Fields::person_label( (int) $i, true ), $row['label'] ) : $row['label'],
+					'label' => $i > 0 ? sprintf( __( '%1$s: %2$s', 'feriae' ), Fields::person_label( (int) $i, true ), $row['label'] ) : $row['label'],
 					'value' => $row['value'],
 				);
 			}
@@ -275,26 +275,26 @@ final class WaitlistController {
 	public function entry_action( WP_REST_Request $request ): WP_REST_Response {
 		$entry = ( new Waitlist() )->get( (int) $request['id'] );
 		if ( ! ( new WaitlistService() )->remove( $entry ) ) {
-			return new WP_REST_Response( array( 'message' => __( 'This person is no longer waiting.', 'openevents' ) ), 409 );
+			return new WP_REST_Response( array( 'message' => __( 'This person is no longer waiting.', 'feriae' ) ), 409 );
 		}
 		return new WP_REST_Response( ( new Waitlist() )->get( $entry->id )->to_array() );
 	}
 
 	public function menu(): void {
-		add_submenu_page( PostTypes::menu_parent( openevents()->settings() ), __( 'Waitlist', 'openevents' ), __( 'Waitlist', 'openevents' ), 'edit_posts', self::SLUG, array( $this, 'render' ) );
+		add_submenu_page( PostTypes::menu_parent( feriae()->settings() ), __( 'Waitlist', 'feriae' ), __( 'Waitlist', 'feriae' ), 'edit_posts', self::SLUG, array( $this, 'render' ) );
 	}
 
 	public function enqueue(): void {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		if ( self::SLUG === sanitize_key( wp_unslash( $_GET['page'] ?? '' ) ) ) {
-			\OpenEvents\Modules\Rsvp\Admin::enqueue_bundle();
+			\Feriae\Modules\Rsvp\Admin::enqueue_bundle();
 		}
 	}
 
 	public function render(): void {
 		printf(
-			'<div id="openevents-attendance" class="openevents-admin" data-screen="waitlist" data-events="%s" data-event="%d"></div>',
-			esc_attr( (string) wp_json_encode( \OpenEvents\Modules\Rsvp\Admin::events() ) ),
+			'<div id="feriae-attendance" class="feriae-admin" data-screen="waitlist" data-events="%s" data-event="%d"></div>',
+			esc_attr( (string) wp_json_encode( \Feriae\Modules\Rsvp\Admin::events() ) ),
 			absint( $_GET['event'] ?? 0 ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		);
 	}
@@ -307,36 +307,36 @@ final class WaitlistController {
 		$type     = ( new TicketTypes() )->get( $entry->ticket_type_id );
 		$what     = $type && 'paid' === $type->kind ? $entry->quantity . ' × ' . $type->name : sprintf(
 			/* translators: %d: number of people */
-			_n( '%d person', '%d people', $entry->quantity, 'openevents' ),
+			_n( '%d person', '%d people', $entry->quantity, 'feriae' ),
 			$entry->quantity
 		);
 		$statuses = array(
 			/* translators: 1: what they're waiting for, 2: place in line */
-			WaitlistEntry::WAITING => sprintf( __( 'You’re on the waitlist for %1$s (#%2$d in line).', 'openevents' ), $what, $waitlist->position( $entry ) ),
-			WaitlistEntry::OFFERED => __( 'Don’t need them any more? Release them for the next person in line.', 'openevents' ),
-			WaitlistEntry::CLAIMED => __( 'You got a spot from the waitlist.', 'openevents' ),
-			WaitlistEntry::EXPIRED => __( 'Your hold expired and passed to the next person in line.', 'openevents' ),
+			WaitlistEntry::WAITING => sprintf( __( 'You’re on the waitlist for %1$s (#%2$d in line).', 'feriae' ), $what, $waitlist->position( $entry ) ),
+			WaitlistEntry::OFFERED => __( 'Don’t need them any more? Release them for the next person in line.', 'feriae' ),
+			WaitlistEntry::CLAIMED => __( 'You got a spot from the waitlist.', 'feriae' ),
+			WaitlistEntry::EXPIRED => __( 'Your hold expired and passed to the next person in line.', 'feriae' ),
 		);
-		$status   = $statuses[ $entry->status ] ?? __( 'You’re no longer on the waitlist.', 'openevents' );
+		$status   = $statuses[ $entry->status ] ?? __( 'You’re no longer on the waitlist.', 'feriae' );
 
-		$html = '<div class="oe-waitlist__entry" role="status" tabindex="-1"><p>' . esc_html( $status ) . '</p>';
+		$html = '<div class="feriae-waitlist__entry" role="status" tabindex="-1"><p>' . esc_html( $status ) . '</p>';
 		if ( in_array( $entry->status, array( WaitlistEntry::WAITING, WaitlistEntry::OFFERED ), true ) ) {
 			$html .= '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" data-wp-on--submit="actions.leaveWaitlist">';
-			$html .= '<input type="hidden" name="action" value="openevents_waitlist_leave"><input type="hidden" name="token" value="' . esc_attr( $token ) . '">';
+			$html .= '<input type="hidden" name="action" value="feriae_waitlist_leave"><input type="hidden" name="token" value="' . esc_attr( $token ) . '">';
 			$html .= '<input type="hidden" name="event_id" value="' . esc_attr( (string) $entry->event_id ) . '"><input type="hidden" name="anchor" value="' . esc_attr( $anchor ) . '">';
-			$html .= '<button type="submit" class="oe-waitlist__leave">' . esc_html( WaitlistEntry::OFFERED === $entry->status ? __( 'No thanks, release these tickets', 'openevents' ) : __( 'Leave the waitlist', 'openevents' ) ) . '</button></form>';
+			$html .= '<button type="submit" class="feriae-waitlist__leave">' . esc_html( WaitlistEntry::OFFERED === $entry->status ? __( 'No thanks, release these tickets', 'feriae' ) : __( 'Leave the waitlist', 'feriae' ) ) . '</button></form>';
 		}
 		return $html . '</div>';
 	}
 
 	public static function result_text( string $code ): string {
 		$messages = array(
-			'waitlisted'   => __( 'You’re on the waitlist. We’ll email you if a spot opens up.', 'openevents' ),
-			'exists'       => __( 'You’re already on the waitlist. We’ve emailed you a link to manage your place.', 'openevents' ),
-			'left'         => __( 'You’ve left the waitlist.', 'openevents' ),
-			'available'    => __( 'Good news: there’s room now, so you can book directly.', 'openevents' ),
-			'rate_limited' => __( 'Too many requests from your connection. Please try again later.', 'openevents' ),
+			'waitlisted'   => __( 'You’re on the waitlist. We’ll email you if a spot opens up.', 'feriae' ),
+			'exists'       => __( 'You’re already on the waitlist. We’ve emailed you a link to manage your place.', 'feriae' ),
+			'left'         => __( 'You’ve left the waitlist.', 'feriae' ),
+			'available'    => __( 'Good news: there’s room now, so you can book directly.', 'feriae' ),
+			'rate_limited' => __( 'Too many requests from your connection. Please try again later.', 'feriae' ),
 		);
-		return $messages[ $code ] ?? __( 'Please check the form and try again.', 'openevents' );
+		return $messages[ $code ] ?? __( 'Please check the form and try again.', 'feriae' );
 	}
 }

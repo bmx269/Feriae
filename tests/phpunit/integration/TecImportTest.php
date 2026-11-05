@@ -5,13 +5,13 @@
  * The full conversion is exercised against a real TEC site; these cover the
  * format translations, which are where data could quietly change.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Tests\Integration;
+namespace Feriae\Tests\Integration;
 
-use OpenEvents\Import\Tec;
-use OpenEvents\Tests\TestCase;
+use Feriae\Import\Tec;
+use Feriae\Tests\TestCase;
 
 final class TecImportTest extends TestCase {
 

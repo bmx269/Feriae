@@ -3,7 +3,7 @@
 @import "@wordpress/dataviews/build-style/style";
 
 // Attendee answers: long consent labels are clamped (full text in the CSV).
-.oe-answers {
+.feriae-answers {
 	max-width: 32rem;
 	margin: 0;
 	padding: 0;
@@ -18,15 +18,15 @@
 	}
 }
 
-.oe-answers__label {
+.feriae-answers__label {
 	font-weight: 600;
 }
 
-.oe-check-in {
+.feriae-check-in {
 	max-width: 40rem;
 }
 
-.oe-check-in__video {
+.feriae-check-in__video {
 	width: 100%;
 	max-width: 24rem;
 	border-radius: 4px;
@@ -34,7 +34,7 @@
 }
 
 // Calendar import.
-.oe-file-field {
+.feriae-file-field {
 	display: flex;
 	flex-direction: column;
 	gap: 4px;
@@ -47,12 +47,12 @@
 	}
 }
 
-.oe-feed-error {
+.feriae-feed-error {
 	color: #cc1818; // Matches the WordPress error notice colour (AA on white).
 }
 
 // DataViews mutes its empty state below AA contrast.
-.oe-feeds__empty {
+.feriae-feeds__empty {
 	margin: 0;
 	color: #50575e;
 }

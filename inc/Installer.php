@@ -2,12 +2,12 @@
 /**
  * Schema and lifecycle.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents;
+namespace Feriae;
 
-use OpenEvents\Content\PostTypes;
+use Feriae\Content\PostTypes;
 
 /**
  * Creates and upgrades custom tables, and handles activation side effects.
@@ -19,9 +19,9 @@ use OpenEvents\Content\PostTypes;
 final class Installer {
 
 	public const DB_VERSION        = '3';
-	public const DB_VERSION_OPTION = 'openevents_db_version';
-	public const FLUSH_OPTION      = 'openevents_flush_rewrite';
-	public const ERROR_OPTION      = 'openevents_schema_error';
+	public const DB_VERSION_OPTION = 'feriae_db_version';
+	public const FLUSH_OPTION      = 'feriae_flush_rewrite';
+	public const ERROR_OPTION      = 'feriae_schema_error';
 
 	public static function register(): void {
 		add_action( 'init', array( self::class, 'maybe_upgrade' ), 1 );
@@ -39,8 +39,8 @@ final class Installer {
 		if ( $error && current_user_can( 'manage_options' ) ) {
 			printf(
 				'<div class="notice notice-error"><p><strong>%s</strong> %s</p><p><code>%s</code></p></div>',
-				esc_html__( 'OpenEvents could not create its database table.', 'openevents' ),
-				esc_html__( 'Events will not appear on calendars until this is fixed. It will retry automatically on the next page load.', 'openevents' ),
+				esc_html__( 'Feriae could not create its database table.', 'feriae' ),
+				esc_html__( 'Events will not appear on calendars until this is fixed. It will retry automatically on the next page load.', 'feriae' ),
 				esc_html( (string) $error )
 			);
 		}
@@ -80,7 +80,7 @@ final class Installer {
 
 	public static function occurrences_table(): string {
 		global $wpdb;
-		return $wpdb->prefix . 'oe_occurrences';
+		return $wpdb->prefix . 'feriae_occurrences';
 	}
 
 	public static function install_schema(): void {
@@ -179,7 +179,7 @@ final class Installer {
 			self::ERROR_OPTION,
 			Occurrences\Sync::MAX_DURATION_OPTION,
 			Admin\AdminApp::REDIRECT_OPTION,
-			'openevents_module_versions',
+			'feriae_module_versions',
 		);
 		foreach ( $options as $option ) {
 			delete_option( $option );
@@ -188,6 +188,6 @@ final class Installer {
 		/**
 		 * Lets modules remove their own tables and options.
 		 */
-		do_action( 'openevents/uninstall' );
+		do_action( 'feriae/uninstall' );
 	}
 }

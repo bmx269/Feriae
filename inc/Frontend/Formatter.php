@@ -2,12 +2,12 @@
 /**
  * Date formatting.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Frontend;
+namespace Feriae\Frontend;
 
-use OpenEvents\Occurrences\Occurrence;
+use Feriae\Occurrences\Occurrence;
 
 /**
  * The single path for turning occurrences into display strings, so every view,
@@ -16,12 +16,12 @@ use OpenEvents\Occurrences\Occurrence;
 final class Formatter {
 
 	public static function date( \DateTimeImmutable $date, ?string $format = null ): string {
-		$format ??= openevents()->settings()->date_format();
+		$format ??= feriae()->settings()->date_format();
 		return wp_date( $format, $date->getTimestamp(), $date->getTimezone() );
 	}
 
 	public static function time( \DateTimeImmutable $date ): string {
-		return wp_date( openevents()->settings()->time_format(), $date->getTimestamp(), $date->getTimezone() );
+		return wp_date( feriae()->settings()->time_format(), $date->getTimestamp(), $date->getTimezone() );
 	}
 
 	/**
@@ -36,7 +36,7 @@ final class Formatter {
 		$start = $occurrence->start;
 		$end   = $occurrence->end;
 		/* translators: separator between start and end of a date range */
-		$sep = _x( ' – ', 'date range separator', 'openevents' );
+		$sep = _x( ' – ', 'date range separator', 'feriae' );
 
 		if ( $occurrence->all_day ) {
 			$out = self::date( $start );
@@ -62,25 +62,25 @@ final class Formatter {
 		 * @param string     $out        Formatted range.
 		 * @param Occurrence $occurrence Occurrence.
 		 */
-		return apply_filters( 'openevents/format_range', $out, $occurrence );
+		return apply_filters( 'feriae/format_range', $out, $occurrence );
 	}
 
 	/**
 	 * "For <date>" above an RSVP or tickets form on a repeating event, whose
 	 * dates each have their own places; empty for other events.
 	 */
-	public static function booking_date( \OpenEvents\Attendance\TicketType $type, string $class_name ): string {
-		$event = openevents_get_event( $type->event_id );
-		if ( ! $event || ! \OpenEvents\Modules\Recurrence\Recurrence::for_event( $event ) ) {
+	public static function booking_date( \Feriae\Attendance\TicketType $type, string $class_name ): string {
+		$event = feriae_get_event( $type->event_id );
+		if ( ! $event || ! \Feriae\Modules\Recurrence\Recurrence::for_event( $event ) ) {
 			return '';
 		}
-		$occurrence = \OpenEvents\Attendance\TicketTypes::date_of( $type );
+		$occurrence = \Feriae\Attendance\TicketTypes::date_of( $type );
 		if ( ! $occurrence ) {
 			return '';
 		}
 		return '<p class="' . esc_attr( $class_name ) . '">' . sprintf(
 			/* translators: %s: date and time of one date of a repeating event */
-			esc_html__( 'For %s', 'openevents' ),
+			esc_html__( 'For %s', 'feriae' ),
 			'<time datetime="' . esc_attr( self::iso( $occurrence->start, $occurrence->all_day ) ) . '">' . esc_html( self::range( $occurrence ) ) . '</time>'
 		) . '</p>';
 	}

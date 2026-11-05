@@ -2,10 +2,10 @@
 /**
  * Abuse protection for public forms.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Attendance;
+namespace Feriae\Attendance;
 
 /**
  * Shared by the RSVP and ticket forms. No nonces (they break on cached
@@ -54,6 +54,6 @@ final class Guard {
 		 *
 		 * @param string $ip IP address.
 		 */
-		return (string) apply_filters( 'openevents/client_ip', $ip );
+		return (string) apply_filters( 'feriae/client_ip', $ip );
 	}
 }

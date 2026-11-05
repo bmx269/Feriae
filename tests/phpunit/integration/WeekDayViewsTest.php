@@ -2,13 +2,13 @@
 /**
  * Week and day calendar views.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Tests\Integration;
+namespace Feriae\Tests\Integration;
 
-use OpenEvents\Settings;
-use OpenEvents\Tests\TestCase;
+use Feriae\Settings;
+use Feriae\Tests\TestCase;
 
 final class WeekDayViewsTest extends TestCase {
 
@@ -17,27 +17,27 @@ final class WeekDayViewsTest extends TestCase {
 		update_option( 'date_format', 'F j, Y' );
 		update_option( 'time_format', 'g:i a' );
 		update_option( 'start_of_week', 1 );
-		add_filter( 'openevents/calendar/cache', '__return_false' );
+		add_filter( 'feriae/calendar/cache', '__return_false' );
 	}
 
 	public function tear_down(): void {
-		remove_filter( 'openevents/calendar/cache', '__return_false' );
-		unset( $_GET['oe_view'], $_GET['oe_date'] );
+		remove_filter( 'feriae/calendar/cache', '__return_false' );
+		unset( $_GET['feriae_view'], $_GET['feriae_date'] );
 		parent::tear_down();
 	}
 
 	private function calendar( string $view, string $date ): string {
-		$_GET['oe_view'] = $view;
-		$_GET['oe_date'] = $date;
-		return do_blocks( '<!-- wp:openevents/calendar {"views":["month","week","day","list"]} /-->' );
+		$_GET['feriae_view'] = $view;
+		$_GET['feriae_date'] = $date;
+		return do_blocks( '<!-- wp:feriae/calendar {"views":["month","week","day","list"]} /-->' );
 	}
 
 	private function dated( string $title, string $start, string $end, array $meta = array() ): int {
 		$id = $this->event(
 			array_merge(
 				array(
-					'_oe_start' => $start,
-					'_oe_end'   => $end,
+					'_feriae_start' => $start,
+					'_feriae_end'   => $end,
 				),
 				$meta
 			),
@@ -55,17 +55,17 @@ final class WeekDayViewsTest extends TestCase {
 
 		$html = $this->calendar( 'week', '2030-05-08' );
 
-		$this->assertStringContainsString( 'oe-calendar--week', $html );
-		$this->assertSame( 7, substr_count( $html, '<li class="oe-week__day' ) );
+		$this->assertStringContainsString( 'feriae-calendar--week', $html );
+		$this->assertSame( 7, substr_count( $html, '<li class="feriae-week__day' ) );
 		$this->assertMatchesRegularExpression( '#<time datetime="2030-05-06">6</time>.*Monday talk#s', $html );
 		$this->assertMatchesRegularExpression( '#<time datetime="2030-05-12">12</time>.*Sunday fair#s', $html );
 		$this->assertStringNotContainsString( 'Following Monday', $html );
-		$this->assertStringContainsString( 'oe_date=2030-05-13', $html, 'Next week link.' );
+		$this->assertStringContainsString( 'feriae_date=2030-05-13', $html, 'Next week link.' );
 	}
 
 	public function test_week_lists_all_day_and_multi_day_events_first(): void {
 		$this->dated( 'Morning class', '2030-05-08 09:00:00', '2030-05-08 10:00:00' );
-		$this->dated( 'Book festival', '2030-05-07 00:00:00', '2030-05-09 23:59:59', array( '_oe_all_day' => true ) );
+		$this->dated( 'Book festival', '2030-05-07 00:00:00', '2030-05-09 23:59:59', array( '_feriae_all_day' => true ) );
 
 		$html = $this->calendar( 'week', '2030-05-08' );
 		preg_match( '#<time datetime="2030-05-08">8</time>.*?</li></ul></li>#s', $html, $wednesday );
@@ -84,8 +84,8 @@ final class WeekDayViewsTest extends TestCase {
 		$this->assertStringContainsString( 'Wednesday, May 8, 2030', $html );
 		$this->assertStringContainsString( 'Evening concert', $html );
 		$this->assertStringNotContainsString( 'Other day', $html );
-		$this->assertStringContainsString( 'oe_date=2030-05-07', $html, 'Previous day link.' );
-		$this->assertStringContainsString( 'oe_date=2030-05-09', $html, 'Next day link.' );
+		$this->assertStringContainsString( 'feriae_date=2030-05-07', $html, 'Previous day link.' );
+		$this->assertStringContainsString( 'feriae_date=2030-05-09', $html, 'Next day link.' );
 	}
 
 	public function test_day_view_says_when_nothing_is_on(): void {
@@ -96,12 +96,12 @@ final class WeekDayViewsTest extends TestCase {
 		foreach ( array( 9, 10, 11, 12 ) as $hour ) {
 			$this->dated( "Session {$hour}", sprintf( '2030-05-08 %02d:00:00', $hour ), sprintf( '2030-05-08 %02d:30:00', $hour ) );
 		}
-		$_GET['oe_view']  = 'month';
-		$_GET['oe_month'] = '2030-05';
-		$html             = do_blocks( '<!-- wp:openevents/calendar {"views":["month","week","day","list"]} /-->' );
-		unset( $_GET['oe_view'], $_GET['oe_month'] );
+		$_GET['feriae_view']  = 'month';
+		$_GET['feriae_month'] = '2030-05';
+		$html             = do_blocks( '<!-- wp:feriae/calendar {"views":["month","week","day","list"]} /-->' );
+		unset( $_GET['feriae_view'], $_GET['feriae_month'] );
 
-		$this->assertMatchesRegularExpression( '#class="oe-month__more" href="[^"]*oe_view=day[^"]*oe_date=2030-05-08#', str_replace( '&#038;', '&', $html ) );
+		$this->assertMatchesRegularExpression( '#class="feriae-month__more" href="[^"]*feriae_view=day[^"]*feriae_date=2030-05-08#', str_replace( '&#038;', '&', $html ) );
 	}
 
 	public function test_settings_accept_week_and_day(): void {

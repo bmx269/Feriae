@@ -5,13 +5,13 @@
  *
  *   import { Fill } from '@wordpress/components';
  *   registerPlugin( 'my-addon', { render: () => (
- *     <Fill name="OpenEventsEventPanel">
+ *     <Fill name="FeriaeEventPanel">
  *       { ( { meta, setMeta, postType } ) => <MyControl /> }
  *     </Fill>
  *   ) } );
  *
- * Slots: OpenEventsEventPanel, OpenEventsVenuePanel, OpenEventsOrganizerPanel.
- * Register your meta with the openevents/meta_fields PHP filter so it saves
+ * Slots: FeriaeEventPanel, FeriaeVenuePanel, FeriaeOrganizerPanel.
+ * Register your meta with the feriae/meta_fields PHP filter so it saves
  * over REST.
  */
 import { registerPlugin } from '@wordpress/plugins';
@@ -29,9 +29,9 @@ import TicketsPanel from './tickets-panel';
 import RepeatPanel from './repeat-panel';
 import './editor.scss';
 
-const config = window.openEvents || {};
+const config = window.feriae || {};
 
-function OpenEventsSidebar() {
+function FeriaeSidebar() {
 	const { postType, postId } = useSelect(
 		( select ) => ( {
 			postType: select( editorStore ).getCurrentPostType(),
@@ -48,16 +48,16 @@ function OpenEventsSidebar() {
 
 	if ( ( config.eventPostTypes || [] ).includes( postType ) ) {
 		const isDedicated = postType === config.dedicatedType;
-		const isEvent = isDedicated || !! meta._oe_start;
+		const isEvent = isDedicated || !! meta._feriae_start;
 		const rsvpEnabled = ( config.modules || [] ).includes( 'rsvp' );
 		const ticketsEnabled = ( config.modules || [] ).includes( 'tickets' );
 		const repeatEnabled = ( config.modules || [] ).includes( 'recurrence' );
 		return (
 			<>
 				<PluginDocumentSettingPanel
-					name="openevents-event"
-					title={ __( 'Event', 'openevents' ) }
-					className="oe-editor-panel"
+					name="feriae-event"
+					title={ __( 'Event', 'feriae' ) }
+					className="feriae-editor-panel"
 				>
 					<EventPanel
 						meta={ meta }
@@ -69,9 +69,9 @@ function OpenEventsSidebar() {
 				</PluginDocumentSettingPanel>
 				{ repeatEnabled && isEvent && (
 					<PluginDocumentSettingPanel
-						name="openevents-repeat"
-						title={ __( 'Repeat', 'openevents' ) }
-						className="oe-editor-panel"
+						name="feriae-repeat"
+						title={ __( 'Repeat', 'feriae' ) }
+						className="feriae-editor-panel"
 					>
 						<RepeatPanel
 							meta={ meta }
@@ -83,9 +83,9 @@ function OpenEventsSidebar() {
 				) }
 				{ rsvpEnabled && isEvent && (
 					<PluginDocumentSettingPanel
-						name="openevents-rsvp"
-						title={ __( 'RSVP', 'openevents' ) }
-						className="oe-editor-panel"
+						name="feriae-rsvp"
+						title={ __( 'RSVP', 'feriae' ) }
+						className="feriae-editor-panel"
 					>
 						<RsvpPanel
 							meta={ meta }
@@ -97,9 +97,9 @@ function OpenEventsSidebar() {
 				) }
 				{ ticketsEnabled && isEvent && (
 					<PluginDocumentSettingPanel
-						name="openevents-tickets"
-						title={ __( 'Tickets', 'openevents' ) }
-						className="oe-editor-panel"
+						name="feriae-tickets"
+						title={ __( 'Tickets', 'feriae' ) }
+						className="feriae-editor-panel"
 					>
 						<TicketsPanel
 							meta={ meta }
@@ -114,19 +114,19 @@ function OpenEventsSidebar() {
 	}
 
 	if (
-		postType === 'oe_series' &&
+		postType === 'feriae_series' &&
 		( config.modules || [] ).includes( 'tickets' )
 	) {
 		return (
 			<PluginDocumentSettingPanel
-				name="openevents-series-passes"
-				title={ __( 'Series passes', 'openevents' ) }
-				className="oe-editor-panel"
+				name="feriae-series-passes"
+				title={ __( 'Series passes', 'feriae' ) }
+				className="feriae-editor-panel"
 			>
-				<p className="oe-editor-panel__hint">
+				<p className="feriae-editor-panel__hint">
 					{ __(
 						'Passes are sold on the series page and cover every event in the series.',
-						'openevents'
+						'feriae'
 					) }
 				</p>
 				<TicketsPanel
@@ -139,24 +139,24 @@ function OpenEventsSidebar() {
 		);
 	}
 
-	if ( postType === 'oe_venue' ) {
+	if ( postType === 'feriae_venue' ) {
 		return (
 			<PluginDocumentSettingPanel
-				name="openevents-venue"
-				title={ __( 'Venue details', 'openevents' ) }
-				className="oe-editor-panel"
+				name="feriae-venue"
+				title={ __( 'Venue details', 'feriae' ) }
+				className="feriae-editor-panel"
 			>
 				<VenuePanel meta={ meta } setMeta={ setMeta } />
 			</PluginDocumentSettingPanel>
 		);
 	}
 
-	if ( postType === 'oe_organizer' ) {
+	if ( postType === 'feriae_organizer' ) {
 		return (
 			<PluginDocumentSettingPanel
-				name="openevents-organizer"
-				title={ __( 'Organizer details', 'openevents' ) }
-				className="oe-editor-panel"
+				name="feriae-organizer"
+				title={ __( 'Organizer details', 'feriae' ) }
+				className="feriae-editor-panel"
 			>
 				<OrganizerPanel meta={ meta } setMeta={ setMeta } />
 			</PluginDocumentSettingPanel>
@@ -166,4 +166,4 @@ function OpenEventsSidebar() {
 	return null;
 }
 
-registerPlugin( 'openevents', { render: OpenEventsSidebar } );
+registerPlugin( 'feriae', { render: FeriaeSidebar } );

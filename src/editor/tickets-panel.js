@@ -26,7 +26,7 @@ const newType = () => ( {
 } );
 
 /**
- * Ticket types for this event, saved with the post in _oe_tickets.
+ * Ticket types for this event, saved with the post in _feriae_tickets.
  *
  * @param {Object}   props
  * @param {Object}   props.meta    Post meta.
@@ -35,8 +35,8 @@ const newType = () => ( {
  * @param {Object}   props.config  Editor config.
  */
 export default function TicketsPanel( { meta, setMeta, postId, config } ) {
-	const types = meta._oe_tickets || [];
-	const setTypes = ( next ) => setMeta( { _oe_tickets: next } );
+	const types = meta._feriae_tickets || [];
+	const setTypes = ( next ) => setMeta( { _feriae_tickets: next } );
 	const update = ( index, changes ) =>
 		setTypes(
 			types.map( ( type, i ) =>
@@ -50,17 +50,17 @@ export default function TicketsPanel( { meta, setMeta, postId, config } ) {
 				<p>
 					{ __(
 						'Add a ticket type to sell (or give away) tickets for this event.',
-						'openevents'
+						'feriae'
 					) }
 				</p>
 			) }
 			{ types.map( ( type, index ) => (
-				<fieldset key={ type.key } className="oe-editor-panel__ticket">
+				<fieldset key={ type.key } className="feriae-editor-panel__ticket">
 					<legend>
 						{ type.name ||
 							sprintf(
 								/* translators: %d: ticket type number */
-								__( 'Ticket type %d', 'openevents' ),
+								__( 'Ticket type %d', 'feriae' ),
 								index + 1
 							) }
 					</legend>
@@ -68,7 +68,7 @@ export default function TicketsPanel( { meta, setMeta, postId, config } ) {
 						<TextControl
 							__next40pxDefaultSize
 							__nextHasNoMarginBottom
-							label={ __( 'Name', 'openevents' ) }
+							label={ __( 'Name', 'feriae' ) }
 							value={ type.name }
 							onChange={ ( name ) => update( index, { name } ) }
 						/>
@@ -78,10 +78,10 @@ export default function TicketsPanel( { meta, setMeta, postId, config } ) {
 								__nextHasNoMarginBottom
 								label={ sprintf(
 									/* translators: %s: currency code */
-									__( 'Price (%s)', 'openevents' ),
+									__( 'Price (%s)', 'feriae' ),
 									config.currency || 'USD'
 								) }
-								help={ __( '0 is free.', 'openevents' ) }
+								help={ __( '0 is free.', 'feriae' ) }
 								inputMode="decimal"
 								value={ type.price }
 								onChange={ ( price ) =>
@@ -93,14 +93,14 @@ export default function TicketsPanel( { meta, setMeta, postId, config } ) {
 								__nextHasNoMarginBottom
 								type="number"
 								min={ 0 }
-								label={ __( 'Capacity', 'openevents' ) }
+								label={ __( 'Capacity', 'feriae' ) }
 								help={
 									repeats( meta )
 										? __(
 												'For each date. 0 is unlimited.',
-												'openevents'
+												'feriae'
 										  )
-										: __( '0 is unlimited.', 'openevents' )
+										: __( '0 is unlimited.', 'feriae' )
 								}
 								value={ String( type.capacity ) }
 								onChange={ ( value ) =>
@@ -119,7 +119,7 @@ export default function TicketsPanel( { meta, setMeta, postId, config } ) {
 							type="number"
 							min={ 1 }
 							max={ 50 }
-							label={ __( 'Maximum per order', 'openevents' ) }
+							label={ __( 'Maximum per order', 'feriae' ) }
 							value={ String( type.max_per_order ) }
 							onChange={ ( value ) =>
 								update( index, {
@@ -134,11 +134,11 @@ export default function TicketsPanel( { meta, setMeta, postId, config } ) {
 							}
 						/>
 						<DateField
-							label={ __( 'Sales end', 'openevents' ) }
+							label={ __( 'Sales end', 'feriae' ) }
 							value={ type.sale_end }
 							emptyLabel={ __(
 								'When the event starts',
-								'openevents'
+								'feriae'
 							) }
 							onChange={ ( value ) =>
 								update( index, { sale_end: value } )
@@ -150,11 +150,11 @@ export default function TicketsPanel( { meta, setMeta, postId, config } ) {
 							__nextHasNoMarginBottom
 							label={ __(
 								'Waitlist when sold out',
-								'openevents'
+								'feriae'
 							) }
 							help={ __(
 								'Freed tickets are held for the next person, who gets a link to buy them.',
-								'openevents'
+								'feriae'
 							) }
 							checked={ !! type.waitlist }
 							onChange={ ( value ) =>
@@ -163,17 +163,17 @@ export default function TicketsPanel( { meta, setMeta, postId, config } ) {
 						/>
 						<TextareaControl
 							__nextHasNoMarginBottom
-							label={ __( 'Description', 'openevents' ) }
+							label={ __( 'Description', 'feriae' ) }
 							rows={ 2 }
 							value={ type.description }
 							onChange={ ( description ) =>
 								update( index, { description } )
 							}
 						/>
-						<h3 className="oe-editor-panel__subhead">
+						<h3 className="feriae-editor-panel__subhead">
 							{ __(
 								'Questions for each ticket holder',
-								'openevents'
+								'feriae'
 							) }
 						</h3>
 						<AttendeeFields
@@ -192,8 +192,8 @@ export default function TicketsPanel( { meta, setMeta, postId, config } ) {
 						>
 							{ sprintf(
 								/* translators: %s: ticket type name */
-								__( 'Remove %s', 'openevents' ),
-								type.name || __( 'ticket type', 'openevents' )
+								__( 'Remove %s', 'feriae' ),
+								type.name || __( 'ticket type', 'feriae' )
 							) }
 						</Button>
 					</Flex>
@@ -203,13 +203,13 @@ export default function TicketsPanel( { meta, setMeta, postId, config } ) {
 				variant="secondary"
 				onClick={ () => setTypes( [ ...types, newType() ] ) }
 			>
-				{ __( 'Add ticket type', 'openevents' ) }
+				{ __( 'Add ticket type', 'feriae' ) }
 			</Button>
 			{ types.length > 0 && postId && (
 				<ExternalLink
 					href={ `${ config.ordersUrl }&event=${ postId }` }
 				>
-					{ __( 'Orders for this event', 'openevents' ) }
+					{ __( 'Orders for this event', 'feriae' ) }
 				</ExternalLink>
 			) }
 		</Flex>

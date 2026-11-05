@@ -2,13 +2,13 @@
 /**
  * RFC 5545 writer.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\ICal;
+namespace Feriae\Modules\ICal;
 
-use OpenEvents\Content\Event;
-use OpenEvents\Occurrences\Occurrence;
+use Feriae\Content\Event;
+use Feriae\Occurrences\Occurrence;
 
 /**
  * Serialises occurrences as an iCalendar document. Times are written in UTC
@@ -23,7 +23,7 @@ final class Writer {
 		$lines = array(
 			'BEGIN:VCALENDAR',
 			'VERSION:2.0',
-			'PRODID:-//OpenEvents//' . self::text( get_bloginfo( 'name' ) ) . '//EN',
+			'PRODID:-//Feriae//' . self::text( get_bloginfo( 'name' ) ) . '//EN',
 			'CALSCALE:GREGORIAN',
 			'METHOD:PUBLISH',
 			'X-WR-CALNAME:' . self::text( get_bloginfo( 'name' ) ),
@@ -63,25 +63,25 @@ final class Writer {
 		$title = get_the_title( $event->post );
 		if ( $occurrence->is_called_off() ) {
 			// STATUS for apps that show it (cancelled dates are struck through); the title for the rest.
-			$lines[] = 'STATUS:' . ( \OpenEvents\Content\EventStatus::CANCELLED === $occurrence->event_status ? 'CANCELLED' : 'TENTATIVE' );
+			$lines[] = 'STATUS:' . ( \Feriae\Content\EventStatus::CANCELLED === $occurrence->event_status ? 'CANCELLED' : 'TENTATIVE' );
 			/* translators: 1: status such as "Cancelled", 2: event title */
-			$title = sprintf( __( '%1$s: %2$s', 'openevents' ), \OpenEvents\Content\EventStatus::label( $occurrence->event_status ), $title );
+			$title = sprintf( __( '%1$s: %2$s', 'feriae' ), \Feriae\Content\EventStatus::label( $occurrence->event_status ), $title );
 		}
 		$lines[] = 'SUMMARY:' . self::text( $title );
 		$lines[] = 'DESCRIPTION:' . self::text( get_the_excerpt( $event->post ) );
-		$lines[] = 'URL:' . openevents_occurrence_url( $occurrence );
+		$lines[] = 'URL:' . feriae_occurrence_url( $occurrence );
 
 		$venue = $event->venue();
 		if ( $venue ) {
 			$lines[] = 'LOCATION:' . self::text( get_the_title( $venue ) . ', ' . Event::venue_address( $venue ) );
-			$lat     = get_post_meta( $venue->ID, '_oe_lat', true );
-			$lng     = get_post_meta( $venue->ID, '_oe_lng', true );
+			$lat     = get_post_meta( $venue->ID, '_feriae_lat', true );
+			$lng     = get_post_meta( $venue->ID, '_feriae_lng', true );
 			if ( is_numeric( $lat ) && is_numeric( $lng ) ) {
 				$lines[] = 'GEO:' . (float) $lat . ';' . (float) $lng;
 			}
 		}
 
-		$categories = wp_list_pluck( (array) ( get_the_terms( $event->post, \OpenEvents\Content\PostTypes::CATEGORY ) ?: array() ), 'name' );
+		$categories = wp_list_pluck( (array) ( get_the_terms( $event->post, \Feriae\Content\PostTypes::CATEGORY ) ?: array() ), 'name' );
 		if ( is_array( $categories ) && $categories ) {
 			$lines[] = 'CATEGORIES:' . implode( ',', array_map( array( self::class, 'text' ), $categories ) );
 		}

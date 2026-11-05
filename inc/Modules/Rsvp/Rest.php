@@ -2,28 +2,28 @@
 /**
  * RSVP and attendee REST routes.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Rsvp;
+namespace Feriae\Modules\Rsvp;
 
-use OpenEvents\Attendance\Attendee;
-use OpenEvents\Attendance\Attendees;
-use OpenEvents\Attendance\TicketTypes;
+use Feriae\Attendance\Attendee;
+use Feriae\Attendance\Attendees;
+use Feriae\Attendance\TicketTypes;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_REST_Server;
 
 /**
- * POST /openevents/v1/events/{id}/rsvp       Respond, change, or cancel (public).
- * GET  /openevents/v1/events/{id}/rsvp       Counts and open/closed state (public).
- * GET  /openevents/v1/attendees              Attendee list (needs edit rights on the events).
- * POST /openevents/v1/attendees/{id}         Check in/out or change status.
+ * POST /feriae/v1/events/{id}/rsvp       Respond, change, or cancel (public).
+ * GET  /feriae/v1/events/{id}/rsvp       Counts and open/closed state (public).
+ * GET  /feriae/v1/attendees              Attendee list (needs edit rights on the events).
+ * POST /feriae/v1/attendees/{id}         Check in/out or change status.
  */
 final class Rest {
 
-	private const NS = 'openevents/v1';
+	private const NS = 'feriae/v1';
 
 	public function __construct( private Service $service, private Attendees $attendees = new Attendees() ) {}
 
@@ -90,7 +90,7 @@ final class Rest {
 					),
 					'checked_in' => array( 'type' => 'boolean' ),
 					'sequence'   => array(
-						'description' => __( 'One date of a repeating event (an occurrence sequence); needs event.', 'openevents' ),
+						'description' => __( 'One date of a repeating event (an occurrence sequence); needs event.', 'feriae' ),
 						'type'        => 'integer',
 						'minimum'     => 0,
 					),
@@ -169,11 +169,11 @@ final class Rest {
 	public function summary( WP_REST_Request $request ): WP_REST_Response|WP_Error {
 		$event_id = (int) $request['id'];
 		if ( 'publish' !== get_post_status( $event_id ) ) {
-			return new WP_Error( 'openevents_rsvp_disabled', __( 'This event is not taking RSVPs.', 'openevents' ), array( 'status' => 404 ) );
+			return new WP_Error( 'feriae_rsvp_disabled', __( 'This event is not taking RSVPs.', 'feriae' ), array( 'status' => 404 ) );
 		}
 		$type = $this->service->ticket_type( $event_id, (int) $request['sequence'] );
 		if ( ! $type ) {
-			return new WP_Error( 'openevents_rsvp_disabled', __( 'This event is not taking RSVPs.', 'openevents' ), array( 'status' => 404 ) );
+			return new WP_Error( 'feriae_rsvp_disabled', __( 'This event is not taking RSVPs.', 'feriae' ), array( 'status' => 404 ) );
 		}
 		$counts = $this->attendees->counts( $event_id, $type->id );
 		return new WP_REST_Response(
@@ -189,7 +189,7 @@ final class Rest {
 	public function respond( WP_REST_Request $request ): WP_REST_Response {
 		$event_id = (int) $request['id'];
 		if ( 'publish' !== get_post_status( $event_id ) ) {
-			return new WP_REST_Response( Result::error( 'disabled', __( 'This event is not taking RSVPs.', 'openevents' ) )->to_array(), 404 );
+			return new WP_REST_Response( Result::error( 'disabled', __( 'This event is not taking RSVPs.', 'feriae' ) )->to_array(), 404 );
 		}
 		$input = array(
 			'name'     => (string) $request['name'],
@@ -284,8 +284,8 @@ final class Rest {
 						'date'        => $repo->date_label( $a->ticket_type_id, $dates ),
 						'code'        => $a->security_code,
 						// For organisers to send again when someone can't find their email.
-						'pass_url'    => \OpenEvents\Attendance\Pass::url( $a ),
-						'answers'     => \OpenEvents\Attendance\Fields::answers( $a, $types ),
+						'pass_url'    => \Feriae\Attendance\Pass::url( $a ),
+						'answers'     => \Feriae\Attendance\Fields::answers( $a, $types ),
 					)
 				);
 			},
@@ -308,7 +308,7 @@ final class Rest {
 		if ( $request->has_param( 'status' ) && $request['status'] !== $attendee->status ) {
 			if ( Attendee::GOING === $request['status'] ) {
 				if ( ! $types->reserve( $attendee->ticket_type_id, 1 ) ) {
-					return new WP_Error( 'openevents_full', __( 'There are no spots left.', 'openevents' ), array( 'status' => 409 ) );
+					return new WP_Error( 'feriae_full', __( 'There are no spots left.', 'feriae' ), array( 'status' => 409 ) );
 				}
 			} elseif ( Attendee::GOING === $attendee->status ) {
 				$types->release( $attendee->ticket_type_id, 1 );
@@ -325,6 +325,6 @@ final class Rest {
 		 *
 		 * @param string $capability Capability.
 		 */
-		return (string) apply_filters( 'openevents/attendees/capability', 'edit_others_posts' );
+		return (string) apply_filters( 'feriae/attendees/capability', 'edit_others_posts' );
 	}
 }

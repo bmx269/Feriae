@@ -6,7 +6,7 @@ test.describe( 'Event pages', () => {
 		page,
 	} ) => {
 		await page.goto( '/events/jazz-night/' );
-		const details = page.locator( '.oe-details' );
+		const details = page.locator( '.feriae-details' );
 
 		await expect( details.locator( 'dt' ) ).toContainText( [
 			'When',
@@ -30,10 +30,10 @@ test.describe( 'Event pages', () => {
 		page,
 	} ) => {
 		await page.goto( '/blog-post-book-launch/' );
-		await expect( page.locator( '.oe-details' ) ).toBeVisible();
+		await expect( page.locator( '.feriae-details' ) ).toBeVisible();
 
 		await page.goto( '/plain-blog-post-not-an-event/' );
-		await expect( page.locator( '.oe-details' ) ).toHaveCount( 0 );
+		await expect( page.locator( '.feriae-details' ) ).toHaveCount( 0 );
 		await expect(
 			page.getByText( 'Nothing about this post should change.' )
 		).toBeVisible();
@@ -48,15 +48,15 @@ test.describe( 'Event pages', () => {
 				title: 'E2E Event',
 				status: 'publish',
 				meta: {
-					_oe_start: `${ day( 3 ) } 19:00:00`,
-					_oe_end: `${ day( 3 ) } 20:00:00`,
+					_feriae_start: `${ day( 3 ) } 19:00:00`,
+					_feriae_end: `${ day( 3 ) } 20:00:00`,
 				},
 			},
 		} );
 		expect( created.status ).toBe( 201 );
 		const id = created.body.id;
 		const occurrences = async () =>
-			( await rest( page, `/openevents/v1/occurrences?event=${ id }` ) )
+			( await rest( page, `/feriae/v1/occurrences?event=${ id }` ) )
 				.body;
 
 		const [ first ] = await occurrences();
@@ -66,8 +66,8 @@ test.describe( 'Event pages', () => {
 			method: 'POST',
 			data: {
 				meta: {
-					_oe_start: `${ day( 4 ) } 09:00:00`,
-					_oe_end: `${ day( 4 ) } 10:00:00`,
+					_feriae_start: `${ day( 4 ) } 09:00:00`,
+					_feriae_end: `${ day( 4 ) } 10:00:00`,
 				},
 			},
 		} );
@@ -100,7 +100,7 @@ test.describe( 'Event pages', () => {
 				slug: 'single-event-category-workshops',
 				title: 'Single Event: Workshops',
 				content:
-					'<!-- wp:paragraph --><p>Workshop template in use</p><!-- /wp:paragraph --><!-- wp:post-title /--><!-- wp:openevents/event-details /-->',
+					'<!-- wp:paragraph --><p>Workshop template in use</p><!-- /wp:paragraph --><!-- wp:post-title /--><!-- wp:feriae/event-details /-->',
 			},
 		} );
 		expect( created.status ).toBe( 201 );
@@ -109,7 +109,7 @@ test.describe( 'Event pages', () => {
 		await expect(
 			page.getByText( 'Workshop template in use' )
 		).toBeVisible();
-		await expect( page.locator( '.oe-details' ) ).toBeVisible();
+		await expect( page.locator( '.feriae-details' ) ).toBeVisible();
 
 		await page.goto( '/events/jazz-night/' );
 		await expect(
@@ -126,12 +126,12 @@ test.describe( 'Event pages', () => {
 	} ) => {
 		const list = await rest(
 			page,
-			'/wp-abilities/v1/abilities?category=openevents'
+			'/wp-abilities/v1/abilities?category=feriae'
 		);
 		expect( list.body.map( ( a ) => a.name ) ).toEqual(
 			expect.arrayContaining( [
-				'openevents/list-events',
-				'openevents/create-event',
+				'feriae/list-events',
+				'feriae/create-event',
 			] )
 		);
 	} );

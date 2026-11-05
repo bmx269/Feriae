@@ -2,10 +2,10 @@
 /**
  * Registered post meta.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Content;
+namespace Feriae\Content;
 
 /**
  * Registers event, venue, and organizer meta so it is typed, sanitised, and
@@ -13,12 +13,12 @@ namespace OpenEvents\Content;
  */
 final class Meta {
 
-	public function __construct( private \OpenEvents\Settings $settings ) {}
+	public function __construct( private \Feriae\Settings $settings ) {}
 
 	public const DATETIME_FORMAT = 'Y-m-d H:i:s';
 
 	/** Keys whose change requires regenerating occurrences. */
-	public const SCHEDULE_KEYS = array( '_oe_start', '_oe_end', '_oe_timezone', '_oe_all_day', '_oe_hide_from_listings', '_oe_recurrence', '_oe_status', '_oe_date_status' );
+	public const SCHEDULE_KEYS = array( '_feriae_start', '_feriae_end', '_feriae_timezone', '_feriae_all_day', '_feriae_hide_from_listings', '_feriae_recurrence', '_feriae_status', '_feriae_date_status' );
 
 	public function register(): void {
 		// After every post type (ours and other plugins') is registered, so revision support can be checked.
@@ -30,24 +30,24 @@ final class Meta {
 	 */
 	public static function event_fields(): array {
 		return array(
-			'_oe_start'              => array(
+			'_feriae_start'              => array(
 				'type'              => 'string',
 				'sanitize_callback' => array( self::class, 'sanitize_datetime' ),
 			),
-			'_oe_end'                => array(
+			'_feriae_end'                => array(
 				'type'              => 'string',
 				'sanitize_callback' => array( self::class, 'sanitize_datetime' ),
 			),
-			'_oe_timezone'           => array(
+			'_feriae_timezone'           => array(
 				'type'              => 'string',
 				'sanitize_callback' => array( self::class, 'sanitize_timezone' ),
 			),
-			'_oe_all_day'            => array( 'type' => 'boolean' ),
-			'_oe_venue_id'           => array(
+			'_feriae_all_day'            => array( 'type' => 'boolean' ),
+			'_feriae_venue_id'           => array(
 				'type'              => 'integer',
 				'sanitize_callback' => 'absint',
 			),
-			'_oe_organizer_ids'      => array(
+			'_feriae_organizer_ids'      => array(
 				'type'         => 'array',
 				'default'      => array(),
 				'show_in_rest' => array(
@@ -57,22 +57,22 @@ final class Meta {
 					),
 				),
 			),
-			'_oe_cost'               => array(
+			'_feriae_cost'               => array(
 				'type'              => 'string',
 				'sanitize_callback' => 'sanitize_text_field',
 			),
-			'_oe_currency_symbol'    => array(
+			'_feriae_currency_symbol'    => array(
 				'type'              => 'string',
 				'sanitize_callback' => 'sanitize_text_field',
 			),
-			'_oe_url'                => array(
+			'_feriae_url'                => array(
 				'type'              => 'string',
 				'sanitize_callback' => 'esc_url_raw',
 			),
-			'_oe_featured'           => array( 'type' => 'boolean' ),
-			'_oe_hide_from_listings' => array( 'type' => 'boolean' ),
+			'_feriae_featured'           => array( 'type' => 'boolean' ),
+			'_feriae_hide_from_listings' => array( 'type' => 'boolean' ),
 			// Scheduled, cancelled, or postponed, with an optional note; see EventStatus.
-			'_oe_status'             => array(
+			'_feriae_status'             => array(
 				'type'              => 'string',
 				'default'           => EventStatus::SCHEDULED,
 				'sanitize_callback' => array( EventStatus::class, 'sanitize' ),
@@ -83,12 +83,12 @@ final class Meta {
 					),
 				),
 			),
-			'_oe_status_reason'      => array(
+			'_feriae_status_reason'      => array(
 				'type'              => 'string',
 				'sanitize_callback' => array( EventStatus::class, 'sanitize_reason' ),
 			),
 			// One date of a repeating event cancelled or postponed on its own.
-			'_oe_date_status'        => array(
+			'_feriae_date_status'        => array(
 				'type'              => 'array',
 				'default'           => array(),
 				'sanitize_callback' => array( EventStatus::class, 'sanitize_dates' ),
@@ -113,7 +113,7 @@ final class Meta {
 				),
 			),
 			// Extra labelled details shown in the event details (imported TEC Pro additional fields).
-			'_oe_details'            => array(
+			'_feriae_details'            => array(
 				'type'              => 'array',
 				'default'           => array(),
 				'sanitize_callback' => array( self::class, 'sanitize_details' ),
@@ -142,22 +142,22 @@ final class Meta {
 			'sanitize_callback' => 'sanitize_text_field',
 		);
 		return array(
-			'_oe_address'     => $text,
-			'_oe_city'        => $text,
-			'_oe_region'      => $text,
-			'_oe_postal_code' => $text,
-			'_oe_country'     => $text,
-			'_oe_phone'       => $text,
-			'_oe_website'     => array(
+			'_feriae_address'     => $text,
+			'_feriae_city'        => $text,
+			'_feriae_region'      => $text,
+			'_feriae_postal_code' => $text,
+			'_feriae_country'     => $text,
+			'_feriae_phone'       => $text,
+			'_feriae_website'     => array(
 				'type'              => 'string',
 				'sanitize_callback' => 'esc_url_raw',
 			),
 			// Strings so "not set" can be stored as empty rather than 0,0.
-			'_oe_lat'         => array(
+			'_feriae_lat'         => array(
 				'type'              => 'string',
 				'sanitize_callback' => array( self::class, 'sanitize_coordinate' ),
 			),
-			'_oe_lng'         => array(
+			'_feriae_lng'         => array(
 				'type'              => 'string',
 				'sanitize_callback' => array( self::class, 'sanitize_coordinate' ),
 			),
@@ -169,15 +169,15 @@ final class Meta {
 	 */
 	public static function organizer_fields(): array {
 		return array(
-			'_oe_phone'   => array(
+			'_feriae_phone'   => array(
 				'type'              => 'string',
 				'sanitize_callback' => 'sanitize_text_field',
 			),
-			'_oe_email'   => array(
+			'_feriae_email'   => array(
 				'type'              => 'string',
 				'sanitize_callback' => 'sanitize_email',
 			),
-			'_oe_website' => array(
+			'_feriae_website' => array(
 				'type'              => 'string',
 				'sanitize_callback' => 'esc_url_raw',
 			),
@@ -201,7 +201,7 @@ final class Meta {
 			 * @param array  $fields    Meta key => register_post_meta args.
 			 * @param string $post_type Post type.
 			 */
-			$fields = apply_filters( 'openevents/meta_fields', $fields, $post_type );
+			$fields = apply_filters( 'feriae/meta_fields', $fields, $post_type );
 
 			// Track event dates and details in revisions where the post type keeps them.
 			$revisions = in_array( $post_type, $this->settings->event_post_types(), true ) && post_type_supports( $post_type, 'revisions' );

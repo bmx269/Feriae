@@ -2,10 +2,10 @@
 /**
  * Currency amounts.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Attendance;
+namespace Feriae\Attendance;
 
 /**
  * Amounts are integers in the currency's minor unit (cents), never floats.
@@ -47,7 +47,7 @@ final class Money {
 	public static function format( int $minor, string $currency ): string {
 		$currency = strtoupper( $currency );
 		if ( 0 === $minor ) {
-			return __( 'Free', 'openevents' );
+			return __( 'Free', 'feriae' );
 		}
 		if ( class_exists( \NumberFormatter::class ) ) {
 			$formatter = new \NumberFormatter( get_locale(), \NumberFormatter::CURRENCY );

@@ -11,10 +11,10 @@ import ServerSideRender from '@wordpress/server-side-render';
 import CategoryPicker from '../shared/category-picker';
 
 const VIEWS = [
-	{ value: 'month', label: __( 'Month', 'openevents' ) },
-	{ value: 'week', label: __( 'Week', 'openevents' ) },
-	{ value: 'day', label: __( 'Day', 'openevents' ) },
-	{ value: 'list', label: __( 'List', 'openevents' ) },
+	{ value: 'month', label: __( 'Month', 'feriae' ) },
+	{ value: 'week', label: __( 'Week', 'feriae' ) },
+	{ value: 'day', label: __( 'Day', 'feriae' ) },
+	{ value: 'list', label: __( 'List', 'feriae' ) },
 ];
 
 export default function Edit( { attributes, setAttributes } ) {
@@ -39,7 +39,7 @@ export default function Edit( { attributes, setAttributes } ) {
 	return (
 		<div { ...useBlockProps() }>
 			<InspectorControls>
-				<PanelBody title={ __( 'Views', 'openevents' ) }>
+				<PanelBody title={ __( 'Views', 'feriae' ) }>
 					{ VIEWS.map( ( view ) => (
 						<CheckboxControl
 							key={ view.value }
@@ -54,12 +54,12 @@ export default function Edit( { attributes, setAttributes } ) {
 					<SelectControl
 						__next40pxDefaultSize
 						__nextHasNoMarginBottom
-						label={ __( 'Default view', 'openevents' ) }
+						label={ __( 'Default view', 'feriae' ) }
 						value={ defaultView }
 						options={ [
 							{
 								value: '',
-								label: __( 'Site default', 'openevents' ),
+								label: __( 'Site default', 'feriae' ),
 							},
 							...VIEWS.filter( ( v ) =>
 								views.includes( v.value )
@@ -70,7 +70,7 @@ export default function Edit( { attributes, setAttributes } ) {
 						}
 					/>
 				</PanelBody>
-				<PanelBody title={ __( 'Filter', 'openevents' ) }>
+				<PanelBody title={ __( 'Filter', 'feriae' ) }>
 					<CategoryPicker
 						value={ categories }
 						onChange={ ( value ) =>
@@ -78,29 +78,29 @@ export default function Edit( { attributes, setAttributes } ) {
 						}
 					/>
 				</PanelBody>
-				<PanelBody title={ __( 'Display', 'openevents' ) }>
+				<PanelBody title={ __( 'Display', 'feriae' ) }>
 					<SelectControl
 						__next40pxDefaultSize
 						__nextHasNoMarginBottom
-						label={ __( 'Selecting an event', 'openevents' ) }
+						label={ __( 'Selecting an event', 'feriae' ) }
 						value={ attributes.clickAction }
 						options={ [
 							{
 								value: '',
-								label: __( 'Site default', 'openevents' ),
+								label: __( 'Site default', 'feriae' ),
 							},
 							{
 								value: 'page',
 								label: __(
 									'Go to the event page',
-									'openevents'
+									'feriae'
 								),
 							},
 							{
 								value: 'popup',
 								label: __(
 									'Show a summary popup',
-									'openevents'
+									'feriae'
 								),
 							},
 						] }
@@ -110,7 +110,7 @@ export default function Edit( { attributes, setAttributes } ) {
 					/>
 					<ToggleControl
 						__nextHasNoMarginBottom
-						label={ __( 'Show filter and search', 'openevents' ) }
+						label={ __( 'Show filter and search', 'feriae' ) }
 						checked={ attributes.showFilters }
 						onChange={ ( value ) =>
 							setAttributes( { showFilters: value } )
@@ -120,7 +120,7 @@ export default function Edit( { attributes, setAttributes } ) {
 						__nextHasNoMarginBottom
 						label={ __(
 							'Show category colour legend',
-							'openevents'
+							'feriae'
 						) }
 						checked={ showLegend }
 						onChange={ ( value ) =>
@@ -132,9 +132,9 @@ export default function Edit( { attributes, setAttributes } ) {
 						__nextHasNoMarginBottom
 						label={ __(
 							'Events per page (list view)',
-							'openevents'
+							'feriae'
 						) }
-						help={ __( '0 uses the site setting.', 'openevents' ) }
+						help={ __( '0 uses the site setting.', 'feriae' ) }
 						min={ 0 }
 						max={ 50 }
 						value={ perPage }
@@ -145,7 +145,7 @@ export default function Edit( { attributes, setAttributes } ) {
 					<SelectControl
 						__next40pxDefaultSize
 						__nextHasNoMarginBottom
-						label={ __( 'Heading level', 'openevents' ) }
+						label={ __( 'Heading level', 'feriae' ) }
 						value={ String( headingLevel ) }
 						options={ [ 1, 2, 3, 4, 5, 6 ].map( ( level ) => ( {
 							value: String( level ),
@@ -159,7 +159,7 @@ export default function Edit( { attributes, setAttributes } ) {
 			</InspectorControls>
 			<div inert="">
 				<ServerSideRender
-					block="openevents/calendar"
+					block="feriae/calendar"
 					attributes={ attributes }
 				/>
 			</div>

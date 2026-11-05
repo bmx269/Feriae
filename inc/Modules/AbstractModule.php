@@ -2,10 +2,10 @@
 /**
  * Module base class.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules;
+namespace Feriae\Modules;
 
 /**
  * Sensible defaults for optional Module methods.

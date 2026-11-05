@@ -2,19 +2,19 @@
 /**
  * Turns feed items into events.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Feeds;
+namespace Feriae\Modules\Feeds;
 
 use DateTimeImmutable;
-use OpenEvents\Content\Event;
-use OpenEvents\Content\EventStatus;
-use OpenEvents\Content\Meta;
-use OpenEvents\Content\PostTypes;
-use OpenEvents\Modules\Recurrence\Recurrence;
-use OpenEvents\Modules\Recurrence\Rule;
-use OpenEvents\Occurrences\Sync;
+use Feriae\Content\Event;
+use Feriae\Content\EventStatus;
+use Feriae\Content\Meta;
+use Feriae\Content\PostTypes;
+use Feriae\Modules\Recurrence\Recurrence;
+use Feriae\Modules\Recurrence\Rule;
+use Feriae\Occurrences\Sync;
 
 /**
  * Creates and updates events from feed items, matched by UID, so syncing
@@ -31,11 +31,11 @@ use OpenEvents\Occurrences\Sync;
 final class Importer {
 
 	/** Meta linking an event to its feed. */
-	public const FEED     = '_oe_feed';
-	public const UID      = '_oe_feed_uid';
-	public const HASH     = '_oe_feed_hash';
-	public const SYNCED   = '_oe_feed_synced';
-	public const REMOVED  = '_oe_feed_removed';
+	public const FEED     = '_feriae_feed';
+	public const UID      = '_feriae_feed_uid';
+	public const HASH     = '_feriae_feed_hash';
+	public const SYNCED   = '_feriae_feed_synced';
+	public const REMOVED  = '_feriae_feed_removed';
 	public const META_KEYS = array( self::FEED, self::UID, self::HASH, self::SYNCED, self::REMOVED );
 
 	private const COUNTS = array( 'created', 'updated', 'unchanged', 'removed', 'kept', 'private', 'past', 'unsupported', 'failed', 'skipped' );
@@ -166,12 +166,12 @@ final class Importer {
 		$title   = sanitize_text_field( $item->summary );
 		$content = self::content( $item->description );
 		$meta    = array(
-			'_oe_start'            => $item->start->format( Meta::DATETIME_FORMAT ),
-			'_oe_end'              => $item->end->format( Meta::DATETIME_FORMAT ),
-			'_oe_timezone'         => $item->timezone(),
-			'_oe_all_day'          => $item->all_day ? '1' : '',
-			'_oe_url'              => $url,
-			'_oe_status'           => $item->is_cancelled() ? EventStatus::CANCELLED : EventStatus::SCHEDULED,
+			'_feriae_start'            => $item->start->format( Meta::DATETIME_FORMAT ),
+			'_feriae_end'              => $item->end->format( Meta::DATETIME_FORMAT ),
+			'_feriae_timezone'         => $item->timezone(),
+			'_feriae_all_day'          => $item->all_day ? '1' : '',
+			'_feriae_url'              => $url,
+			'_feriae_status'           => $item->is_cancelled() ? EventStatus::CANCELLED : EventStatus::SCHEDULED,
 			Recurrence::META_KEY   => $recurrence ?? Recurrence::empty_meta(),
 		);
 		$hash    = md5( (string) wp_json_encode( array( $title, $content, $meta, $location, $item->lat, $item->lng, $this->category, $this->post_type ) ) );
@@ -182,7 +182,7 @@ final class Importer {
 		}
 
 		$post = array(
-			'post_title'   => '' !== $title ? $title : __( '(No title)', 'openevents' ),
+			'post_title'   => '' !== $title ? $title : __( '(No title)', 'feriae' ),
 			'post_content' => $content,
 		);
 		if ( $row ) {
@@ -208,7 +208,7 @@ final class Importer {
 			return;
 		}
 
-		$meta['_oe_venue_id'] = $this->venue( $location, $item->lat, $item->lng );
+		$meta['_feriae_venue_id'] = $this->venue( $location, $item->lat, $item->lng );
 		foreach ( $meta as $meta_key => $value ) {
 			update_post_meta( $id, $meta_key, $value );
 		}
@@ -268,8 +268,8 @@ final class Importer {
 	}
 
 	/**
-	 * `_oe_recurrence` for an item, or null for a single date. Rules outside
-	 * what OpenEvents can repeat are dropped (the first date is still
+	 * `_feriae_recurrence` for an item, or null for a single date. Rules outside
+	 * what Feriae can repeat are dropped (the first date is still
 	 * imported) and counted, rather than guessed at.
 	 *
 	 * @param string[] $skip Extra skipped dates.
@@ -362,9 +362,9 @@ final class Importer {
 					'post_author' => $this->author,
 					'meta_input'  => array_filter(
 						array(
-							'_oe_address' => $address,
-							'_oe_lat'     => null === $lat ? '' : (string) $lat,
-							'_oe_lng'     => null === $lng ? '' : (string) $lng,
+							'_feriae_address' => $address,
+							'_feriae_lat'     => null === $lat ? '' : (string) $lat,
+							'_feriae_lng'     => null === $lng ? '' : (string) $lng,
 						),
 						'strlen'
 					),
@@ -519,42 +519,42 @@ final class Importer {
 			return (string) $report['error'];
 		}
 		if ( $report['not_modified'] ) {
-			return __( 'No changes since the last sync.', 'openevents' );
+			return __( 'No changes since the last sync.', 'feriae' );
 		}
 		$parts = array();
 		$say   = array(
 			/* translators: %s: number of events */
-			'created'     => _n_noop( '%s event added', '%s events added', 'openevents' ),
+			'created'     => _n_noop( '%s event added', '%s events added', 'feriae' ),
 			/* translators: %s: number of events */
-			'updated'     => _n_noop( '%s updated', '%s updated', 'openevents' ),
+			'updated'     => _n_noop( '%s updated', '%s updated', 'feriae' ),
 			/* translators: %s: number of events */
-			'removed'     => _n_noop( '%s unpublished (no longer in the calendar)', '%s unpublished (no longer in the calendar)', 'openevents' ),
+			'removed'     => _n_noop( '%s unpublished (no longer in the calendar)', '%s unpublished (no longer in the calendar)', 'feriae' ),
 			/* translators: %s: number of events */
-			'kept'        => _n_noop( '%s left as edited here', '%s left as edited here', 'openevents' ),
+			'kept'        => _n_noop( '%s left as edited here', '%s left as edited here', 'feriae' ),
 			/* translators: %s: number of events */
-			'unchanged'   => _n_noop( '%s unchanged', '%s unchanged', 'openevents' ),
+			'unchanged'   => _n_noop( '%s unchanged', '%s unchanged', 'feriae' ),
 			/* translators: %s: number of events */
-			'private'     => _n_noop( '%s private event not imported', '%s private events not imported', 'openevents' ),
+			'private'     => _n_noop( '%s private event not imported', '%s private events not imported', 'feriae' ),
 			/* translators: %s: number of events */
-			'past'        => _n_noop( '%s past event not imported', '%s past events not imported', 'openevents' ),
+			'past'        => _n_noop( '%s past event not imported', '%s past events not imported', 'feriae' ),
 			/* translators: %s: number of events */
-			'unsupported' => _n_noop( '%s repeat rule not supported (first date imported)', '%s repeat rules not supported (first dates imported)', 'openevents' ),
+			'unsupported' => _n_noop( '%s repeat rule not supported (first date imported)', '%s repeat rules not supported (first dates imported)', 'feriae' ),
 			/* translators: %s: number of events */
-			'failed'      => _n_noop( '%s couldn’t be saved', '%s couldn’t be saved', 'openevents' ),
+			'failed'      => _n_noop( '%s couldn’t be saved', '%s couldn’t be saved', 'feriae' ),
 			/* translators: %s: number of events */
-			'skipped'     => _n_noop( '%s unreadable event skipped', '%s unreadable events skipped', 'openevents' ),
+			'skipped'     => _n_noop( '%s unreadable event skipped', '%s unreadable events skipped', 'feriae' ),
 		);
 		foreach ( $say as $key => $noop ) {
 			$count = (int) $report[ $key ];
 			if ( $count ) {
-				$parts[] = sprintf( translate_nooped_plural( $noop, $count, 'openevents' ), number_format_i18n( $count ) );
+				$parts[] = sprintf( translate_nooped_plural( $noop, $count, 'feriae' ), number_format_i18n( $count ) );
 			}
 		}
-		$message = $parts ? wp_sprintf( '%l.', $parts ) : __( 'The calendar has no events to import.', 'openevents' );
+		$message = $parts ? wp_sprintf( '%l.', $parts ) : __( 'The calendar has no events to import.', 'feriae' );
 		if ( $report['partial'] ) {
 			$message .= ' ' . ( 'file' === ( $report['source'] ?? '' )
-				? __( 'Import the file again to continue.', 'openevents' )
-				: __( 'The rest will be imported in a minute.', 'openevents' ) );
+				? __( 'Import the file again to continue.', 'feriae' )
+				: __( 'The rest will be imported in a minute.', 'feriae' ) );
 		}
 		return $message;
 	}

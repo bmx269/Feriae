@@ -34,8 +34,8 @@ module.exports = defineConfig( {
 	],
 	webServer: {
 		// Mount at a fixed folder name: --auto-mount would use the checkout's
-		// folder name (e.g. "OpenEvents" in CI), breaking the plugin path.
-		command: `./node_modules/.bin/wp-playground-cli server --blueprint=blueprint.json --mount=.:/wordpress/wp-content/plugins/openevents --port=${ PORT }`,
+		// folder name (e.g. "Feriae" in CI), breaking the plugin path.
+		command: `./node_modules/.bin/wp-playground-cli server --blueprint=blueprint.json --mount=.:/wordpress/wp-content/plugins/feriae --port=${ PORT }`,
 		// A static file: dynamic pages may redirect through Playground's auto-login.
 		url: `${ baseURL }/readme.html`,
 		timeout: 300_000,

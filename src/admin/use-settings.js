@@ -1,9 +1,9 @@
 import apiFetch from '@wordpress/api-fetch';
 import { useCallback, useEffect, useState } from '@wordpress/element';
 
-const SETTINGS = 'openevents_settings';
-const MODULES = 'openevents_modules';
-const SETUP = 'openevents_setup_complete';
+const SETTINGS = 'feriae_settings';
+const MODULES = 'feriae_modules';
+const SETUP = 'feriae_setup_complete';
 
 /**
  * Loads and saves plugin options through the core /wp/v2/settings endpoint.

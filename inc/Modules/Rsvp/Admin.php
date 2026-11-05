@@ -2,14 +2,14 @@
 /**
  * Attendees admin screen and CSV export.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Rsvp;
+namespace Feriae\Modules\Rsvp;
 
-use OpenEvents\Attendance\Attendees;
-use OpenEvents\Attendance\Fields;
-use OpenEvents\Content\PostTypes;
+use Feriae\Attendance\Attendees;
+use Feriae\Attendance\Fields;
+use Feriae\Content\PostTypes;
 
 /**
  * Events → Attendees: a DataViews list (rendered by the admin app) backed by
@@ -17,21 +17,21 @@ use OpenEvents\Content\PostTypes;
  */
 final class Admin {
 
-	public const SLUG = 'openevents-attendees';
+	public const SLUG = 'feriae-attendees';
 
 	public function __construct( private Service $service ) {}
 
 	public function register(): void {
 		add_action( 'admin_menu', array( $this, 'menu' ), 20 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue' ) );
-		add_action( 'admin_post_openevents_attendees_csv', array( $this, 'export_csv' ) );
+		add_action( 'admin_post_feriae_attendees_csv', array( $this, 'export_csv' ) );
 	}
 
 	public function menu(): void {
 		add_submenu_page(
-			PostTypes::menu_parent( openevents()->settings() ),
-			__( 'Attendees', 'openevents' ),
-			__( 'Attendees', 'openevents' ),
+			PostTypes::menu_parent( feriae()->settings() ),
+			__( 'Attendees', 'feriae' ),
+			__( 'Attendees', 'feriae' ),
 			'edit_posts',
 			self::SLUG,
 			array( $this, 'render' )
@@ -49,23 +49,23 @@ final class Admin {
 	 * Loads the attendance admin bundle (attendee and order screens).
 	 */
 	public static function enqueue_bundle(): void {
-		$asset_file = \OpenEvents\PLUGIN_DIR . '/build/admin/attendance.asset.php';
+		$asset_file = \Feriae\PLUGIN_DIR . '/build/admin/attendance.asset.php';
 		if ( ! is_readable( $asset_file ) ) {
 			return;
 		}
 		$asset = require $asset_file;
-		wp_enqueue_script( 'openevents-attendance', plugins_url( 'build/admin/attendance.js', \OpenEvents\PLUGIN_FILE ), $asset['dependencies'], $asset['version'], true );
-		wp_set_script_translations( 'openevents-attendance', 'openevents' );
-		wp_enqueue_style( 'openevents-attendance', plugins_url( 'build/admin/attendance.css', \OpenEvents\PLUGIN_FILE ), array( 'wp-components' ), $asset['version'] );
+		wp_enqueue_script( 'feriae-attendance', plugins_url( 'build/admin/attendance.js', \Feriae\PLUGIN_FILE ), $asset['dependencies'], $asset['version'], true );
+		wp_set_script_translations( 'feriae-attendance', 'feriae' );
+		wp_enqueue_style( 'feriae-attendance', plugins_url( 'build/admin/attendance.css', \Feriae\PLUGIN_FILE ), array( 'wp-components' ), $asset['version'] );
 	}
 
 	public function render(): void {
 		printf(
-			'<div id="openevents-attendance" class="openevents-admin" data-screen="attendees" data-csv="%s" data-events="%s" data-event="%d"><noscript>%s</noscript></div>',
-			esc_attr( wp_nonce_url( admin_url( 'admin-post.php?action=openevents_attendees_csv' ), 'openevents_attendees_csv' ) ),
+			'<div id="feriae-attendance" class="feriae-admin" data-screen="attendees" data-csv="%s" data-events="%s" data-event="%d"><noscript>%s</noscript></div>',
+			esc_attr( wp_nonce_url( admin_url( 'admin-post.php?action=feriae_attendees_csv' ), 'feriae_attendees_csv' ) ),
 			esc_attr( (string) wp_json_encode( self::events() ) ),
 			absint( $_GET['event'] ?? 0 ), // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			esc_html__( 'The attendee list needs JavaScript. You can still download it as CSV.', 'openevents' )
+			esc_html__( 'The attendee list needs JavaScript. You can still download it as CSV.', 'feriae' )
 		);
 	}
 
@@ -76,7 +76,7 @@ final class Admin {
 	 */
 	public static function events(): array {
 		global $wpdb;
-		$table = \OpenEvents\Attendance\Schema::ticket_types();
+		$table = \Feriae\Attendance\Schema::ticket_types();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$ids = array_map( 'intval', (array) $wpdb->get_col( "SELECT DISTINCT event_id FROM {$table} ORDER BY event_id DESC LIMIT 500" ) );
 		if ( $ids ) {
@@ -98,10 +98,10 @@ final class Admin {
 	 * Streams attendees as CSV, in batches so memory stays flat for large events.
 	 */
 	public function export_csv(): void {
-		check_admin_referer( 'openevents_attendees_csv' );
+		check_admin_referer( 'feriae_attendees_csv' );
 		$event_id = absint( $_GET['event'] ?? 0 );
 		if ( $event_id ? ! current_user_can( 'edit_post', $event_id ) : ! current_user_can( Rest::capability() ) ) {
-			wp_die( esc_html__( 'You are not allowed to export these attendees.', 'openevents' ), 403 );
+			wp_die( esc_html__( 'You are not allowed to export these attendees.', 'feriae' ), 403 );
 		}
 		$status = sanitize_key( wp_unslash( $_GET['status'] ?? '' ) );
 		$date   = isset( $_GET['sequence'] ) ? absint( $_GET['sequence'] ) : null;
@@ -124,7 +124,7 @@ final class Admin {
 		);
 		$types   = array();
 		$dates   = array();
-		$tickets = new \OpenEvents\Attendance\TicketTypes();
+		$tickets = new \Feriae\Attendance\TicketTypes();
 
 		// First pass: one column per attendee question that has answers.
 		$columns = array();

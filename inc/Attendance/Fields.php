@@ -2,18 +2,18 @@
 /**
  * Attendee fields: questions asked of each person on an RSVP or ticket.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Attendance;
+namespace Feriae\Attendance;
 
 /**
  * Field definitions live on the ticket type (RSVP settings, or each ticket in
- * `_oe_tickets`) as a list of
+ * `_feriae_tickets`) as a list of
  *
  *   { key, type, label, required, help, options }
  *
- * and answers are stored per attendee in `oe_attendees.fields` as key => value
+ * and answers are stored per attendee in `feriae_attendees.fields` as key => value
  * (a list of strings for checkboxes). Each ticket type also says whether every
  * person gives their own name and email (`attendee_details`: none, optional,
  * required), as Event Tickets Plus's per-attendee collection does.
@@ -92,7 +92,7 @@ final class Fields {
 			}
 			if ( 'checkbox' === $type && ! $options ) {
 				// A lone checkbox ("I agree"): its label is the question.
-				$options = array( __( 'Yes', 'openevents' ) );
+				$options = array( __( 'Yes', 'feriae' ) );
 			}
 
 			$key  = substr( sanitize_key( (string) ( $field['key'] ?? '' ) ) ?: sanitize_title( $label ), 0, 40 );
@@ -148,13 +148,13 @@ final class Fields {
 			$help_id  = '' !== $field['help'] ? $input_id . '-help' : '';
 			$required = $field['required'] ? ( $enforce ? ' required' : ' data-wp-bind--required="state.groupRequired"' ) : '';
 			$describe = $help_id ? ' aria-describedby="' . esc_attr( $help_id ) . '"' : '';
-			$help     = $help_id ? '<span class="oe-field__help" id="' . esc_attr( $help_id ) . '">' . esc_html( $field['help'] ) . '</span>' : '';
-			$label    = esc_html( $field['label'] ) . ( $field['required'] ? '' : ' <span class="oe-field__optional">' . esc_html__( '(optional)', 'openevents' ) . '</span>' );
+			$help     = $help_id ? '<span class="feriae-field__help" id="' . esc_attr( $help_id ) . '">' . esc_html( $field['help'] ) . '</span>' : '';
+			$label    = esc_html( $field['label'] ) . ( $field['required'] ? '' : ' <span class="feriae-field__optional">' . esc_html__( '(optional)', 'feriae' ) . '</span>' );
 			$attr     = esc_attr( $name . '[' . $key . ']' );
 
 			if ( 'checkbox' === $field['type'] && 1 === count( $field['options'] ) ) {
 				$html .= sprintf(
-					'<p class="oe-field oe-field--consent"><input type="checkbox" id="%1$s" name="%2$s[]" value="%3$s"%4$s%5$s%6$s> <label for="%1$s">%7$s</label>%8$s</p>',
+					'<p class="feriae-field feriae-field--consent"><input type="checkbox" id="%1$s" name="%2$s[]" value="%3$s"%4$s%5$s%6$s> <label for="%1$s">%7$s</label>%8$s</p>',
 					esc_attr( $input_id ),
 					$attr,
 					esc_attr( $field['options'][0] ),
@@ -168,14 +168,14 @@ final class Fields {
 			}
 
 			if ( in_array( $field['type'], array( 'radio', 'checkbox' ), true ) ) {
-				$html .= '<fieldset class="oe-field oe-field--choices"' . $describe . '><legend>' . $label . '</legend>';
+				$html .= '<fieldset class="feriae-field feriae-field--choices"' . $describe . '><legend>' . $label . '</legend>';
 				foreach ( $field['options'] as $i => $option ) {
 					$option_id = $input_id . '-' . $i;
 					$is_on     = 'checkbox' === $field['type'] ? in_array( $option, (array) $value, true ) : $option === $value;
 					// One required radio is enough to make the group required; checkbox groups are checked on the server.
 					$req   = 'radio' === $field['type'] && 0 === $i ? $required : '';
 					$html .= sprintf(
-						'<label class="oe-field__choice" for="%1$s"><input type="%2$s" id="%1$s" name="%3$s" value="%4$s"%5$s%6$s> %7$s</label>',
+						'<label class="feriae-field__choice" for="%1$s"><input type="%2$s" id="%1$s" name="%3$s" value="%4$s"%5$s%6$s> %7$s</label>',
 						esc_attr( $option_id ),
 						esc_attr( $field['type'] ),
 						'checkbox' === $field['type'] ? $attr . '[]' : $attr,
@@ -190,7 +190,7 @@ final class Fields {
 			}
 
 			if ( 'select' === $field['type'] ) {
-				$control = '<select id="' . esc_attr( $input_id ) . '" name="' . $attr . '"' . $required . $describe . '><option value="">' . esc_html__( 'Choose…', 'openevents' ) . '</option>';
+				$control = '<select id="' . esc_attr( $input_id ) . '" name="' . $attr . '"' . $required . $describe . '><option value="">' . esc_html__( 'Choose…', 'feriae' ) . '</option>';
 				foreach ( $field['options'] as $option ) {
 					$control .= '<option value="' . esc_attr( $option ) . '"' . selected( $option, $value, false ) . '>' . esc_html( $option ) . '</option>';
 				}
@@ -215,7 +215,7 @@ final class Fields {
 					$describe
 				);
 			}
-			$html .= '<p class="oe-field"><label for="' . esc_attr( $input_id ) . '">' . $label . '</label>' . $control . $help . '</p>';
+			$html .= '<p class="feriae-field"><label for="' . esc_attr( $input_id ) . '">' . $label . '</label>' . $control . $help . '</p>';
 		}
 		return $html;
 	}
@@ -241,9 +241,9 @@ final class Fields {
 						$field,
 						1 === count( $field['options'] )
 							/* translators: %s: field label */
-							? __( 'Please check “%s”.', 'openevents' )
+							? __( 'Please check “%s”.', 'feriae' )
 							/* translators: %s: field label */
-							: __( 'Please choose at least one option for “%s”.', 'openevents' )
+							: __( 'Please choose at least one option for “%s”.', 'feriae' )
 					);
 				}
 				if ( $picked ) {
@@ -256,7 +256,7 @@ final class Fields {
 			if ( '' === $value ) {
 				if ( $field['required'] ) {
 					/* translators: %s: field label */
-					return self::fail( $field, __( 'Please fill in “%s”.', 'openevents' ) );
+					return self::fail( $field, __( 'Please fill in “%s”.', 'feriae' ) );
 				}
 				continue;
 			}
@@ -272,7 +272,7 @@ final class Fields {
 			};
 			if ( ! $valid ) {
 				/* translators: %s: field label */
-				return self::fail( $field, __( 'Please check “%s”.', 'openevents' ) );
+				return self::fail( $field, __( 'Please check “%s”.', 'feriae' ) );
 			}
 			$values[ $key ] = $value;
 		}
@@ -321,14 +321,14 @@ final class Fields {
 					return array(
 						'people' => array(),
 						/* translators: %s: who, e.g. "Guest 2" or "Adult, ticket 1" */
-						'error'  => sprintf( __( '%s: please enter a name and email.', 'openevents' ), $who ),
+						'error'  => sprintf( __( '%s: please enter a name and email.', 'feriae' ), $who ),
 					);
 				}
 				if ( '' !== $person['email'] && ! is_email( $person['email'] ) ) {
 					return array(
 						'people' => array(),
 						/* translators: %s: who, e.g. "Guest 2" or "Adult, ticket 1" */
-						'error'  => sprintf( __( '%s: please check the email address.', 'openevents' ), $who ),
+						'error'  => sprintf( __( '%s: please check the email address.', 'feriae' ), $who ),
 					);
 				}
 			}
@@ -358,10 +358,10 @@ final class Fields {
 	public static function person_label( int $index, bool $lead_is_first, string $type_name = '' ): string {
 		if ( $lead_is_first ) {
 			/* translators: %d: guest number (2 for the first guest) */
-			return 0 === $index ? __( 'You', 'openevents' ) : sprintf( __( 'Guest %d', 'openevents' ), $index + 1 );
+			return 0 === $index ? __( 'You', 'feriae' ) : sprintf( __( 'Guest %d', 'feriae' ), $index + 1 );
 		}
 		/* translators: 1: ticket name, 2: ticket number */
-		return sprintf( __( '%1$s, ticket %2$d', 'openevents' ), $type_name, $index + 1 );
+		return sprintf( __( '%1$s, ticket %2$d', 'feriae' ), $type_name, $index + 1 );
 	}
 
 	/**
@@ -374,9 +374,9 @@ final class Fields {
 			return '';
 		}
 		$req  = 'required' === $details ? ( $enforce ? ' required' : ' data-wp-bind--required="state.groupRequired"' ) : '';
-		$opt  = 'required' === $details ? '' : ' <span class="oe-field__optional">' . esc_html__( '(optional)', 'openevents' ) . '</span>';
-		$html = '<p class="oe-field"><label for="' . esc_attr( $id ) . '-name">' . esc_html__( 'Name', 'openevents' ) . $opt . '</label><input id="' . esc_attr( $id ) . '-name" type="text" name="' . esc_attr( $name ) . '[name]" maxlength="200" autocomplete="off" value="' . esc_attr( (string) ( $values['name'] ?? '' ) ) . '"' . $req . '></p>';
-		$html .= '<p class="oe-field"><label for="' . esc_attr( $id ) . '-email">' . esc_html__( 'Email', 'openevents' ) . $opt . '</label><input id="' . esc_attr( $id ) . '-email" type="email" name="' . esc_attr( $name ) . '[email]" autocomplete="off" value="' . esc_attr( (string) ( $values['email'] ?? '' ) ) . '"' . $req . '></p>';
+		$opt  = 'required' === $details ? '' : ' <span class="feriae-field__optional">' . esc_html__( '(optional)', 'feriae' ) . '</span>';
+		$html = '<p class="feriae-field"><label for="' . esc_attr( $id ) . '-name">' . esc_html__( 'Name', 'feriae' ) . $opt . '</label><input id="' . esc_attr( $id ) . '-name" type="text" name="' . esc_attr( $name ) . '[name]" maxlength="200" autocomplete="off" value="' . esc_attr( (string) ( $values['name'] ?? '' ) ) . '"' . $req . '></p>';
+		$html .= '<p class="feriae-field"><label for="' . esc_attr( $id ) . '-email">' . esc_html__( 'Email', 'feriae' ) . $opt . '</label><input id="' . esc_attr( $id ) . '-email" type="email" name="' . esc_attr( $name ) . '[email]" autocomplete="off" value="' . esc_attr( (string) ( $values['email'] ?? '' ) ) . '"' . $req . '></p>';
 		return $html;
 	}
 
@@ -410,7 +410,7 @@ final class Fields {
 	 * @param array<string, mixed> $context Interactivity context for the group (n, and typeId for tickets).
 	 */
 	public static function group( string $legend, string $inner, array $context ): string {
-		return '<fieldset class="oe-person" data-wp-context="' . esc_attr( (string) wp_json_encode( $context ) ) . '" data-wp-bind--hidden="state.groupHidden" data-wp-bind--disabled="state.groupHidden"><legend>' . esc_html( $legend ) . '</legend>' . $inner . '</fieldset>';
+		return '<fieldset class="feriae-person" data-wp-context="' . esc_attr( (string) wp_json_encode( $context ) ) . '" data-wp-bind--hidden="state.groupHidden" data-wp-bind--disabled="state.groupHidden"><legend>' . esc_html( $legend ) . '</legend>' . $inner . '</fieldset>';
 	}
 
 	/**

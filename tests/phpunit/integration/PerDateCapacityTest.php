@@ -2,22 +2,22 @@
 /**
  * Per-date RSVP and ticket capacity for repeating events.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Tests\Integration;
+namespace Feriae\Tests\Integration;
 
-use OpenEvents\Attendance\Attendees;
-use OpenEvents\Attendance\Guard;
-use OpenEvents\Attendance\Schema;
-use OpenEvents\Attendance\TicketTypes;
-use OpenEvents\Attendance\Waitlist;
-use OpenEvents\Content\Event;
-use OpenEvents\Modules\Recurrence\Recurrence;
-use OpenEvents\Modules\Rsvp\Form;
-use OpenEvents\Modules\Rsvp\Service as Rsvp;
-use OpenEvents\Modules\Tickets\Checkout;
-use OpenEvents\Tests\TestCase;
+use Feriae\Attendance\Attendees;
+use Feriae\Attendance\Guard;
+use Feriae\Attendance\Schema;
+use Feriae\Attendance\TicketTypes;
+use Feriae\Attendance\Waitlist;
+use Feriae\Content\Event;
+use Feriae\Modules\Recurrence\Recurrence;
+use Feriae\Modules\Rsvp\Form;
+use Feriae\Modules\Rsvp\Service as Rsvp;
+use Feriae\Modules\Tickets\Checkout;
+use Feriae\Tests\TestCase;
 
 final class PerDateCapacityTest extends TestCase {
 
@@ -48,8 +48,8 @@ final class PerDateCapacityTest extends TestCase {
 		$day = current_datetime()->modify( "{$days} days" )->format( 'Y-m-d' );
 		return $this->event(
 			array(
-				'_oe_start'          => "{$day} 19:00:00",
-				'_oe_end'            => "{$day} 21:00:00",
+				'_feriae_start'          => "{$day} 19:00:00",
+				'_feriae_end'            => "{$day} 21:00:00",
 				Recurrence::META_KEY => array_merge( Recurrence::empty_meta(), array( 'rrule' => 'FREQ=WEEKLY;COUNT=3' ) ),
 			)
 		);
@@ -151,12 +151,12 @@ final class PerDateCapacityTest extends TestCase {
 
 	public function test_a_private_link_keeps_its_date(): void {
 		$this->respond( 'a@example.com', array( 'sequence' => $this->sequences[1] ) );
-		preg_match( '/oe_rsvp_token=([a-f0-9]+)/', $this->last_email()->body, $m );
+		preg_match( '/feriae_rsvp_token=([a-f0-9]+)/', $this->last_email()->body, $m );
 		$token = $m[1];
 
-		$this->assertStringContainsString( 'oe_occurrence=', $this->last_email()->body, 'Links go to the booked date.' );
-		$occurrence = openevents()->occurrences()->by_sequence( $this->event, $this->sequences[1] );
-		$this->assertStringContainsString( \OpenEvents\Frontend\Formatter::range( $occurrence ), $this->last_email()->body );
+		$this->assertStringContainsString( 'feriae_occurrence=', $this->last_email()->body, 'Links go to the booked date.' );
+		$occurrence = feriae()->occurrences()->by_sequence( $this->event, $this->sequences[1] );
+		$this->assertStringContainsString( \Feriae\Frontend\Formatter::range( $occurrence ), $this->last_email()->body );
 
 		// Changing the response from another date's page keeps it on its own date.
 		$result = $this->respond( 'a@example.com', array( 'token' => $token, 'quantity' => 2, 'sequence' => 0 ) );
@@ -182,12 +182,12 @@ final class PerDateCapacityTest extends TestCase {
 	public function test_waitlists_are_per_date(): void {
 		$second = array( 'sequence' => $this->sequences[1] );
 		$this->respond( 'a@example.com', $second + array( 'quantity' => 2 ) );
-		preg_match( '/oe_rsvp_token=([a-f0-9]+)/', $this->last_email()->body, $m );
+		preg_match( '/feriae_rsvp_token=([a-f0-9]+)/', $this->last_email()->body, $m );
 		$this->respond( 'first@example.com', array( 'quantity' => 2 ) ); // Fills the first date too.
-		$first_token = preg_match( '/oe_rsvp_token=([a-f0-9]+)/', $this->last_email()->body, $f ) ? $f[1] : '';
+		$first_token = preg_match( '/feriae_rsvp_token=([a-f0-9]+)/', $this->last_email()->body, $f ) ? $f[1] : '';
 
 		$this->assertSame( 'waitlisted', $this->respond( 'w@example.com', $second + array( 'status' => 'waitlist' ) )->code );
-		$this->assertStringContainsString( 'oe_occurrence=', $this->last_email()->body );
+		$this->assertStringContainsString( 'feriae_occurrence=', $this->last_email()->body );
 
 		( new Rsvp() )->cancel( $first_token );
 		$this->assertSame( 1, ( new Waitlist() )->query( array( 'event_id' => $this->event, 'status' => 'waiting' ) )['total'], 'A place on another date doesn’t promote anyone.' );
@@ -204,9 +204,9 @@ final class PerDateCapacityTest extends TestCase {
 		$type    = $service->ticket_type( $this->event, $this->sequences[1] );
 		$html    = Form::render( Event::get( $this->event ), $type, $service );
 
-		$occurrence = openevents()->occurrences()->by_sequence( $this->event, $this->sequences[1] );
-		$this->assertStringContainsString( '<p class="oe-rsvp__date">For <time datetime="', $html );
-		$this->assertStringContainsString( esc_html( \OpenEvents\Frontend\Formatter::range( $occurrence ) ), $html );
+		$occurrence = feriae()->occurrences()->by_sequence( $this->event, $this->sequences[1] );
+		$this->assertStringContainsString( '<p class="feriae-rsvp__date">For <time datetime="', $html );
+		$this->assertStringContainsString( esc_html( \Feriae\Frontend\Formatter::range( $occurrence ) ), $html );
 		$this->assertStringContainsString( '<input type="hidden" name="sequence" value="' . $this->sequences[1] . '">', $html );
 		$this->assertStringContainsString( '2 spots left', $html, 'Counts are for that date.' );
 	}
@@ -214,7 +214,7 @@ final class PerDateCapacityTest extends TestCase {
 	public function test_tickets_are_per_date(): void {
 		update_post_meta(
 			$this->event,
-			\OpenEvents\Modules\Tickets\Module::META_KEY,
+			\Feriae\Modules\Tickets\Module::META_KEY,
 			array(
 				array(
 					'key'      => 'seat',
@@ -243,7 +243,7 @@ final class PerDateCapacityTest extends TestCase {
 		);
 		$this->assertTrue( $order( 'a@example.com', $this->sequences[1], $type->id )->ok );
 		$this->assertSame( 'sold_out', $checkout->sale_state( ( new TicketTypes() )->get( $type->id ) ) );
-		$this->assertStringContainsString( 'oe_occurrence=', $this->last_email()->body );
+		$this->assertStringContainsString( 'feriae_occurrence=', $this->last_email()->body );
 
 		$result = $order( 'b@example.com', $this->sequences[1], $type->id );
 		$this->assertFalse( $result->ok, 'That date is sold out.' );
@@ -259,15 +259,15 @@ final class PerDateCapacityTest extends TestCase {
 		$this->respond( 'b@example.com' );
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
 
-		$request = new \WP_REST_Request( 'GET', '/openevents/v1/attendees' );
+		$request = new \WP_REST_Request( 'GET', '/feriae/v1/attendees' );
 		$request->set_param( 'event', $this->event );
 		$request->set_param( 'sequence', $this->sequences[1] );
 		$items = rest_do_request( $request )->get_data();
 		$this->assertSame( array( 'a@example.com' ), array_column( $items, 'email' ) );
-		$occurrence = openevents()->occurrences()->by_sequence( $this->event, $this->sequences[1] );
-		$this->assertSame( \OpenEvents\Frontend\Formatter::range( $occurrence ), $items[0]['date'] );
+		$occurrence = feriae()->occurrences()->by_sequence( $this->event, $this->sequences[1] );
+		$this->assertSame( \Feriae\Frontend\Formatter::range( $occurrence ), $items[0]['date'] );
 
-		$request = new \WP_REST_Request( 'GET', '/openevents/v1/attendees/dates' );
+		$request = new \WP_REST_Request( 'GET', '/feriae/v1/attendees/dates' );
 		$request->set_param( 'event', $this->event );
 		$this->assertSame( array( 0, $this->sequences[1] ), array_column( rest_do_request( $request )->get_data(), 'value' ) );
 

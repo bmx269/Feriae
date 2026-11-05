@@ -10,14 +10,14 @@ const scan = ( page, selector ) =>
 test.describe( 'Event status', () => {
 	test( 'a postponed event says so, with the note', async ( { page } ) => {
 		await page.goto( '/events/online-talk-toronto-time/' );
-		const details = page.locator( '.oe-details' );
-		await expect( details.locator( '.oe-status' ) ).toHaveText(
+		const details = page.locator( '.feriae-details' );
+		await expect( details.locator( '.feriae-status' ) ).toHaveText(
 			'Postponed'
 		);
 		await expect( details ).toContainText(
 			'Our speaker is unwell. We’ll announce the new date soon.'
 		);
-		const { violations } = await scan( page, '.oe-details' );
+		const { violations } = await scan( page, '.feriae-details' );
 		expect( violations.map( ( v ) => v.id ) ).toEqual( [] );
 	} );
 
@@ -31,27 +31,27 @@ test.describe( 'Event status', () => {
 			.getByRole( 'link' )
 			.nth( 1 )
 			.click();
-		const details = page.locator( '.oe-details' );
-		await expect( details.locator( '.oe-status' ) ).toHaveText(
+		const details = page.locator( '.feriae-details' );
+		await expect( details.locator( '.feriae-status' ) ).toHaveText(
 			'Cancelled'
 		);
 		await expect( details ).toContainText(
 			'Our storyteller is away this week.'
 		);
-		await expect( page.locator( '.oe-rsvp__closed' ) ).toHaveText(
+		await expect( page.locator( '.feriae-rsvp__closed' ) ).toHaveText(
 			'This event has been cancelled.'
 		);
-		await expect( page.locator( '.oe-rsvp form' ) ).toHaveCount( 0 );
+		await expect( page.locator( '.feriae-rsvp form' ) ).toHaveCount( 0 );
 
 		// The list view labels it, and the other dates aren't (Kids only, to fit one page).
-		await page.goto( '/events/?oe_view=list&oe_audiences%5B%5D=kids' );
-		const cards = page.locator( '.oe-event-card', {
+		await page.goto( '/events/?feriae_view=list&feriae_audiences%5B%5D=kids' );
+		const cards = page.locator( '.feriae-event-card', {
 			hasText: 'Weekly Storytime',
 		} );
 		await expect( cards.filter( { hasText: 'Cancelled' } ) ).toHaveCount(
 			1
 		);
-		const { violations } = await scan( page, '.oe-calendar' );
+		const { violations } = await scan( page, '.feriae-calendar' );
 		expect( violations.map( ( v ) => v.id ) ).toEqual( [] );
 	} );
 } );

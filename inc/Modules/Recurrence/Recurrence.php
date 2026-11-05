@@ -2,26 +2,26 @@
 /**
  * An event's repeat settings.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Recurrence;
+namespace Feriae\Modules\Recurrence;
 
 use DateTimeImmutable;
 use InvalidArgumentException;
-use OpenEvents\Content\Event;
-use OpenEvents\Content\Meta;
+use Feriae\Content\Event;
+use Feriae\Content\Meta;
 
 /**
- * The `_oe_recurrence` meta: an RRULE plus extra dates (RDATE) and skipped dates
+ * The `_feriae_recurrence` meta: an RRULE plus extra dates (RDATE) and skipped dates
  * (EXDATE), the same three parts an iCal VEVENT uses.
  *
- * The event's own start (`_oe_start`) is always the first date, as DTSTART is in
+ * The event's own start (`_feriae_start`) is always the first date, as DTSTART is in
  * iCal, and every date keeps the event's start time and length.
  */
 final class Recurrence {
 
-	public const META_KEY = '_oe_recurrence';
+	public const META_KEY = '_feriae_recurrence';
 
 	/**
 	 * @param string[] $rdates  Extra start times, "Y-m-d H:i:s" in the event timezone.

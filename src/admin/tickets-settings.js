@@ -46,8 +46,8 @@ function GatewayCard( { gateway, values, onChange } ) {
 					<Card.Title>{ gateway.label }</Card.Title>
 					<Badge intent={ gateway.available ? 'stable' : 'draft' }>
 						{ gateway.available
-							? __( 'Ready', 'openevents' )
-							: __( 'Not set up', 'openevents' ) }
+							? __( 'Ready', 'feriae' )
+							: __( 'Not set up', 'feriae' ) }
 					</Badge>
 				</Stack>
 			</Card.Header>
@@ -58,7 +58,7 @@ function GatewayCard( { gateway, values, onChange } ) {
 							const value = values[ key ] ?? field.value;
 							const set = ( v ) => onChange( key, v );
 							const description = field.constant
-								? __( 'Set in wp-config.php.', 'openevents' )
+								? __( 'Set in wp-config.php.', 'feriae' )
 								: field.help;
 							if ( field.type === 'toggle' ) {
 								return (
@@ -124,7 +124,7 @@ export default function TicketsSettings( { settings, update } ) {
 	const [ saving, setSaving ] = useState( false );
 
 	useEffect( () => {
-		apiFetch( { path: '/openevents/v1/gateways' } )
+		apiFetch( { path: '/feriae/v1/gateways' } )
 			.then( ( data ) => setGateways( data.gateways ) )
 			.catch( ( e ) =>
 				setStatus( { intent: 'error', text: e.message } )
@@ -141,7 +141,7 @@ export default function TicketsSettings( { settings, update } ) {
 		setSaving( true );
 		try {
 			const data = await apiFetch( {
-				path: '/openevents/v1/gateways',
+				path: '/feriae/v1/gateways',
 				method: 'POST',
 				data: { gateways: edits },
 			} );
@@ -149,7 +149,7 @@ export default function TicketsSettings( { settings, update } ) {
 			setEdits( {} );
 			setStatus( {
 				intent: 'success',
-				text: __( 'Payment settings saved.', 'openevents' ),
+				text: __( 'Payment settings saved.', 'feriae' ),
 			} );
 		} catch ( e ) {
 			setStatus( { intent: 'error', text: e.message } );
@@ -160,10 +160,10 @@ export default function TicketsSettings( { settings, update } ) {
 	return (
 		<Stack direction="column" gap="lg">
 			<SelectControl
-				label={ __( 'Currency', 'openevents' ) }
+				label={ __( 'Currency', 'feriae' ) }
 				description={ __(
 					'Used for all ticket prices. Save changes to apply.',
-					'openevents'
+					'feriae'
 				) }
 				items={ CURRENCIES.map( ( c ) => ( { value: c, label: c } ) ) }
 				value={ settings.currency || 'USD' }
@@ -173,10 +173,10 @@ export default function TicketsSettings( { settings, update } ) {
 				type="number"
 				min={ 1 }
 				max={ 168 }
-				label={ __( 'Waitlist hold (hours)', 'openevents' ) }
+				label={ __( 'Waitlist hold (hours)', 'feriae' ) }
 				description={ __(
 					'How long freed tickets are held for the next person on a waitlist before passing down the line. Save changes to apply.',
-					'openevents'
+					'feriae'
 				) }
 				value={ String( settings.waitlist_offer_hours ?? 24 ) }
 				onValueChange={ ( value ) =>
@@ -189,12 +189,12 @@ export default function TicketsSettings( { settings, update } ) {
 				}
 			/>
 			<Text variant="heading-sm">
-				{ __( 'Payment methods', 'openevents' ) }
+				{ __( 'Payment methods', 'feriae' ) }
 			</Text>
 			<Text variant="body-sm">
 				{ __(
-					'Buyers pay on Stripe or PayPal; card details never reach this site. OpenEvents adds no fees.',
-					'openevents'
+					'Buyers pay on Stripe or PayPal; card details never reach this site. Feriae adds no fees.',
+					'feriae'
 				) }
 			</Text>
 			{ status && (
@@ -222,7 +222,7 @@ export default function TicketsSettings( { settings, update } ) {
 					loading={ saving }
 					disabled={ ! Object.keys( edits ).length }
 				>
-					{ __( 'Save payment settings', 'openevents' ) }
+					{ __( 'Save payment settings', 'feriae' ) }
 				</Button>
 			</Stack>
 		</Stack>

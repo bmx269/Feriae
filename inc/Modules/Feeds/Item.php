@@ -2,10 +2,10 @@
 /**
  * One event read from an iCalendar feed.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Feeds;
+namespace Feriae\Modules\Feeds;
 
 use DateTimeImmutable;
 

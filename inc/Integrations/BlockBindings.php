@@ -2,25 +2,25 @@
 /**
  * Block Bindings source.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Integrations;
+namespace Feriae\Integrations;
 
-use OpenEvents\Content\Event;
-use OpenEvents\Frontend\Formatter;
+use Feriae\Content\Event;
+use Feriae\Frontend\Formatter;
 
 /**
- * "openevents/event" binding source: lets core blocks (Paragraph,
+ * "feriae/event" binding source: lets core blocks (Paragraph,
  * Heading, Button, Image) show event fields, so themes can design event
  * templates from core blocks instead of fixed plugin markup.
  *
  *   <!-- wp:paragraph {"metadata":{"bindings":{"content":{
- *        "source":"openevents/event","args":{"key":"date"}}}}} -->
+ *        "source":"feriae/event","args":{"key":"date"}}}}} -->
  */
 final class BlockBindings {
 
-	public const SOURCE = 'openevents/event';
+	public const SOURCE = 'feriae/event';
 
 	/**
 	 * Bindable keys and their labels.
@@ -29,16 +29,16 @@ final class BlockBindings {
 	 */
 	public static function fields(): array {
 		return array(
-			'date'          => __( 'Event date and time', 'openevents' ),
-			'start_date'    => __( 'Start date', 'openevents' ),
-			'start_time'    => __( 'Start time', 'openevents' ),
-			'end_date'      => __( 'End date', 'openevents' ),
-			'end_time'      => __( 'End time', 'openevents' ),
-			'venue'         => __( 'Venue name', 'openevents' ),
-			'venue_address' => __( 'Venue address', 'openevents' ),
-			'venue_url'     => __( 'Venue link', 'openevents' ),
-			'cost'          => __( 'Cost', 'openevents' ),
-			'website'       => __( 'Event website', 'openevents' ),
+			'date'          => __( 'Event date and time', 'feriae' ),
+			'start_date'    => __( 'Start date', 'feriae' ),
+			'start_time'    => __( 'Start time', 'feriae' ),
+			'end_date'      => __( 'End date', 'feriae' ),
+			'end_time'      => __( 'End time', 'feriae' ),
+			'venue'         => __( 'Venue name', 'feriae' ),
+			'venue_address' => __( 'Venue address', 'feriae' ),
+			'venue_url'     => __( 'Venue link', 'feriae' ),
+			'cost'          => __( 'Cost', 'feriae' ),
+			'website'       => __( 'Event website', 'feriae' ),
 		);
 	}
 
@@ -50,7 +50,7 @@ final class BlockBindings {
 		register_block_bindings_source(
 			self::SOURCE,
 			array(
-				'label'              => __( 'Event', 'openevents' ),
+				'label'              => __( 'Event', 'feriae' ),
 				'get_value_callback' => array( $this, 'get_value' ),
 				'uses_context'       => array( 'postId', 'postType' ),
 			)
@@ -63,11 +63,11 @@ final class BlockBindings {
 	 */
 	public function get_value( array $args, \WP_Block $block ): ?string {
 		$post_id = (int) ( $block->context['postId'] ?? get_the_ID() );
-		$event   = $post_id ? openevents_get_event( $post_id ) : null;
+		$event   = $post_id ? feriae_get_event( $post_id ) : null;
 		if ( ! $event ) {
 			return null;
 		}
-		$occurrence = openevents()->occurrences()->requested( $post_id );
+		$occurrence = feriae()->occurrences()->requested( $post_id );
 		$venue      = $event->venue();
 
 		$value = match ( (string) ( $args['key'] ?? '' ) ) {
@@ -91,7 +91,7 @@ final class BlockBindings {
 		 * @param array<string, mixed> $args  Binding args.
 		 * @param Event                $event Event.
 		 */
-		$value = apply_filters( 'openevents/block_bindings/value', $value, $args, $event );
+		$value = apply_filters( 'feriae/block_bindings/value', $value, $args, $event );
 
 		if ( null === $value ) {
 			return null;

@@ -2,12 +2,12 @@
 /**
  * Category colours.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Frontend;
+namespace Feriae\Frontend;
 
-use OpenEvents\Content\PostTypes;
+use Feriae\Content\PostTypes;
 
 /**
  * Per-category background colour (term meta), with a text colour picked for
@@ -15,7 +15,7 @@ use OpenEvents\Content\PostTypes;
  */
 final class CategoryColors {
 
-	public const META_KEY = 'oe_color';
+	public const META_KEY = 'feriae_color';
 
 	public static function register(): void {
 		add_action( 'init', array( self::class, 'register_meta' ) );
@@ -122,7 +122,7 @@ final class CategoryColors {
 
 	private static function style( string $color ): string {
 		$fill = self::fill( $color );
-		return sprintf( '--oe-event-bg:%s;--oe-event-fg:%s;', $fill, self::contrast( $fill ) );
+		return sprintf( '--feriae-event-bg:%s;--feriae-event-fg:%s;', $fill, self::contrast( $fill ) );
 	}
 
 	/**

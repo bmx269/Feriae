@@ -5,19 +5,19 @@
  * These functions are a stable contract: their signatures will not change in
  * minor releases. Prefer them to instantiating internal classes.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-use OpenEvents\Content\Event;
-use OpenEvents\Occurrences\Occurrence;
-use OpenEvents\Plugin;
+use Feriae\Content\Event;
+use Feriae\Occurrences\Occurrence;
+use Feriae\Plugin;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
  * Plugin instance: settings(), occurrences() repository, modules() registry.
  */
-function openevents(): Plugin {
+function feriae(): Plugin {
 	return Plugin::instance();
 }
 
@@ -26,8 +26,8 @@ function openevents(): Plugin {
  *
  * @return string[]
  */
-function openevents_event_post_types(): array {
-	return openevents()->settings()->event_post_types();
+function feriae_event_post_types(): array {
+	return feriae()->settings()->event_post_types();
 }
 
 /**
@@ -36,10 +36,10 @@ function openevents_event_post_types(): array {
  *
  * @return string[]
  */
-function openevents_ticketed_post_types(): array {
-	$types = openevents_event_post_types();
-	if ( openevents()->modules()->is_enabled( 'series' ) ) {
-		$types[] = OpenEvents\Modules\Series\Module::POST_TYPE;
+function feriae_ticketed_post_types(): array {
+	$types = feriae_event_post_types();
+	if ( feriae()->modules()->is_enabled( 'series' ) ) {
+		$types[] = Feriae\Modules\Series\Module::POST_TYPE;
 	}
 	return $types;
 }
@@ -48,23 +48,23 @@ function openevents_ticketed_post_types(): array {
  * Event wrapper for a post, or null when the post's type is not event-enabled
  * or the post has no start date.
  */
-function openevents_get_event( int|WP_Post|null $post = null ): ?Event {
+function feriae_get_event( int|WP_Post|null $post = null ): ?Event {
 	$event = Event::get( $post );
 	return ( $event && $event->is_scheduled() ) ? $event : null;
 }
 
-function openevents_is_event( int|WP_Post|null $post = null ): bool {
-	return null !== openevents_get_event( $post );
+function feriae_is_event( int|WP_Post|null $post = null ): bool {
+	return null !== feriae_get_event( $post );
 }
 
 /**
- * Queries occurrences. See OpenEvents\Occurrences\Repository::defaults() for arguments.
+ * Queries occurrences. See Feriae\Occurrences\Repository::defaults() for arguments.
  *
  * @param array<string, mixed> $args Query arguments.
  * @return array{items: Occurrence[], total: int, pages: int}
  */
-function openevents_get_occurrences( array $args = array() ): array {
-	return openevents()->occurrences()->query( $args );
+function feriae_get_occurrences( array $args = array() ): array {
+	return feriae()->occurrences()->query( $args );
 }
 
 /**
@@ -72,54 +72,54 @@ function openevents_get_occurrences( array $args = array() ): array {
  *
  * @return Occurrence[]
  */
-function openevents_get_upcoming( int $limit = 10, array $args = array() ): array {
+function feriae_get_upcoming( int $limit = 10, array $args = array() ): array {
 	$args = array_merge(
 		array(
-			'ends_after' => OpenEvents\Occurrences\Repository::now(),
+			'ends_after' => Feriae\Occurrences\Repository::now(),
 			'per_page'   => $limit,
 			'count'      => false,
 		),
 		$args
 	);
-	return openevents_get_occurrences( $args )['items'];
+	return feriae_get_occurrences( $args )['items'];
 }
 
 /**
  * Human-readable date range for an occurrence, e.g. "November 3, 2026, 7:00 pm – 9:00 pm".
  */
-function openevents_format_range( Occurrence $occurrence ): string {
-	return OpenEvents\Frontend\Formatter::range( $occurrence );
+function feriae_format_range( Occurrence $occurrence ): string {
+	return Feriae\Frontend\Formatter::range( $occurrence );
 }
 
 /**
  * Link to one occurrence. Later dates of a repeating event add the date
- * (/event/{slug}/{Y-m-d}/, or ?oe_occurrence= without pretty permalinks) so
+ * (/event/{slug}/{Y-m-d}/, or ?feriae_occurrence= without pretty permalinks) so
  * the event page shows the date that was clicked; the first date uses the
  * plain permalink, which stays the canonical URL.
  */
-function openevents_occurrence_url( Occurrence $occurrence ): string {
+function feriae_occurrence_url( Occurrence $occurrence ): string {
 	$url = (string) get_permalink( $occurrence->event_id );
 	if ( 0 === $occurrence->sequence ) {
 		return $url;
 	}
 	$date = $occurrence->start->format( 'Y-m-d' );
 	// Pretty permalinks: /event/{slug}/{date}/, as TEC links them (see the recurrence module's rewrite).
-	if ( get_option( 'permalink_structure' ) && OpenEvents\Content\PostTypes::EVENT === get_post_type( $occurrence->event_id ) && openevents_is_module_enabled( 'recurrence' ) ) {
+	if ( get_option( 'permalink_structure' ) && Feriae\Content\PostTypes::EVENT === get_post_type( $occurrence->event_id ) && feriae_is_module_enabled( 'recurrence' ) ) {
 		return trailingslashit( $url ) . $date . '/';
 	}
-	return add_query_arg( 'oe_occurrence', $date, $url );
+	return add_query_arg( 'feriae_occurrence', $date, $url );
 }
 
-function openevents_is_module_enabled( string $id ): bool {
-	return openevents()->modules()->is_enabled( $id );
+function feriae_is_module_enabled( string $id ): bool {
+	return feriae()->modules()->is_enabled( $id );
 }
 
 /**
  * URL of the main calendar: the Events archive when the post type is registered,
  * otherwise the calendar page chosen in setup.
  */
-function openevents_calendar_url(): string {
-	$settings = openevents()->settings();
+function feriae_calendar_url(): string {
+	$settings = feriae()->settings();
 	if ( $settings->registers_event_type() ) {
 		$url = get_post_type_archive_link( $settings::EVENT_TYPE );
 		if ( $url ) {

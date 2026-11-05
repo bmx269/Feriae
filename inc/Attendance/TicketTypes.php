@@ -2,10 +2,10 @@
 /**
  * Ticket type storage.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Attendance;
+namespace Feriae\Attendance;
 
 /**
  * Reads ticket types and reserves seats atomically.
@@ -49,7 +49,7 @@ final class TicketTypes {
 				$was = $before[ $id ] ?? null;
 				// More room (capacity raised or made unlimited): let the waitlist fill it.
 				if ( $was && 'active' === $after->status && ( null === $after->capacity ? null !== $was->capacity : ( null !== $was->capacity && $after->capacity > $was->capacity ) ) ) {
-					do_action( 'openevents/seats_released', $id, 0 );
+					do_action( 'feriae/seats_released', $id, 0 );
 				}
 			}
 			return (int) $existing;
@@ -131,16 +131,16 @@ final class TicketTypes {
 	 * The date a row sells seats for: the occurrence with its sequence, or
 	 * for a series pass, the series' last date (passes sell until it starts).
 	 */
-	public static function occurrence( TicketType $type ): ?\OpenEvents\Occurrences\Occurrence {
-		return self::is_series( $type ) ? openevents()->occurrences()->last_in_series( $type->event_id ) : self::date_of( $type );
+	public static function occurrence( TicketType $type ): ?\Feriae\Occurrences\Occurrence {
+		return self::is_series( $type ) ? feriae()->occurrences()->last_in_series( $type->event_id ) : self::date_of( $type );
 	}
 
 	/**
 	 * The one date a row is for, to show people (null for a series pass,
 	 * which covers many).
 	 */
-	public static function date_of( TicketType $type ): ?\OpenEvents\Occurrences\Occurrence {
-		return self::is_series( $type ) ? null : openevents()->occurrences()->by_sequence( $type->event_id, $type->sequence );
+	public static function date_of( TicketType $type ): ?\Feriae\Occurrences\Occurrence {
+		return self::is_series( $type ) ? null : feriae()->occurrences()->by_sequence( $type->event_id, $type->sequence );
 	}
 
 	/**
@@ -148,7 +148,7 @@ final class TicketTypes {
 	 */
 	public static function url( TicketType $type ): string {
 		$occurrence = self::date_of( $type );
-		return $occurrence ? openevents_occurrence_url( $occurrence ) : (string) get_permalink( $type->event_id );
+		return $occurrence ? feriae_occurrence_url( $occurrence ) : (string) get_permalink( $type->event_id );
 	}
 
 	/**
@@ -161,7 +161,7 @@ final class TicketTypes {
 		if ( ! array_key_exists( $ticket_type_id, $cache ) ) {
 			$type                     = $this->get( $ticket_type_id );
 			$occurrence               = $type ? self::date_of( $type ) : null;
-			$cache[ $ticket_type_id ] = $occurrence ? \OpenEvents\Frontend\Formatter::range( $occurrence ) : '';
+			$cache[ $ticket_type_id ] = $occurrence ? \Feriae\Frontend\Formatter::range( $occurrence ) : '';
 		}
 		return $cache[ $ticket_type_id ];
 	}
@@ -178,17 +178,17 @@ final class TicketTypes {
 		$sequences = $wpdb->get_col( $wpdb->prepare( 'SELECT DISTINCT t.sequence FROM %i t INNER JOIN %i a ON a.ticket_type_id = t.id WHERE t.event_id = %d ORDER BY t.sequence', Schema::ticket_types(), Schema::attendees(), $event_id ) );
 		$out       = array();
 		foreach ( array_map( 'intval', $sequences ) as $sequence ) {
-			$occurrence = openevents()->occurrences()->by_sequence( $event_id, $sequence );
+			$occurrence = feriae()->occurrences()->by_sequence( $event_id, $sequence );
 			$out[]      = array(
 				'value' => $sequence,
-				'label' => $occurrence ? \OpenEvents\Frontend\Formatter::range( $occurrence ) : __( 'A date no longer on the schedule', 'openevents' ),
+				'label' => $occurrence ? \Feriae\Frontend\Formatter::range( $occurrence ) : __( 'A date no longer on the schedule', 'feriae' ),
 			);
 		}
 		return $out;
 	}
 
 	private static function is_series( TicketType $type ): bool {
-		return \OpenEvents\Modules\Series\Module::POST_TYPE === get_post_type( $type->event_id );
+		return \Feriae\Modules\Series\Module::POST_TYPE === get_post_type( $type->event_id );
 	}
 
 	/**
@@ -232,7 +232,7 @@ final class TicketTypes {
 		 * @param int $id       Ticket type id.
 		 * @param int $quantity Seats released.
 		 */
-		do_action( 'openevents/seats_released', $id, $quantity );
+		do_action( 'feriae/seats_released', $id, $quantity );
 	}
 
 	/**

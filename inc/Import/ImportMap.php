@@ -2,13 +2,13 @@
 /**
  * Source-to-target ids for imports.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Import;
+namespace Feriae\Import;
 
 /**
- * Remembers what an import created (`oe_import_map`: source kind and id →
+ * Remembers what an import created (`feriae_import_map`: source kind and id →
  * target id), so running it again skips what's done, and a rollback removes
  * exactly what it added.
  */
@@ -16,7 +16,7 @@ final class ImportMap {
 
 	public static function table(): string {
 		global $wpdb;
-		return $wpdb->prefix . 'oe_import_map';
+		return $wpdb->prefix . 'feriae_import_map';
 	}
 
 	public static function install(): void {

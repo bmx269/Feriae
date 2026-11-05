@@ -2,30 +2,30 @@
 /**
  * Tickets REST routes.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Modules\Tickets;
+namespace Feriae\Modules\Tickets;
 
-use OpenEvents\Attendance\Guard;
-use OpenEvents\Attendance\Order;
-use OpenEvents\Attendance\Orders;
+use Feriae\Attendance\Guard;
+use Feriae\Attendance\Order;
+use Feriae\Attendance\Orders;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_REST_Server;
 
 /**
- * POST /openevents/v1/events/{id}/orders     Place an order (public).
- * GET  /openevents/v1/orders/return          Buyers return from Stripe/PayPal (public).
- * POST /openevents/v1/gateways/{id}/webhook  Provider notifications (public, signature-checked).
- * GET  /openevents/v1/orders                 Order list (editors).
- * POST /openevents/v1/orders/{id}            mark_paid | refund | cancel (event editors).
- * GET|POST /openevents/v1/gateways           Gateway settings (administrators; secrets masked).
+ * POST /feriae/v1/events/{id}/orders     Place an order (public).
+ * GET  /feriae/v1/orders/return          Buyers return from Stripe/PayPal (public).
+ * POST /feriae/v1/gateways/{id}/webhook  Provider notifications (public, signature-checked).
+ * GET  /feriae/v1/orders                 Order list (editors).
+ * POST /feriae/v1/orders/{id}            mark_paid | refund | cancel (event editors).
+ * GET|POST /feriae/v1/gateways           Gateway settings (administrators; secrets masked).
  */
 final class Rest {
 
-	private const NS   = 'openevents/v1';
+	private const NS   = 'feriae/v1';
 	public const MASK  = '••••••••';
 
 	public function register(): void {
@@ -44,14 +44,14 @@ final class Rest {
 					'name'    => array( 'type' => 'string' ),
 					'email'   => array( 'type' => 'string' ),
 					'sequence' => array(
-						'description' => __( 'Which date of a repeating event (an occurrence sequence; 0 is the event’s own date).', 'openevents' ),
+						'description' => __( 'Which date of a repeating event (an occurrence sequence; 0 is the event’s own date).', 'feriae' ),
 						'type'        => 'integer',
 						'minimum'     => 0,
 						'default'     => 0,
 					),
 					'tickets' => array( 'type' => 'object' ),
 					'attendees' => array(
-						'description' => __( 'Per ticket type id, a list of people: name, email, and fields (answers by field key).', 'openevents' ),
+						'description' => __( 'Per ticket type id, a list of people: name, email, and fields (answers by field key).', 'feriae' ),
 						'type'        => 'object',
 					),
 					'gateway' => array( 'type' => 'string' ),
@@ -85,7 +85,7 @@ final class Rest {
 			array(
 				'methods'             => WP_REST_Server::READABLE,
 				'callback'            => array( $this, 'list_orders' ),
-				'permission_callback' => static fn( WP_REST_Request $r ) => (int) $r['event'] ? current_user_can( 'edit_post', (int) $r['event'] ) : current_user_can( \OpenEvents\Modules\Rsvp\Rest::capability() ),
+				'permission_callback' => static fn( WP_REST_Request $r ) => (int) $r['event'] ? current_user_can( 'edit_post', (int) $r['event'] ) : current_user_can( \Feriae\Modules\Rsvp\Rest::capability() ),
 				'args'                => array(
 					'event'    => array( 'type' => 'integer', 'default' => 0 ),
 					'status'   => array( 'type' => 'string', 'default' => '' ),
@@ -135,7 +135,7 @@ final class Rest {
 	public function place( WP_REST_Request $request ): WP_REST_Response {
 		$event_id = (int) $request['id'];
 		if ( 'publish' !== get_post_status( $event_id ) ) {
-			return new WP_REST_Response( CheckoutResult::error( 'closed', __( 'This event isn’t selling tickets.', 'openevents' ) )->to_array(), 404 );
+			return new WP_REST_Response( CheckoutResult::error( 'closed', __( 'This event isn’t selling tickets.', 'feriae' ) )->to_array(), 404 );
 		}
 		$result = ( new Checkout() )->place(
 			$event_id,
@@ -170,7 +170,7 @@ final class Rest {
 	 * the buyer to the event page with the outcome.
 	 */
 	public function return_from_gateway( WP_REST_Request $request ): WP_REST_Response {
-		$order = ( new Orders() )->by_uuid( sanitize_text_field( (string) $request['oe_order'] ) );
+		$order = ( new Orders() )->by_uuid( sanitize_text_field( (string) $request['feriae_order'] ) );
 		if ( ! $order ) {
 			return $this->redirect( home_url( '/' ) );
 		}
@@ -187,15 +187,15 @@ final class Rest {
 				$checkout->complete( $order, $result->txn );
 				$state = 'done';
 			} elseif ( 'failed' === $result->status ) {
-				$checkout->release( $order, 'cancel' === ( $query['oe_checkout'] ?? '' ) ? Order::CANCELLED : Order::FAILED );
-				$state = 'cancel' === ( $query['oe_checkout'] ?? '' ) ? 'cancelled' : 'failed';
+				$checkout->release( $order, 'cancel' === ( $query['feriae_checkout'] ?? '' ) ? Order::CANCELLED : Order::FAILED );
+				$state = 'cancel' === ( $query['feriae_checkout'] ?? '' ) ? 'cancelled' : 'failed';
 			}
 		}
 
-		$token = isset( $_COOKIE[ 'oe_order_' . $order->uuid ] ) ? sanitize_text_field( wp_unslash( $_COOKIE[ 'oe_order_' . $order->uuid ] ) ) : '';
-		$args  = array( 'oe_checkout' => $state );
+		$token = isset( $_COOKIE[ 'feriae_order_' . $order->uuid ] ) ? sanitize_text_field( wp_unslash( $_COOKIE[ 'feriae_order_' . $order->uuid ] ) ) : '';
+		$args  = array( 'feriae_checkout' => $state );
 		if ( $token && ( new Orders() )->by_token( $token )?->id === $order->id ) {
-			$args['oe_order_token'] = $token;
+			$args['feriae_order_token'] = $token;
 		}
 		return $this->redirect( add_query_arg( $args, Checkout::order_page( $order ) ) . '#tickets' );
 	}
@@ -224,7 +224,7 @@ final class Rest {
 				$o->to_array(),
 				array(
 					'event_title'   => html_entity_decode( get_the_title( $o->event_id ), ENT_QUOTES ),
-					'gateway_label' => Gateways::get( $o->gateway )?->label() ?? ( 'free' === $o->gateway ? __( 'Free', 'openevents' ) : $o->gateway ),
+					'gateway_label' => Gateways::get( $o->gateway )?->label() ?? ( 'free' === $o->gateway ? __( 'Free', 'feriae' ) : $o->gateway ),
 					'oversold'      => ! empty( $o->meta['oversold'] ),
 				)
 			),
@@ -242,7 +242,7 @@ final class Rest {
 		switch ( $request['action'] ) {
 			case 'mark_paid':
 				if ( Order::UNPAID !== $order->status || ! $checkout->mark_paid( $order ) ) {
-					return new WP_Error( 'openevents_order_state', __( 'Only unpaid orders can be marked as paid.', 'openevents' ), array( 'status' => 409 ) );
+					return new WP_Error( 'feriae_order_state', __( 'Only unpaid orders can be marked as paid.', 'feriae' ), array( 'status' => 409 ) );
 				}
 				break;
 			case 'refund':
@@ -254,7 +254,7 @@ final class Rest {
 				break;
 			case 'cancel':
 				if ( ! $checkout->release( $order, Order::CANCELLED ) ) {
-					return new WP_Error( 'openevents_order_state', __( 'Only pending or unpaid orders can be cancelled. Refund paid orders instead.', 'openevents' ), array( 'status' => 409 ) );
+					return new WP_Error( 'feriae_order_state', __( 'Only pending or unpaid orders can be cancelled. Refund paid orders instead.', 'feriae' ), array( 'status' => 409 ) );
 				}
 				break;
 		}
@@ -282,7 +282,7 @@ final class Rest {
 				'id'        => $id,
 				'label'     => $gateway->label(),
 				'available' => $gateway->is_available( Checkout::currency() ),
-				'webhook'   => rest_url( 'openevents/v1/gateways/' . $id . '/webhook' ),
+				'webhook'   => rest_url( 'feriae/v1/gateways/' . $id . '/webhook' ),
 				'fields'    => $fields,
 			);
 		}

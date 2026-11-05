@@ -2,10 +2,10 @@
 /**
  * Waitlist outcome.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Attendance;
+namespace Feriae\Attendance;
 
 /**
  * Codes: waitlisted, exists, left (success); invalid, disabled, available.

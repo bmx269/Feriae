@@ -2,23 +2,23 @@
 /**
  * Occurrence queries.
  *
- * @package OpenEvents
+ * @package Feriae
  */
 
-namespace OpenEvents\Occurrences;
+namespace Feriae\Occurrences;
 
 use DateTimeInterface;
 use DateTimeZone;
-use OpenEvents\Content\Meta;
-use OpenEvents\Content\PostTypes;
-use OpenEvents\Installer;
+use Feriae\Content\Meta;
+use Feriae\Content\PostTypes;
+use Feriae\Installer;
 
 /**
- * The one place that reads oe_occurrences. Views, REST, feeds, abilities, and
+ * The one place that reads feriae_occurrences. Views, REST, feeds, abilities, and
  * add-ons all query through here so filters, caching, and priming apply everywhere.
  *
  * Performance contract (see docs/ARCHITECTURE.md, "Performance"):
- * - Listings are single-table reads on oe_occurrences using its indexes; wp_posts
+ * - Listings are single-table reads on feriae_occurrences using its indexes; wp_posts
  *   is joined only for keyword search.
  * - Date-range scans are bounded by the longest event duration, so a month query
  *   reads about a month of index entries however much history exists.
@@ -28,7 +28,7 @@ use OpenEvents\Installer;
  */
 final class Repository {
 
-	public const CACHE_GROUP = 'openevents';
+	public const CACHE_GROUP = 'feriae';
 
 	/** @var array<int, Occurrence|null> Per-request memo for for_event(). */
 	private array $event_memo = array();
@@ -81,9 +81,9 @@ final class Repository {
 		 *
 		 * @param array<string, mixed> $args Query arguments.
 		 */
-		$args = apply_filters( 'openevents/occurrences/query_args', $args );
+		$args = apply_filters( 'feriae/occurrences/query_args', $args );
 
-		$post_types = array_values( array_filter( (array) $args['post_types'] ) ) ?: openevents()->settings()->event_post_types();
+		$post_types = array_values( array_filter( (array) $args['post_types'] ) ) ?: feriae()->settings()->event_post_types();
 		if ( ! $post_types ) {
 			return array(
 				'items' => array(),
@@ -171,14 +171,14 @@ final class Repository {
 
 		if ( $args['venue'] ) {
 			$where[] = $wpdb->prepare(
-				"o.event_id IN (SELECT vm.post_id FROM {$wpdb->postmeta} vm WHERE vm.meta_key = '_oe_venue_id' AND vm.meta_value = %s)",
+				"o.event_id IN (SELECT vm.post_id FROM {$wpdb->postmeta} vm WHERE vm.meta_key = '_feriae_venue_id' AND vm.meta_value = %s)",
 				(string) absint( $args['venue'] )
 			);
 		}
 
 		if ( $args['series'] ) {
 			$where[] = $wpdb->prepare(
-				"o.event_id IN (SELECT sm.post_id FROM {$wpdb->postmeta} sm WHERE sm.meta_key = '_oe_series_id' AND sm.meta_value = %s)",
+				"o.event_id IN (SELECT sm.post_id FROM {$wpdb->postmeta} sm WHERE sm.meta_key = '_feriae_series_id' AND sm.meta_value = %s)",
 				(string) absint( $args['series'] )
 			);
 		}
@@ -240,8 +240,8 @@ final class Repository {
 		$linked   = array();
 		$term_ids = array();
 		foreach ( $event_ids as $id ) {
-			$linked[] = (int) get_post_meta( $id, '_oe_venue_id', true );
-			foreach ( (array) get_post_meta( $id, '_oe_organizer_ids', true ) as $organizer ) {
+			$linked[] = (int) get_post_meta( $id, '_feriae_venue_id', true );
+			foreach ( (array) get_post_meta( $id, '_feriae_organizer_ids', true ) as $organizer ) {
 				$linked[] = (int) $organizer;
 			}
 			if ( $images ) {
@@ -312,12 +312,12 @@ final class Repository {
 	}
 
 	/**
-	 * The occurrence a visitor asked for: the date in ?oe_occurrence= (links to one
+	 * The occurrence a visitor asked for: the date in ?feriae_occurrence= (links to one
 	 * date of a repeating event carry it), else the next one (see for_event()).
 	 */
 	public function requested( int $event_id ): ?Occurrence {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only display state.
-		$date = sanitize_text_field( wp_unslash( $_GET['oe_occurrence'] ?? '' ) ) ?: (string) get_query_var( 'oe_occurrence' );
+		$date = sanitize_text_field( wp_unslash( $_GET['feriae_occurrence'] ?? '' ) ) ?: (string) get_query_var( 'feriae_occurrence' );
 		if ( preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date ) ) {
 			$occurrence = $this->on_date( $event_id, $date );
 			if ( $occurrence ) {
