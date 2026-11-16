@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+	<!-- Feriae mark: a calendar day tile with a rising sun, the feast day. -->
+	<rect width="64" height="64" rx="14" fill="#A63A2B"/>
+	<path d="M0 14a14 14 0 0 1 14-14h36a14 14 0 0 1 14 14v2H0z" fill="#7E2A1F"/>
+	<circle cx="20" cy="8" r="3" fill="#F7F1E6"/>
+	<circle cx="44" cy="8" r="3" fill="#F7F1E6"/>
+	<path d="M39 54a10 10 0 0 1 20 0z" fill="#E0A33A"/>
+	<path d="M14 24h31v10h-3.5l-1.5-4H27v6h9l1-2.5h3v10h-3l-1-2.5h-9V46h4v5H14v-5h4.5V29H14z" fill="#F7F1E6"/>
+</svg>

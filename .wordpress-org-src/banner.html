@@ -2,30 +2,31 @@
 <html><head><meta charset="utf-8"><title>Banner</title>
 <style>
 @font-face { font-family: Inter; src: url(https://cdn.jsdelivr.net/npm/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2) format('woff2'); font-weight: 100 900; }
-:root { --blue: #1D3A8A; --deep: #16306f; --coral: #FF7A59; --soft: #D7E0F7; --ink: #1E1E1E; }
+@font-face { font-family: Fraunces; src: url(https://cdn.jsdelivr.net/npm/@fontsource-variable/fraunces/files/fraunces-latin-wght-normal.woff2) format('woff2'); font-weight: 100 900; }
+:root { --red: #A63A2B; --deep: #7E2A1F; --ochre: #E0A33A; --laurel: #2F6B4F; --parchment: #F7F1E6; --ink: #1F1A17; }
 * { box-sizing: border-box; margin: 0; }
-html, body { width: 772px; height: 250px; overflow: hidden; background: var(--blue); font-family: Inter, sans-serif; }
-.halo { position: absolute; left: 400px; top: -250px; width: 760px; height: 760px; border-radius: 50%; background: var(--deep); }
+html, body { width: 772px; height: 250px; overflow: hidden; background: var(--red); font-family: Inter, sans-serif; }
+.sun { position: absolute; left: 430px; top: 40px; width: 560px; height: 560px; border-radius: 50%; background: var(--deep); }
 .copy { position: absolute; left: 48px; top: 0; height: 250px; display: flex; flex-direction: column; justify-content: center; }
-.logo { display: flex; align-items: center; gap: 12px; }
-.logo img { width: 52px; height: 52px; }
-h1 { color: #fff; font-weight: 800; font-size: 48px; letter-spacing: -1.6px; line-height: 1; }
-.kicker { margin-top: 12px; color: var(--soft); font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
-.kicker b { color: var(--coral); font-weight: 800; }
-p { margin-top: 10px; color: #fff; font-size: 16px; line-height: 22px; font-weight: 600; width: 300px; }
-.card { position: absolute; right: 44px; top: 34px; width: 300px; background: #fff; border-radius: 10px; box-shadow: 0 12px 30px rgba(0,0,0,.25); padding: 14px; transform: rotate(-3deg); }
-.card h3 { font-size: 13px; font-weight: 800; color: var(--ink); margin-bottom: 8px; }
+.logo { display: flex; align-items: center; gap: 14px; }
+.logo img { width: 52px; height: 52px; border-radius: 12px; box-shadow: 0 0 0 2px rgba(247,241,230,.35); }
+h1 { color: var(--parchment); font-family: Fraunces, Georgia, serif; font-weight: 700; font-size: 54px; letter-spacing: -1px; line-height: 1; }
+.kicker { margin-top: 14px; color: var(--parchment); font-size: 11px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; }
+.kicker b { color: var(--ochre); font-weight: 800; }
+p { margin-top: 10px; color: #fff; font-size: 16px; line-height: 22px; font-weight: 600; width: 310px; }
+.card { position: absolute; right: 44px; top: 34px; width: 300px; background: var(--parchment); border-radius: 10px; box-shadow: 0 12px 30px rgba(0,0,0,.28); padding: 14px; transform: rotate(-3deg); }
+.card h3 { font-family: Fraunces, Georgia, serif; font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
 .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
-.grid span { height: 22px; border-radius: 3px; background: #EEF2FB; font-size: 8px; color: #5b6170; padding: 2px 3px; }
-.grid span.e { background: var(--coral); color: var(--ink); font-weight: 700; }
-.grid span.m { background: #7c3aed; color: #fff; font-weight: 700; }
-.grid span.g { background: #047857; color: #fff; font-weight: 700; }
-.ticket { position: absolute; right: 250px; bottom: 26px; background: var(--coral); color: var(--ink); border-radius: 8px; padding: 8px 12px; font-size: 11px; font-weight: 800; box-shadow: 0 8px 18px rgba(0,0,0,.25); transform: rotate(4deg); }
+.grid span { height: 22px; border-radius: 3px; background: #EDE3D1; font-size: 8px; color: #5E5149; padding: 2px 3px; }
+.grid span.e { background: var(--ochre); color: var(--ink); font-weight: 700; }
+.grid span.m { background: var(--red); color: #fff; font-weight: 700; }
+.grid span.g { background: var(--laurel); color: #fff; font-weight: 700; }
+.ticket { position: absolute; right: 250px; bottom: 26px; background: var(--ochre); color: var(--ink); border-radius: 8px; padding: 8px 12px; font-size: 11px; font-weight: 800; box-shadow: 0 8px 18px rgba(0,0,0,.25); transform: rotate(4deg); }
 </style></head>
 <body>
-<div class="halo"></div>
+<div class="sun"></div>
 <div class="copy">
-	<h1>Feriae</h1>
+	<div class="logo"><img src="mark.svg" alt=""><h1>Feriae</h1></div>
 	<div class="kicker">Calendar <b>·</b> RSVP <b>·</b> Tickets</div>
 	<p>Open-source events for WordPress. Fast at any size, no upsells.</p>
 </div>
