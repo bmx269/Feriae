@@ -32,9 +32,22 @@ test.describe( 'Calendar block', () => {
 			calendar.getByText( 'Blog post: Book Launch' )
 		).toBeVisible();
 		await expect( page.locator( '.feriae-legend li' ) ).toHaveCount( 3 );
-		await expect( page.locator( '.feriae-month__more' ) ).toHaveText(
-			'+1 more'
+
+		// The 20th has four fixed sample events, and events dated relative
+		// to today can land on it too, so a day shows three and counts the
+		// rest. The count is checked against that day's full listing.
+		const twentieth = calendar.locator(
+			'td.feriae-month__day:not(.is-other-month):has(time[datetime$="-20"])'
 		);
+		await expect(
+			twentieth.locator( '.feriae-month__events li' )
+		).toHaveCount( 3 );
+		const more = twentieth.locator( '.feriae-month__more' );
+		await expect( more ).toHaveText( /^\+\d+ more$/ );
+		const shown = await more.textContent();
+		await page.goto( await more.getAttribute( 'href' ) );
+		const total = await page.locator( '.feriae-day > li' ).count();
+		expect( shown ).toBe( `+${ total - 3 } more` );
 	} );
 
 	test( 'navigation updates in place without a page reload and moves focus', async ( {
