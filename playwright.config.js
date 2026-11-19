@@ -14,7 +14,9 @@ module.exports = defineConfig( {
 	fullyParallel: false,
 	retries: process.env.CI ? 1 : 0,
 	timeout: 60_000,
-	reporter: process.env.CI ? [ [ 'github' ], [ 'html', { open: 'never' } ] ] : 'list',
+	reporter: process.env.CI
+		? [ [ 'github' ], [ 'html', { open: 'never' } ] ]
+		: 'list',
 	use: {
 		baseURL,
 		trace: 'retain-on-failure',
@@ -28,7 +30,10 @@ module.exports = defineConfig( {
 		{ name: 'setup', testMatch: /auth\.setup\.js/ },
 		{
 			name: 'chromium',
-			use: { ...devices[ 'Desktop Chrome' ], storageState: 'test-results/.auth/admin.json' },
+			use: {
+				...devices[ 'Desktop Chrome' ],
+				storageState: 'test-results/.auth/admin.json',
+			},
 			dependencies: [ 'setup' ],
 		},
 	],
